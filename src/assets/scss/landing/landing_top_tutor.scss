@@ -1,0 +1,111 @@
+.top-rated-tutors {
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        text-align: center;
+        color: #1f2937;
+        margin-bottom: 3rem;
+    }
+
+    .tutors-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2rem;
+
+        @media (min-width: 768px) {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        @media (min-width: 1024px) {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    .tutor-card {
+        background: #fff;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        text-align: center;
+
+        &:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .tutor-image {
+            width: 8rem;
+            height: 8rem;
+            margin: 0 auto 1rem;
+            border-radius: 50%;
+            overflow: hidden;
+
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+        }
+
+        .tutor-name {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .tutor-specialty {
+            color: #6b7280;
+            margin-bottom: 1rem;
+        }
+
+        .tutor-rating {
+            margin-bottom: 1rem;
+
+            .rating-stars {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.25rem;
+
+                .star {
+                    color: #fbbf24;
+                }
+
+                .rating-value {
+                    margin-left: 0.5rem;
+                    color: #4b5563;
+                    font-weight: 500;
+                }
+            }
+
+            .review-count {
+                font-size: 0.875rem;
+                color: #6b7280;
+                margin-top: 0.25rem;
+            }
+        }
+
+        .view-details-btn {
+            background: var(--main-color);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 9999px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+
+            &:hover {
+                background: var(--main-color-80);
+                transform: translateY(-2px);
+            }
+        }
+    }
+
+    .no-tutors {
+        text-align: center;
+        color: #6b7280;
+        padding: 3rem 0;
+    }
+}

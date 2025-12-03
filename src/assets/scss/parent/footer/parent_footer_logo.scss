@@ -1,0 +1,29 @@
+.fp-logo {
+    display: inline-flex;
+
+    .fp-logo-text {
+        font-size: 1.5rem;
+        font-weight: 900;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--main-color);
+        margin: 0;
+    }
+
+    .fp-logo-char {
+        display: inline-block;
+        animation: bounceColor 1s infinite ease-in-out;
+    }
+}
+
+@keyframes bounceColor {
+    0%,
+    100% {
+        transform: translateY(0);
+        color: var(--main-color);
+    }
+    50% {
+        transform: translateY(-5px);
+        color: var(--main-color-50);
+    }
+}

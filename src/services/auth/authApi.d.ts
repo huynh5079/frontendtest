@@ -1,0 +1,10 @@
+import type { ChangePassword, ForgotPassword, LoginEmail, RegisterParent, RegisterStudent, VerifyEmail, VerifyOtp } from "../../types/auth";
+export declare const loginApi: (params: LoginEmail) => Promise<any>;
+export declare const verifyEmailApi: (params: VerifyEmail) => Promise<any>;
+export declare const verifyOtpApi: (params: VerifyOtp) => Promise<any>;
+export declare const registerStudentApi: (params: RegisterStudent) => Promise<any>;
+export declare const registerParentApi: (params: RegisterParent) => Promise<any>;
+export declare const verifyEmailForgotPasswordApi: (params: VerifyEmail) => Promise<any>;
+export declare const verifyOtpForgotPasswordApi: (params: VerifyOtp) => Promise<any>;
+export declare const forgotPassswordApi: (params: ForgotPassword) => Promise<any>;
+export declare const changePasswordApi: (params: ChangePassword) => Promise<any>;

@@ -1,0 +1,199 @@
+#detail-course-section {
+    background: var(--main-color-10);
+    padding: 2rem;
+
+    .dcs-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        gap: 2rem;
+
+        .dcscc1 {
+            flex: 2;
+
+            h3 {
+                font-size: 3rem;
+                font-weight: 700;
+                color: var(--main-color);
+                margin: 0;
+                margin-bottom: 2rem;
+            }
+
+            .image {
+                width: 100%;
+                height: 400px;
+                object-fit: cover;
+                background: #fff;
+                border-radius: 1rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .tabs {
+                display: flex;
+                justify-content: start;
+                align-items: center;
+                gap: 1rem;
+                margin-bottom: 1rem;
+
+                .tabs-item {
+                    font-size: 1.25rem;
+                    padding: 0.5rem 1rem;
+                    border-radius: 1.5rem;
+                    cursor: pointer;
+                    transition: all 0.2s ease-in-out;
+                    background: #fff;
+                    border: 1px solid var(--main-color);
+                    color: var(--main-color);
+
+                    &.tabs-item-actived {
+                        background-color: var(--main-color);
+                        color: #fff;
+                    }
+                }
+            }
+
+            .content {
+                background: #fff;
+                padding: 1rem;
+                border-radius: 1rem;
+                font-size: 1.25rem;
+                font-weight: 500;
+                color: var(--main-black);
+
+                h4 {
+                    font-size: 2rem;
+                    font-weight: 700;
+                    color: var(--main-color);
+                    margin: 0;
+                    margin-bottom: 0.5rem;
+                }
+
+                .schedules {
+                    .schedule-item {
+                        font-size: 1.5rem;
+                        font-weight: 600;
+                        color: var(--main-black);
+                        margin: 0;
+                        margin-bottom: 0.5rem;
+                    }
+                }
+
+                .form {
+                    max-width: 400px;
+                    margin-bottom: 1rem;
+
+                    .form-input-icon {
+                        font-size: 1.5rem;
+                    }
+
+                    .form-input {
+                        width: 100%;
+                        padding: 0.75rem 0.75rem 0.75rem 2.5rem;
+                        font-size: 1.25rem;
+                        font-weight: 500;
+                    }
+
+                    .pr-btn, .disable-btn {
+                        padding: 0.5rem 1rem;
+                        font-size: 1.25rem;
+                    }
+                }
+            }
+        }
+
+        .dcscc2 {
+            flex: 1;
+
+            .dcscc2r1,
+            .dcscc2r2 {
+                background: #fff;
+                padding: 1rem;
+                border-radius: 1rem;
+                margin-bottom: 1rem;
+
+                h3 {
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    color: var(--main-color);
+                    margin: 0;
+                    margin-bottom: 1rem;
+                }
+
+                .pr-btn, .disable-btn, .delete-btn {
+                    width: 100%;
+                    padding: 0.75rem 1.25rem;
+                    font-size: 1.25rem;
+                    margin: 0.5rem 0;
+                }
+            }
+
+            .dcscc2r1 {
+                .info {
+                    display: flex;
+                    justify-content: start;
+                    align-items: center;
+                    gap: 1rem;
+                    margin-bottom: 1rem;
+
+                    .avatar {
+                        width: 70px;
+                        height: 70px;
+                        border-radius: 50%;
+                        object-fit: cover;
+                        background: var(--main-color);
+                    }
+
+                    .name {
+                        font-size: 1.25rem;
+                        font-weight: 700;
+                        color: var(--main-black);
+                    }
+                }
+
+                .phone,
+                .email {
+                    display: flex;
+                    align-items: center;
+                    justify-content: start;
+                    font-size: 1.25rem;
+                    font-weight: 500;
+                    color: var(--main-black);
+                    margin-bottom: 1rem;
+
+                    span {
+                        font-weight: 700;
+                        color: var(--main-black);
+                    }
+
+                    .icon {
+                        font-size: 2rem;
+                        color: var(--main-color);
+                    }
+                }
+            }
+
+            .dcscc2r2 {
+                p {
+                    display: flex;
+                    align-items: center;
+                    justify-content: start;
+                    font-size: 1.25rem;
+                    font-weight: 500;
+                    color: var(--main-black);
+                    margin-bottom: 1rem;
+
+                    span {
+                        font-weight: 600;
+                        color: var(--main-black);
+                    }
+
+                    .icon {
+                        font-size: 2rem;
+                        color: var(--main-color);
+                        margin-right: 0.5rem;
+                    }
+                }
+            }
+        }
+    }
+}

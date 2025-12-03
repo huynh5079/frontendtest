@@ -1,0 +1,22 @@
+#admin-dashboard-section {
+    .ads-container {
+        max-width: 1200px;
+        margin: 0 auto;
+
+        .adscr1 {
+            display: flex;
+            gap: 1rem;
+
+            .adscr1c1 {
+                flex: 2;
+                height: 400px;
+                background: #fff;
+            }
+            .adscr1c2 {
+                flex: 3;
+                background: #fff;
+                height: 400px;
+            }
+        }
+    }
+}

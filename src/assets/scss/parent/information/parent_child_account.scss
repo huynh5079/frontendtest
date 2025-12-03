@@ -1,0 +1,122 @@
+.parent-child-account {
+    &::-webkit-scrollbar {
+        display: none;
+    }
+
+    .pca-step-1 {
+        .pcas1r1 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+
+            h3 {
+                font-size: 1.75rem;
+                font-weight: 800;
+                color: var(--main-color);
+                margin: 0;
+            }
+
+            .pr-btn {
+                padding: 0.75rem 1.25rem;
+                font-size: 1.25rem;
+            }
+        }
+
+        .table {
+            .pr-btn {
+                padding: 0.5rem 1rem;
+                font-size: 1rem;
+            }
+        }
+
+        .pcas1r2-detail {
+            display: flex;
+            align-items: start;
+            gap: 2rem;
+
+            .pcas1r2dc1,
+            .pcas1r2dc2 {
+                flex: 1;
+            }
+
+            .pcas1r2dc1 {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                
+                img {
+                    width: 300px;
+                    height: 300px;
+                    object-fit: cover;
+                    border-radius: 50%;
+                }
+            }
+
+            .pcas1r2dc2 {
+                h4 {
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    color: var(--main-color);
+                    margin: 0;
+                    margin-bottom: 0.5rem;
+                }
+
+                p {
+                    font-size: 1.25rem;
+                    font-weight: 500;
+                    color: var(--main-black);
+                    margin: 0;
+                    margin-bottom: 1rem;
+                }
+            }
+        }
+    }
+
+    .pca-step-2 {
+        .sc-btn {
+            padding: 0.75rem 1.25rem;
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .form {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+
+            .pr-btn {
+                width: 100%;
+                padding: 0.75rem 1.25rem;
+                font-size: 1.25rem;
+                margin-top: 2rem;
+            }
+        }
+    }
+
+    .step {
+        transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
+    }
+
+    @keyframes slide-in-right {
+        0% {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        100% {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes slide-in-left {
+        0% {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+        100% {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+}

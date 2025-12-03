@@ -1,0 +1,109 @@
+#student-book-tutor-section {
+    background: var(--main-color-10);
+    padding: 2rem;
+
+    .sbts-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: #fff;
+        border-radius: 1rem;
+        padding: 2rem;
+        text-align: center;
+
+        h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--main-color);
+            margin: 0;
+            margin-bottom: 3rem;
+        }
+
+        .form {
+            max-width: 800px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-bottom: 2rem;
+
+            .form-field {
+                text-align: start;
+
+                .note {
+                    font-size: 1.15rem;
+                    font-weight: 500;
+                    color: var(--main-black);
+                    margin: 0;
+                    margin-bottom: 0.5rem;
+                }
+            }
+
+            .form-input {
+                flex: 1;
+            }
+
+            .calendar-container,
+            .note-container,
+            .price-container, .form-submit {
+                grid-column: span 2;
+            }
+
+            .note-container {
+                p {
+                    text-align: start;
+                    font-size: 1.25rem;
+                    line-height: 2rem;
+                    font-weight: 700;
+                    color: var(--main-color);
+                    margin: 0;
+                    margin-bottom: 1rem;
+
+                    span {
+                        font-weight: 500;
+                        color: var(--main-black);
+                    }
+                }
+            }
+
+            .price-container {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+
+                .price-container-col {
+                    p {
+                        font-size: 1.25rem;
+                        font-weight: 700;
+                        color: var(--main-black);
+                        margin: 0;
+                        margin-bottom: 0.5rem;
+                    }
+
+                    h4 {
+                        font-size: 1.5rem;
+                        font-weight: 800;
+                        color: var(--main-color);
+                        margin: 0;
+                    }
+                }
+            }
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--main-black);
+            margin: 0;
+            margin-bottom: 1rem;
+        }
+
+        .payment-btn,
+        .disable-btn {
+            width: 400px;
+            padding: 0.75rem 1.25rem;
+            font-size: 1.25rem;
+            margin: 0 auto;
+            margin-top: 2rem;
+        }
+    }
+}

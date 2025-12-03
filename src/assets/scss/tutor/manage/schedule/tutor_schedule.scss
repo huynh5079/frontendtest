@@ -1,0 +1,172 @@
+#tutor-schedule-section {
+    .tss-container {
+        max-width: 1200px;
+        margin: 0 auto;
+
+        .tsscr1 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: #fff;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+
+            h4 {
+                font-size: 1.5rem;
+                font-weight: 600;
+                color: var(--main-color);
+            }
+
+            p {
+                font-size: 1.25rem;
+                font-weight: 500;
+                color: var(--main-black);
+
+                span {
+                    background: var(--main-color-10);
+                    padding: 0.5rem 0.75rem;
+                    border-radius: 0.5rem;
+                    margin-left: 0.5rem;
+                }
+            }
+        }
+
+        .tsscr2 {
+            display: flex;
+            justify-content: start;
+            align-items: start;
+            gap: 2rem;
+            margin-bottom: 2rem;
+
+            .tsscr2-item {
+                flex: 1;
+                background: #fff;
+                border-radius: 1rem;
+                padding: 1rem;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                justify-content: start;
+                gap: 1rem;
+                transition: all 0.3s ease;
+
+                .tsscr2-item-icon {
+                    padding: 0.75rem;
+                    font-size: 2.5rem;
+                    background: var(--main-color);
+                    border-radius: 0.75rem;
+                    color: #fff;
+                }
+
+                h5 {
+                    font-size: 1.5rem;
+                    font-weight: 600;
+                    color: var(--main-color);
+                    margin: 0;
+                }
+
+                &:hover {
+                    background: var(--main-color-30);
+
+                    h5 {
+                        color: #fff;
+                    }
+                }
+
+                &.active {
+                    background: var(--main-color);
+
+                    .tsscr2-item-icon {
+                        background: #fff;
+                        color: var(--main-color);
+                    }
+
+                    h5 {
+                        color: #fff;
+                    }
+                }
+            }
+        }
+
+        .tsscr3 {
+            padding: 2rem;
+            background: #fff;
+            border-radius: 1rem;
+            margin-bottom: 1rem;
+
+            .pr-btn {
+                font-size: 1.25rem;
+                padding: 0.5rem 1.25rem;
+            }
+        }
+
+        .tsscr4 {
+            padding: 2rem;
+            background: #fff;
+            border-radius: 1rem;
+
+            .week-filter {
+                display: flex;
+                justify-content: start;
+                align-items: center;
+                gap: 1rem;
+                margin-bottom: 1rem;
+
+                .pr-btn,
+                .sc-btn {
+                    padding: 0.5rem 1.25rem;
+                    font-size: 1.25rem;
+                }
+            }
+
+            .today {
+                font-size: 1.5rem;
+                font-weight: 700;
+                color: var(--main-color);
+                margin: 0;
+                margin-bottom: 1rem;
+
+                span {
+                    color: var(--main-black);
+                }
+            }
+
+            .days {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 1rem;
+                margin-bottom: 2rem;
+
+                .day-item {
+                    font-size: 1.25rem;
+                    font-weight: 600;
+                    color: var(--main-color);
+                    padding: 0.5rem 2rem;
+                    border-radius: 0.5rem;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+
+                    &.active {
+                        background: var(--main-color);
+                        color: #fff;
+                    }
+
+                    &:hover:not(.active) {
+                        background: var(--main-color-10);
+                    }
+                }
+            }
+
+            .day-content {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                align-items: start;
+                gap: 1rem;
+            }
+        }
+    }
+}

@@ -1,0 +1,24 @@
+#create-availability-block-for-tutor-modal-section {
+    .cabftm-container {
+        h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--main-color);
+            margin: 0;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .group-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+
+            .sc-btn, .pr-btn {
+                padding: 0.5rem 1.25rem;
+                font-size: 1.25rem;
+            }
+        }
+    }
+}

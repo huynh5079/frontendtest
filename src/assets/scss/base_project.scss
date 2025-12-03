@@ -1,0 +1,378 @@
+//Quick-sand
+@font-face {
+    font-family: "Quicksand";
+    src: url("../fonts/quicksand/Quicksand-Light.ttf") format("truetype");
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Quicksand";
+    src: url("../fonts/quicksand/Quicksand-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Quicksand";
+    src: url("../fonts/quicksand/Quicksand-Medium.ttf") format("truetype");
+    font-weight: 500;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Quicksand";
+    src: url("../fonts/quicksand/Quicksand-SemiBold.ttf") format("truetype");
+    font-weight: 600;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Quicksand";
+    src: url("../fonts/quicksand/Quicksand-Bold.ttf") format("truetype");
+    font-weight: 700;
+    font-style: normal;
+}
+
+//Rebond_Grotesque
+@font-face {
+    font-family: "Rebond Grotesque";
+    src: url("../fonts/rebond_grotesque/Rebond-Grotesque-Extralight.otf")
+        format("truetype");
+    font-weight: 200;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Rebond Grotesque";
+    src: url("../fonts/rebond_grotesque/Rebond-Grotesque-Light.otf")
+        format("truetype");
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Rebond Grotesque";
+    src: url("../fonts/rebond_grotesque/Rebond-Grotesque-Regular.otf")
+        format("truetype");
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Rebond Grotesque";
+    src: url("../fonts/rebond_grotesque/Rebond-Grotesque-Medium.otf")
+        format("truetype");
+    font-weight: 500;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Rebond Grotesque";
+    src: url("../fonts/rebond_grotesque/Rebond-Grotesque-SemiBold.otf")
+        format("truetype");
+    font-weight: 600;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Rebond Grotesque";
+    src: url("../fonts/rebond_grotesque/Rebond-Grotesque-Bold.otf")
+        format("truetype");
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Rebond Grotesque";
+    src: url("../fonts/rebond_grotesque/Rebond-Grotesque-Extrabold.otf")
+        format("truetype");
+    font-weight: 800;
+    font-style: normal;
+}
+
+:root {
+    --main-color: #008d52;
+    --main-color-10: #008d521a;
+    --main-color-20: #008d5233;
+    --main-color-30: #008d524d;
+    --main-color-40: #008d5266;
+    --main-color-50: #008d5280;
+    --main-color-60: #008d5299;
+    --main-color-70: #008d52b3;
+    --main-color-80: #008d52cc;
+    --main-color-90: #008d52e6;
+    --main-black: #29343d;
+}
+
+body {
+    padding: 0;
+    margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+div,
+a,
+span,
+button,
+input,
+select,
+textarea,
+img,
+.quill {
+    margin: 0;
+    box-sizing: border-box;
+    font-family: "Rebond Grotesque";
+    font-style: normal;
+    font-weight: 500;
+}
+
+.editor-wrapper {
+    width: 100%;
+    overflow: hidden;
+    text-align: center;
+
+    .ql-container {
+        height: calc(100% - 42px);
+    }
+
+    .ql-toolbar {
+        border-radius: 8px 8px 0 0;
+    }
+
+    .ql-container.ql-snow {
+        border-radius: 0 0 8px 8px;
+    }
+
+    .pr-btn {
+        margin: 0 auto;
+        margin-top: 1rem;
+    }
+}
+
+input:not([type="checkbox"], [type="radio"]),
+select {
+    border: 1px solid var(--main-black);
+    outline: none;
+    border-radius: 0.5rem;
+    appearance: none;
+
+    &:focus {
+        border-color: var(--main-color);
+        outline: none;
+    }
+}
+
+//button
+.pr-btn,
+.sc-btn,
+.disable-btn,
+.delete-btn
+{
+    position: relative;
+    overflow: hidden;
+    border: none;
+    cursor: pointer;
+    z-index: 0;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 0.75rem;
+    transition: color 0.4s ease;
+    text-align: center;
+}
+
+.disable-btn {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+/* nền hiệu ứng chung */
+.pr-btn::before,
+.sc-btn::before,
+.delete-btn::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 0;
+    height: 100%;
+    z-index: -1;
+    transform: translateX(-50%);
+    transition: width 0.4s ease;
+}
+
+/* hiệu ứng bung nền */
+.pr-btn:hover::before,
+.sc-btn:hover::before,
+.delete-btn:hover::before {
+    width: 100%;
+}
+
+/* nút chính */
+.pr-btn {
+    background: var(--main-color);
+    color: #fff;
+    border: 1px solid var(--main-color);
+}
+.pr-btn::before {
+    background: #fff;
+}
+.pr-btn:hover {
+    color: var(--main-color);
+}
+
+.delete-btn {
+    background: #fff;
+    color: red;
+    border: 1px solid red;
+}
+.delete-btn::before {
+    background: red;
+}
+.delete-btn:hover {
+    color: #fff;
+}
+
+/* nút phụ */
+.sc-btn {
+    background: #fff;
+    color: var(--main-color);
+    border: 1px solid var(--main-color);
+}
+.sc-btn::before {
+    background: var(--main-color);
+}
+.sc-btn:hover {
+    color: #fff;
+}
+
+//form
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    .form-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+
+        .form-label {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: var(--main-black);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input-container {
+            position: relative;
+
+            .form-input-icon {
+                position: absolute;
+                top: 50%;
+                left: 0.75rem;
+                transform: translateY(-50%);
+                font-size: 2rem;
+                color: var(--main-color);
+                z-index: 10;
+            }
+
+            .form-input {
+                width: 100%;
+                padding: 1rem 0.75rem 1rem 3.5rem;
+                font-size: 1.25rem;
+                font-weight: 500;
+            }
+
+            .react-datepicker-wrapper {
+                width: 100%;
+            }
+        }
+
+        .form-note {
+            span {
+                font-size: 1.25rem;
+                color: var(--main-color);
+            }
+
+            font-size: 1rem;
+        }
+    }
+
+    .forgot-password {
+        font-size: 1.25rem;
+        font-weight: 500;
+        color: var(--main-color);
+        text-align: right;
+        cursor: pointer;
+    }
+}
+
+//table
+.table {
+    display: table;
+    width: 100%;
+    padding: 0 1.25rem; // 20px
+    border-collapse: collapse;
+    border-spacing: 0;
+
+    // Table header & body
+    .table-head,
+    .table-body {
+        display: table-row-group;
+    }
+
+    .table-head-row,
+    .table-body-row {
+        display: table-row;
+        border-bottom: 0.0625rem solid #e9ecef; // 1px
+
+        &:hover {
+            background-color: rgba(0, 0, 0, 0.02); // hover effect cho row
+        }
+    }
+
+    // Header cells
+    .table-head-cell,
+    .table-body-cell {
+        display: table-cell;
+        font-size: 1.25rem; // 15px
+        font-weight: 700;
+        color: var(--main-black);
+        padding: 0.8125rem; // 13px
+        text-align: left;
+        background-color: var(--main-color-10); // nền nhẹ cho header
+    }
+
+    // Body cells
+    .table-body-cell {
+        font-size: 1rem; // 15px
+        font-weight: 500;
+        background-color: transparent; // nền nhẹ cho header
+    }
+}
+
+.text-error {
+    color: red;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.css-b62m3t-container {
+    border: 1px solid var(--main-black);
+    border-radius: 0.5rem;
+}
+
+.busy-label {
+    background: #ccc;
+}
+
+.rbc-today {
+  background-color: transparent !important;
+}

@@ -1,0 +1,31 @@
+.week-calendar {
+    .delete-all {
+        font-size: 1.25rem;
+        padding: 0.5rem 1.25rem;
+        margin-bottom: 1rem;
+    }
+
+    .list-event {
+        h6 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--main-color);
+            margin: 0;
+            margin-bottom: 0.5rem;
+        }
+
+        .event-item {
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+
+            .delete-item {
+                margin-left: 0.5rem;
+                font-size: 1rem;
+                padding: 0.25rem 0.75rem;
+            }
+        }
+    }
+}

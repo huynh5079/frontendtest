@@ -1,0 +1,65 @@
+.student-schedule {
+    .week-filter {
+        display: flex;
+        justify-content: start;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+
+        .pr-btn,
+        .sc-btn {
+            padding: 0.5rem 1.25rem;
+            font-size: 1.25rem;
+        }
+    }
+
+    .today {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--main-color);
+        margin: 0;
+        margin-bottom: 1rem;
+
+        span {
+            color: var(--main-black);
+        }
+    }
+
+    .schedule-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: center;
+
+        th,
+        td {
+            border: 1px solid var(--main-color);
+            padding: 10px;
+            min-width: 80px;
+            cursor: pointer;
+        }
+
+        th {
+            background: var(--main-color-50);
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+
+        td {
+            font-size: 1.25rem;
+
+            &.slot-cell {
+                background: #fff;
+                transition: background 0.2s ease;
+
+                &:hover {
+                    background: #f0f8ff;
+                }
+
+                &.selected {
+                    background: var(--main-color);
+                    color: #fff;
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,143 @@
+#tutor-create-class-section {
+    .tccs-container {
+        max-width: 1200px;
+        margin: 0 auto;
+
+        .tccscr1 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: #fff;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+
+            h4 {
+                font-size: 1.5rem;
+                font-weight: 600;
+                color: var(--main-color);
+            }
+
+            p {
+                font-size: 1.25rem;
+                font-weight: 500;
+                color: var(--main-black);
+
+                span {
+                    background: var(--main-color-10);
+                    padding: 0.5rem 0.75rem;
+                    border-radius: 0.5rem;
+                    margin-left: 0.5rem;
+                }
+            }
+        }
+
+        .tccscr2 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: #fff;
+            border-radius: 1rem;
+            gap: 2rem;
+            margin-bottom: 2rem;
+
+            .sc-btn,
+            .pr-btn {
+                padding: 0.5rem 1.25rem;
+                font-size: 1.25rem;
+            }
+        }
+
+        .tccscr3 {
+            padding: 1rem 2rem;
+            background: #fff;
+            border-radius: 1rem;
+
+            .form {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+                margin-bottom: 1rem;
+
+                .form-field {
+                    text-align: start;
+
+                    .note {
+                        font-size: 1.15rem;
+                        font-weight: 500;
+                        color: var(--main-black);
+                        margin: 0;
+                        margin-bottom: 0.5rem;
+                    }
+                }
+
+                .form-input {
+                    flex: 1;
+                }
+
+                .calendar-container,
+                .note-container,
+                .price-container,
+                .form-submit {
+                    grid-column: span 2;
+                }
+
+                .note-container {
+                    p {
+                        text-align: start;
+                        font-size: 1.25rem;
+                        line-height: 2rem;
+                        font-weight: 700;
+                        color: var(--main-color);
+                        margin: 0;
+                        margin-bottom: 1rem;
+
+                        span {
+                            font-weight: 500;
+                            color: var(--main-black);
+                        }
+                    }
+                }
+
+                .price-container {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+
+                    .price-container-col {
+                        p {
+                            font-size: 1.25rem;
+                            font-weight: 700;
+                            color: var(--main-black);
+                            margin: 0;
+                            margin-bottom: 0.5rem;
+                        }
+
+                        h4 {
+                            font-size: 1.5rem;
+                            font-weight: 800;
+                            color: var(--main-color);
+                            margin: 0;
+                        }
+                    }
+                }
+            }
+
+            .pr-btn,
+            .disable-btn {
+                width: 100%;
+                padding: 0.5rem 1.25rem;
+                font-size: 1.25rem;
+                margin: 1rem auto;
+            }
+
+            h4 {
+                font-size: 1.25rem;
+                font-weight: 500;
+                color: var(--main-black);
+                margin-bottom: 0.5rem;
+            }
+        }
+    }
+}

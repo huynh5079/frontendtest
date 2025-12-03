@@ -1,0 +1,56 @@
+.fl-top {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+
+    @media (min-width: 1024px) {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.fl-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+
+    &:hover {
+        background-color: var(--main-color-10);
+    }
+
+    .icon {
+        font-size: 1.5rem;
+        color: #4b5563;
+        transition: color 0.3s ease;
+
+        .fl-item:hover & {
+            color: var(--main-color);
+        }
+    }
+
+    .fl-text {
+        h3 {
+            font-weight: 600;
+            color: #111;
+            transition: color 0.3s ease;
+            margin: 0;
+            margin-bottom: 0.5rem;
+        }
+        p {
+            font-size: 0.875rem;
+            color: #4b5563;
+            margin: 0;
+            transition: color 0.3s ease;
+        }
+    }
+
+    &:hover .fl-text h3 {
+        color: var(--main-black);
+    }
+
+    &:hover .fl-text p {
+        color: var(--main-black);
+    }
+}

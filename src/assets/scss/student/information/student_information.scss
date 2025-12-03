@@ -1,0 +1,24 @@
+#student-information-section {
+    flex: 1;
+    background-color: var(--main-color-10);
+    padding: 100px 20px;
+
+    .sis-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        gap: 2rem;
+
+        .siscc1 {
+            flex: 1;
+        }
+
+        .siscc2 {
+            flex: 3;
+            height: fit-content;
+            background: #fff;
+            padding: 2rem;
+            border-radius: 1rem;
+        }
+    }
+}

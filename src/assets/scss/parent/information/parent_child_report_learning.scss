@@ -1,0 +1,138 @@
+.parent-child-report-learning {
+    height: 100%;
+
+    .form {
+        max-width: 400px;
+        margin-bottom: 2rem;
+    }
+
+    .tabs {
+        display: flex;
+        align-items: center;
+        gap: 1.75rem;
+        font-size: 1.5rem;
+        text-transform: capitalize;
+        font-weight: 600;
+        color: var(--main-black);
+        margin-bottom: 1rem;
+
+        .tab {
+            position: relative;
+            transition: color 0.3s ease;
+            text-decoration: none;
+            cursor: pointer;
+
+            &:hover {
+                color: var(--main-color);
+            }
+
+            &.active {
+                font-weight: 700;
+                font-size: 1.75rem;
+                color: var(--main-color);
+            }
+
+            .underline {
+                position: absolute;
+                bottom: -2px;
+                height: 2px;
+                background-color: var(--main-color);
+                width: 0;
+                transition: all 0.3s ease;
+            }
+
+            .underline.left {
+                left: 50%;
+            }
+
+            .underline.right {
+                right: 50%;
+            }
+
+            &:hover:not(.active) .underline.left {
+                width: 50%;
+                left: 0;
+            }
+
+            &:hover:not(.active) .underline.right {
+                width: 50%;
+                right: 0;
+            }
+
+            .underline.full {
+                width: 50%;
+            }
+        }
+    }
+
+    .form-field {
+        width: 300px;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+
+        .form-label {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: var(--main-black);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input-container {
+            position: relative;
+
+            .form-input-icon {
+                position: absolute;
+                top: 50%;
+                left: 0.75rem;
+                transform: translateY(-50%);
+                font-size: 2rem;
+                color: var(--main-color);
+                z-index: 10;
+            }
+
+            .form-input {
+                width: 100%;
+                padding: 1rem 0.75rem 1rem 3.5rem;
+                font-size: 1.25rem;
+                font-weight: 500;
+            }
+
+            .react-datepicker-wrapper {
+                width: 100%;
+            }
+        }
+
+        .form-note {
+            span {
+                font-size: 1.25rem;
+                color: var(--main-color);
+            }
+
+            font-size: 1rem;
+        }
+    }
+
+    .pie-chart {
+        width: 300px;
+        height: 300px;
+
+        .recharts-wrapper *:focus {
+            outline: none;
+
+            .recharts-default-legend {
+                width: fit-content;
+                margin: 0 auto !important;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 1rem;
+
+                .recharts-legend-item {
+                    display: flex !important;
+                    align-items: center !important;
+                }
+            }
+        }
+    }
+}

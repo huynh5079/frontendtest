@@ -1,0 +1,62 @@
+.parent-profile {
+    .avatar-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        h5 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--main-color);
+            margin-bottom: 1rem;
+        }
+
+        .avatar {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            margin-bottom: 1rem;
+            background: #000;
+            border: 5px solid var(--main-color);
+        }
+
+        .group-btn {
+            width: 300px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+
+            .pr-btn,
+            .sc-btn {
+                flex: 1;
+                padding: 0.5rem 1.25rem;
+                font-size: 1.25rem;
+                text-align: center;
+            }
+        }
+    }
+
+    .form {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .group-btn {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+
+        .pr-btn,
+        .sc-btn {
+            flex: 1;
+            padding: 0.75rem 1.25rem;
+            font-size: 1.25rem;
+        }
+    }
+}

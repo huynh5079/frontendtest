@@ -1,0 +1,16 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "target": "ES2023",
+        "lib": ["ES2023", "DOM"],
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "strict": true,
+        "jsx": "react-jsx", // <-- Thêm dòng này
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "composite": true,
+        "skipLibCheck": true
+    },
+    "include": ["src"]
+}

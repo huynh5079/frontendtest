@@ -1,0 +1,74 @@
+#admin-sidebar {
+    .as-container {
+        padding: 2rem 1rem;
+
+        .ascr1 {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .ascr2 {
+            h4 {
+                font-size: 1.25rem;
+                font-weight: 600;
+                color: var(--main-color);
+                margin-bottom: 0.5rem;
+            }
+
+            .ascr2-nav-item,
+            .ascr2-nav-link {
+                width: 100%;
+                display: flex;
+                justify-content: flex-start;
+                text-decoration: none;
+                align-items: center;
+                font-size: 1.25rem;
+                font-weight: 500;
+                line-height: normal;
+                color: var(--main-color);
+                cursor: pointer;
+                overflow: hidden;
+                white-space: nowrap;
+
+                .ascr2-nav-icon {
+                    font-size: 1.5rem;
+                    color: var(--main-color);
+                    margin-right: 1rem;
+                    flex-shrink: 0;
+                }
+
+                span {
+                    display: inline-block;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    transition: all 0.3s ease-in-out;
+                }
+            }
+
+            .ascr2-nav-item {
+                padding: 1.25rem;
+                margin-bottom: 0.5rem;
+                border-radius: 1rem;
+
+                &:not(.nav-active):hover {
+                    background-color: var(--main-color-50);
+                }
+            }
+
+            .nav-active {
+                background-color: var(--main-color);
+                box-shadow: 0 1.0625rem 1.25rem -0.5rem var(--main-color-20);
+
+                .ascr2-nav-link {
+                    span,
+                    .ascr2-nav-icon {
+                        color: #fff;
+                        font-weight: 600;
+                    }
+                }
+            }
+        }
+    }
+}

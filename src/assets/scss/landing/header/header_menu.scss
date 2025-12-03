@@ -1,0 +1,61 @@
+.hl-menu {
+    display: none;
+    align-items: center;
+    gap: 1.75rem;
+    font-size: 1rem;
+    text-transform: capitalize;
+    font-weight: 600;
+    color: var(--main-black);
+
+    @media (min-width: 768px) {
+        display: inline-flex;
+    }
+}
+
+.hl-link {
+    position: relative;
+    color: inherit;
+    transition: color 0.3s ease;
+    text-decoration: none;
+
+    &:hover {
+        color: var(--main-color);
+    }
+
+    &.active {
+        font-weight: 700;
+        font-size: 1.25rem;
+        color: var(--main-color);
+    }
+}
+
+.underline {
+    position: absolute;
+    bottom: -2px;
+    height: 2px;
+    background-color: var(--main-color);
+    width: 0;
+    transition: all 0.3s ease;
+}
+
+.underline.left {
+    left: 50%;
+}
+
+.underline.right {
+    right: 50%;
+}
+
+.hl-link:hover:not(.active) .underline.left {
+    width: 50%;
+    left: 0;
+}
+
+.hl-link:hover:not(.active) .underline.right {
+    width: 50%;
+    right: 0;
+}
+
+.underline.full {
+    width: 50%;
+}

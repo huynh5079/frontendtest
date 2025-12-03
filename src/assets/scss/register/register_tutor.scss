@@ -1,0 +1,134 @@
+#register-tutor-section {
+    background-color: var(--main-color-10);
+    padding: 150px 20px;
+
+    .rts-container {
+        max-width: 1300px;
+        height: 100%;
+        background: #fff;
+        border-radius: 2rem;
+        margin: 0 auto;
+        padding: 100px 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 4rem;
+
+        h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--main-color);
+            margin: 0;
+        }
+
+        .rtscr1 {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4rem;
+            margin-bottom: 2rem;
+
+            .rtscr1-step {
+                padding: 1.5rem 1.25rem;
+                border-radius: 1.5rem;
+                font-size: 1.25rem;
+                font-weight: 500;
+                cursor: pointer;
+
+                span {
+                    color: #fff;
+                    padding: 0.5rem 0.75rem;
+                    font-size: 1rem;
+                    font-weight: 500;
+                    margin-right: 0.75rem;
+                    background-color: var(--main-black);
+                    border-radius: 50%;
+                }
+
+                &:hover {
+                    background-color: var(--main-color-10);
+                }
+
+                &.rtscr1-step-active {
+                    background-color: var(--main-color-10);
+
+                    span {
+                        background-color: var(--main-color);
+                    }
+                }
+            }
+        }
+
+        .rtscr2-content {
+            width: 1000px;
+
+            &::-webkit-scrollbar {
+                display: none;
+            }
+
+            .form {
+                width: 100%;
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 2rem;
+
+                .react-datepicker-wrapper {
+                    width: 100%;
+                }
+
+                .form-field-textarea {
+                    grid-column: span 2;
+                }
+            }
+
+            .group-btn {
+                display: flex;
+                justify-content: space-between;
+                gap: 1rem;
+                margin-top: 2rem;
+
+                .sc-btn,
+                .pr-btn,
+                .disable-btn {
+                    padding: 1rem 1.5rem;
+                    font-size: 1.25rem;
+                }
+
+                .sc-btn {
+                    margin-right: auto;
+                }
+
+                .pr-btn {
+                    margin-left: auto;
+                }
+            }
+
+            .step {
+                transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
+            }
+
+            @keyframes slide-in-right {
+                0% {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                100% {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes slide-in-left {
+                0% {
+                    transform: translateX(-100%);
+                    opacity: 0;
+                }
+                100% {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+        }
+    }
+}

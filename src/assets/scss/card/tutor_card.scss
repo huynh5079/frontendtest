@@ -1,0 +1,111 @@
+.tutor-card-container {
+    width: 30%;
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+
+    &:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .ttc-image {
+        margin-bottom: 1rem;
+
+        img {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 4px solid #e6f0ff;
+            transition: border-color 0.3s ease;
+
+            &:hover {
+                border-color: #99c2ff;
+            }
+        }
+    }
+
+    .ttc-info {
+        margin-bottom: 1rem;
+
+        .ttci-name {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--main-black);
+            margin-bottom: 0.5rem;
+        }
+
+        .ttci-specialties {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ttci-specialty {
+            width: fit-content;
+            padding: 0.25rem 0.5rem;
+            margin: 0 0.25rem;
+            color: #fff;
+            background: var(--main-color);
+            border-radius: 1rem;
+        }
+    }
+
+    .ttc-rating {
+        margin-bottom: 1rem;
+
+        .star-rating {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 0.25rem;
+
+            .star {
+                width: 18px;
+                height: 18px;
+                color: #ccc;
+                margin: 0 2px;
+
+                &.filled {
+                    color: #facc15; // vàng
+                }
+            }
+        }
+
+        .ttc-reviews {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            align-items: center;
+
+            .rating {
+                font-weight: 600;
+                color: #16a34a;
+            }
+
+            .reviews {
+                font-size: 0.875rem;
+                color: #666;
+            }
+        }
+    }
+
+    .ttc-btn {
+        background: #2563eb;
+        color: #fff;
+        padding: 0.5rem 1.25rem;
+        border: none;
+        border-radius: 9999px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background 0.3s ease;
+
+        &:hover {
+            background: #1d4ed8;
+        }
+    }
+}

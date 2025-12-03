@@ -1,0 +1,44 @@
+.landing-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .lb-content {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+
+        .lbcr1 {
+            h2 {
+                font-size: 2.5rem;
+                font-weight: 800;
+                color: var(--main-color);
+                margin: 0;
+            }
+        }
+
+        .lbcr2 {
+            display: flex;
+            gap: 0.75rem;
+
+            .lb-button {
+                padding: 0.5rem 1.25rem;
+                border-radius: 0.5rem;
+            }
+        }
+    }
+
+    .lb-image {
+        display: none;
+
+        @media (min-width: 768px) {
+            display: inline-flex;
+            width: 24rem;
+
+            img {
+                max-width: 100%;
+                height: auto;
+            }
+        }
+    }
+}

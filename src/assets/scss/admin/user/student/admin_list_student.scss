@@ -1,0 +1,159 @@
+#admin-list-student-section {
+    .alss-container {
+        max-width: 1200px;
+        margin: 0 auto;
+
+        .alsscr1 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: #fff;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+
+            h4 {
+                font-size: 1.5rem;
+                font-weight: 600;
+                color: var(--main-color);
+            }
+
+            p {
+                font-size: 1.25rem;
+                font-weight: 500;
+                color: var(--main-black);
+
+                span {
+                    background: var(--main-color-10);
+                    padding: 0.5rem 0.75rem;
+                    border-radius: 0.5rem;
+                    margin-left: 0.5rem;
+                }
+            }
+        }
+
+        .alsscr2 {
+            display: flex;
+            justify-content: start;
+            align-items: start;
+            gap: 2rem;
+            margin-bottom: 2rem;
+
+            .alsscr2-item {
+                width: 300px;
+                background: #fff;
+                border-radius: 1rem;
+                padding: 1rem;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                justify-content: start;
+                gap: 1rem;
+                transition: all 0.3s ease;
+
+                .alsscr2-item-icon {
+                    padding: 0.5rem;
+                    font-size: 1.75rem;
+                    background: var(--main-color);
+                    border-radius: 0.75rem;
+                    color: #fff;
+                }
+
+                h5 {
+                    font-size: 1.25rem;
+                    font-weight: 600;
+                    color: var(--main-color);
+                    margin-bottom: 0.5rem;
+                }
+
+                p {
+                    font-size: 1rem;
+                    font-weight: 500;
+                    color: var(--main-color);
+                }
+
+                &:hover {
+                    background: var(--main-color-50);
+
+                    h5, p {
+                        color: #fff;
+                    }
+                }
+
+                &.active {
+                    background: var(--main-color);
+
+                    .alsscr2-item-icon {
+                        background: #fff;
+                        color: var(--main-color);
+                    }
+
+                    h5,
+                    p {
+                        color: #fff;
+                    }
+                }
+            }
+        }
+
+        .alsscr3 {
+            padding: 1rem 2rem;
+            background: #fff;
+            border-radius: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+
+            p {
+                font-size: 1.5rem;
+                font-weight: 700;
+                color: var(--main-black);
+
+                span {
+                    font-size: 1.25rem;
+                    font-weight: 500;
+                }
+            }
+
+            .pr-btn {
+                padding: 0.25rem 0.75rem;
+                font-size: 1rem;
+            }
+        }
+
+        .alsscr4 {
+            width: fit-content;
+            margin: 0 auto;
+            padding: 0.5rem;
+            background: #fff;
+            border-radius: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+
+            .alsscr4-item {
+                padding: 0.5rem 0.6rem;
+                border-radius: 50%;
+                cursor: pointer;
+                
+                .alsscr4-item-icon {
+                    font-size: 1rem;
+                }
+
+                &:hover {
+                    background: var(--main-color);
+                    color: #fff;
+                }
+            }
+
+            .alsscr4-page {
+                font-size: 1.5rem;
+                font-weight: 700;
+                color: var(--main-black);
+            }
+        }
+    }
+}

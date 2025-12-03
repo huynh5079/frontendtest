@@ -1,0 +1,31 @@
+#tutor {    
+    #tutor-header {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: calc(100% - 300px);
+    }
+
+    #tutor-sidebar {
+        position: fixed;
+        width: 300px;
+        height: 100%;
+        left: 0;
+        top: 0;
+        overflow-y: auto;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+    }
+
+    #tutor-main {
+        margin-top: 96px;
+        margin-left: 300px;
+        background: var(--main-color-10);
+        border-radius: 2rem;
+        min-height: calc(100vh - 160px);
+        padding: 2rem;
+        overflow-y: auto;
+    }
+}

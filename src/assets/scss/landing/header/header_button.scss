@@ -1,0 +1,9 @@
+.hl-button {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    .hl-login-btn, .hl-reg-btn {
+        padding: 0.5rem 1.25rem;
+    }
+}

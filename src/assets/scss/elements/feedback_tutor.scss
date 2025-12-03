@@ -1,0 +1,70 @@
+.feedback-tutor {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    .account {
+        display: flex;
+        align-items: center;
+        justify-content: start;
+        gap: 1rem;
+
+        .avatar {
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 50%;
+            border: 2px solid #ccc;
+            object-fit: cover;
+        }
+
+        .info {
+            h5 {
+                font-size: 1.25rem;
+                font-weight: 700;
+                color: var(--main-black);
+                margin: 0;
+                margin-bottom: 0.5rem;
+
+                span {
+                    font-size: 1rem;
+                    font-weight: 500;
+                    color: var(--main-black);
+                    margin-left: 0.75rem;
+                }
+            }
+
+            p {
+                font-size: 1.25rem !important;
+                font-weight: 500;
+                color: var(--main-black);
+                margin: 0;
+            }
+        }
+    }
+
+    .action {
+        display: flex;
+        gap: 0.5rem;
+
+        .like {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: var(--main-black);
+            margin-left: 4rem;
+            cursor: pointer;
+        }
+
+        .liked {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: var(--main-color);
+            margin-left: 4rem;
+            cursor: pointer;
+        }
+    }
+
+    .answer {
+        margin-left: 4rem;
+        margin-top: 0.5rem;
+    }
+}

@@ -1,0 +1,173 @@
+#admin-header {
+    .ah-conatiner {
+        padding: 1rem 5rem 1rem 1rem;
+        display: flex;
+        justify-content: end;
+        align-items: center;
+        gap: 2rem;
+
+        .icon {
+            padding: 1rem;
+            font-size: 2rem;
+            color: var(--main-color);
+            cursor: pointer;
+
+            &:hover {
+                background-color: var(--main-color-10);
+                border-radius: 50%;
+            }
+        }
+
+        .avatar {
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 50%;
+            object-fit: cover;
+            cursor: pointer;
+            background-color: #000;
+        }
+
+        .sub-menu {
+            position: absolute;
+            top: 5.5rem;
+            right: 1rem;
+            background: #fff;
+            box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+            border-radius: 0.5rem;
+            border: 1px solid var(--main-color);
+            padding: 0.5rem;
+            z-index: 10;
+
+            ul {
+                padding: 0;
+                margin: 0;
+                display: flex;
+                flex-direction: column;
+
+                li {
+                    font-size: 1.25rem;
+                    font-weight: 500;
+                    list-style: none;
+                    padding: 0.75rem 2rem;
+                    cursor: pointer;
+                    transition: background-color 0.3s ease;
+
+                    &:hover {
+                        background-color: var(--main-color-10);
+                    }
+                }
+            }
+        }
+
+        .sub-notification {
+            width: 350px;
+            position: absolute;
+            top: 5.5rem;
+            right: 1rem;
+            background: #fff;
+            box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+            border-radius: 0.5rem;
+            border: 1px solid var(--main-color);
+            padding: 0.5rem;
+            z-index: 10;
+
+            .tabs {
+                display: flex;
+                align-items: center;
+                justify-content: start;
+                gap: 1rem;
+                margin-bottom: 1rem;
+
+                .tab {
+                    position: relative;
+                    color: inherit;
+                    transition: color 0.3s ease;
+                    text-decoration: none;
+                    cursor: pointer;
+
+                    &:hover {
+                        color: var(--main-color);
+                    }
+
+                    &.active {
+                        font-weight: 600;
+                        font-size: 1.25rem;
+                        color: var(--main-color);
+                    }
+                }
+
+                .underline {
+                    position: absolute;
+                    bottom: -2px;
+                    height: 2px;
+                    background-color: var(--main-color);
+                    width: 0;
+                    transition: all 0.3s ease;
+                }
+
+                .underline.left {
+                    left: 50%;
+                }
+
+                .underline.right {
+                    right: 50%;
+                }
+
+                .tab:hover:not(.active) .underline.left {
+                    width: 50%;
+                    left: 0;
+                }
+
+                .tab:hover:not(.active) .underline.right {
+                    width: 50%;
+                    right: 0;
+                }
+
+                .underline.full {
+                    width: 50%;
+                }
+            }
+
+            h4 {
+                font-size: 1.55rem;
+                font-weight: 700;
+                color: var(--main-color);
+                margin-bottom: 0.75rem;
+                text-align: center;
+            }
+
+            ul {
+                padding: 0;
+                margin: 0;
+                display: flex;
+                flex-direction: column;
+
+                div {
+                    font-size: 1.25rem;
+                    font-weight: 500;
+                    padding: 0.75rem 2rem;
+                    text-align: center;
+                }
+
+                li {
+                    font-size: 1.25rem;
+                    font-weight: 500;
+                    list-style: none;
+                    padding: 0.75rem 1rem;
+                    border-radius: 0.5rem;
+                    cursor: pointer;
+                    transition: background-color 0.3s ease;
+                    margin: 0.5rem 0;
+
+                    &.n-unread {
+                        background-color: var(--main-color-50);
+                    }
+
+                    &:hover {
+                        background-color: var(--main-color-20);
+                    }
+                }
+            }
+        }
+    }
+}

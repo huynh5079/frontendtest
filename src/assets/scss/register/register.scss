@@ -1,0 +1,42 @@
+#register-section {
+    background-image: url("../../images/login_banner.svg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    
+    .rs-container {
+        max-width: 1300px;
+        height: 100%;
+        margin: 0 auto;
+        padding: 100px 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: start;
+        gap: 4rem;
+
+        .rscr1,
+        .rscr2 {
+            position: relative;
+            min-width: 550px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+            li {
+                font-size: 1.5rem;
+                margin-bottom: 0.5rem;
+                font-weight: 500;
+            }
+
+            button {
+                padding: 1rem;
+                font-size: 1.25rem;
+                border-radius: 0.5rem;
+            }
+        }
+    }
+}

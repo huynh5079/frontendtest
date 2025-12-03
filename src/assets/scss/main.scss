@@ -1,0 +1,243 @@
+//base_project
+@use "./base_project.scss";
+
+//about
+@use "./about/about.scss";
+
+//landing
+@use "./landing/landing.scss";
+//landing_banner
+@use "./landing/landing_banner.scss";
+//landing_top_tutor
+@use "./landing/landing_top_tutor.scss";
+//header
+@use "./landing/header/header.scss";
+//header_logo
+@use "./landing/header/header_logo.scss";
+//header_menu
+@use "./landing/header/header_menu.scss";
+//header_button
+@use "./landing/header/header_button.scss";
+//footer
+@use "./landing/footer/footer.scss";
+//footer_logo
+@use "./landing/footer/footer_logo.scss";
+//footer_top
+@use "./landing/footer/footer_top.scss";
+//footer_social_media
+@use "./landing/footer/footer_social_media.scss";
+
+//login
+@use "./login/login.scss";
+
+//forgot_password
+@use "./forgot_password/forgot_password.scss";
+
+//verify_otp
+@use "./verify_otp/verify_otp.scss";
+
+//register
+@use "./register/register.scss";
+//register_student
+@use "./register/register_student.scss";
+//register_tutor
+@use "./register/register_tutor.scss";
+//register_parent
+@use "./register/register_parent.scss";
+
+//element
+//otp_input
+@use "./elements/otp_input.scss";
+//price_range_filter
+@use "./elements/price_range_filter.scss";
+//feedback_tutor
+@use "./elements/feedback_tutor.scss";
+//loading_spinner
+@use "./elements/loading_spinner.scss";
+//week_calendar
+@use "./elements/week_calendar.scss";
+
+//tutor
+//tutor_list
+@use "./tutor/list/list_tutor.scss";
+//tutor_filter
+@use "./tutor/list/filter_tutor.scss";
+//tutor_detail
+@use "./tutor/detail/detail_tutor.scss";
+//manage
+@use "./tutor/manage/tutor.scss";
+//manage_sidebar
+@use "./tutor/manage/sidebar/tutor_sidebar.scss";
+//manage_sidebar_logo
+@use "./tutor/manage/sidebar/tutor_sidebar_logo.scss";
+//manage_header
+@use "./tutor/manage/header/tutor_header.scss";
+//manage_dashboard
+@use "./tutor/manage/dashboard/tutor_dashboard.scss";
+//manage_schedule
+@use "./tutor/manage/schedule/tutor_schedule.scss";
+//manage_class
+@use "./tutor/manage/class/tutor_class.scss";
+//manage_class_detail
+@use "./tutor/manage/class/detail_tutor_class.scss";
+//manage_create_class
+@use "./tutor/manage/class/tutor_create_class.scss";
+//manage_information
+@use "./tutor/manage/information/tutor_information.scss";
+//manage_change_password
+@use "./tutor/manage/information/tutor_change_password.scss";
+//manage_wallet
+@use "./tutor/manage/wallet/tutor_wallet.scss";
+//manage_booking_list
+@use "./tutor/manage/booking/list_tutor_booking.scss";
+//manage_booking_detail
+@use "./tutor/manage/booking/detail_tutor_booking.scss";
+//manage_request_find_tutor_list
+@use "./tutor/manage/request_find_tutor/list_request_find_tutor_for_tutor.scss";
+//manage_request_find_tutor_detail
+@use "./tutor/manage/request_find_tutor/detail_request_find_tutor_for_tutor.scss";
+
+//card
+//tutor_card
+@use "./card/tutor_card.scss";
+//course_card
+@use "./card/course_card.scss";
+//tutor_schedule_card
+@use "./card/tutor_schedule_card.scss";
+
+//course
+//course_list
+@use "./course/list/list_course.scss";
+//course_filter
+@use "./course/list/filter_course.scss";
+//course_detail
+@use "./course/detail/detail_course.scss";
+//schedule_table
+@use "./course/detail/schedule_table.scss";
+
+//student
+@use "./student/student.scss";
+//header
+@use "./student/header/student_header.scss";
+//header_logo
+@use "./student/header/student_header_logo.scss";
+//header_menu
+@use "./student/header/student_header_menu.scss";
+//header_button
+@use "./student/header/student_header_button.scss";
+//footer
+@use "./student/footer/student_footer.scss";
+//footer_logo
+@use "./student/footer/student_footer_logo.scss";
+//footer_top
+@use "./student/footer/student_footer_top.scss";
+//footer_social_media
+@use "./student/footer/student_footer_social_media.scss";
+//information
+@use "./student/information/student_information.scss";
+//information_sidebar
+@use "./student/information/student_sidebar.scss";
+//profile
+@use "./student/information/student_profile.scss";
+//change_password
+@use "./student/information/student_change_pasword.scss";
+//wallet
+@use "./student/information/student_wallet.scss";
+//booking_tutor
+@use "./student/information/student_booking_tutor.scss";
+//schedule
+@use "./student/information/student_schedule.scss";
+//request_find_tutor
+@use "./student/information/student_request_find_tutor.scss";
+//report_learning
+@use "./student/information/student_report_learning.scss";
+//book_tutor
+@use "./student/book/student_book_tutor.scss";
+//student_assigned_class
+@use "./student/information/student_assigned_class.scss";
+
+//parent
+@use "./parent/parent.scss";
+//header
+@use "./parent/header/parent_header.scss";
+//header_logo
+@use "./parent/header/parent_header_logo.scss";
+//header_menu
+@use "./parent/header/parent_header_menu.scss";
+//header_button
+@use "./parent/header/parent_header_button.scss";
+//footer
+@use "./parent/footer/parent_footer.scss";
+//footer_logo
+@use "./parent/footer/parent_footer_logo.scss";
+//footer_top
+@use "./parent/footer/parent_footer_top.scss";
+//footer_social_media
+@use "./parent/footer/parent_footer_social_media.scss";
+//book_tutor
+@use "./parent/book/parent_book_tutor.scss";
+//information
+@use "./parent/information/parent_information.scss";
+//information_sidebar
+@use "./parent/information/parent_sidebar.scss";
+//profile
+@use "./parent/information/parent_profile.scss";
+//change_password
+@use "./parent/information/parent_change_pasword.scss";
+//wallet
+@use "./parent/information/parent_wallet.scss";
+//child_schedule
+@use "./parent/information/parent_child_schedule.scss";
+//report_learning
+@use "./parent/information/parent_child_report_learning.scss";
+//child_account
+@use "./parent/information/parent_child_account.scss";
+//request_find_tutor
+@use "./parent/information/parent_request_find_tutor.scss";
+
+//admin
+@use "./admin/admin.scss";
+//header
+@use "./admin/header/admin_header.scss";
+//sidebar
+@use "./admin/sidebar/admin_sidebar.scss";
+//sidebar_logo
+@use "./admin/sidebar/admin_sidebar_logo.scss";
+//dashboard
+@use "./admin/dashboard/admin_dashboard.scss";
+//user/student
+@use "./admin/user/student/admin_list_student.scss";
+@use "./admin/user/student/admin_detail_student.scss";
+//user/parent
+@use "./admin/user/parent/admin_list_parent.scss";
+@use "./admin/user/parent/admin_detail_parent.scss";
+//user/tutor
+@use "./admin/user/tutor/admin_list_tutor.scss";
+@use "./admin/user/tutor/admin_detail_tutor.scss";
+//manage/class
+@use "./admin/manage/class/admin_list_class.scss";
+//manage/notification
+@use "./admin/manage/notification/admin_list_notification.scss";
+//manage/report
+@use "./admin/manage/report/admin_list_report.scss";
+//transaction/tutor
+@use "./admin/transaction/tutor/admin_list_tutor_transaction.scss";
+//transaction/student
+@use "./admin/transaction/student/admin_list_student_transaction.scss";
+//transaction/parent
+@use "./admin/transaction/parent/admin_list_parent_transaction.scss";
+
+//modal
+@use "./modal/modal.scss";
+//create_availability_block_for_tutor_modal
+@use "./modal/create_availability_block_for_tutor_modal.scss";
+//delete_availability_block_for_tutor_modal
+@use "./modal/delete_availability_block_for_tutor_modal.scss";
+//remind_login_modal
+@use "./modal/remind_login_modal.scss";
+//update_booking_tutor_for_student_modal
+@use "./modal/update_booking_tutor_for_student_modal.scss";
+//cancel_booking_tutor_for_student_modal
+@use "./modal/cancel_booking_tutor_for_student_modal.scss";
+//student_assign_class_modal
+@use "./modal/student_assign_class_modal.scss";

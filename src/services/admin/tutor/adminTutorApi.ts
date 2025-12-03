@@ -1,0 +1,27 @@
+import type { RejectTutor, ProvideTutor } from "../../../types/admin";
+import request from "../../request";
+
+export const getAllTutorForAdminApi = async (page: number) => {
+    const data = await request.get(`admin/tutor?page=${page}`);
+    return data.data;
+};
+
+export const getDetailTutorForAdminApi = async (tutorId: string) => {
+    const data = await request.get(`admin/tutor/detail/${tutorId}`);
+    return data.data;
+}
+
+export const acceptTutorApi = async (tutorId: string) => {
+    const data = await request.put(`admin/tutor/accept/${tutorId}`);
+    return data.data;
+}
+
+export const rejectTutorApi = async (tutorId: string, params: RejectTutor) => {
+    const data = await request.put(`admin/tutor/reject/${tutorId}`, params);
+    return data.data;
+}
+
+export const providetutorApi = async (tutorId: string, params: ProvideTutor) => {
+    const data = await request.put(`admin/tutor/provide/${tutorId}`, params);
+    return data.data;
+}

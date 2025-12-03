@@ -1,0 +1,11 @@
+{
+    "references": [
+        { "path": "./tsconfig.app.json" },
+    ],
+    "compilerOptions": {
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true
+    },
+    "include": ["src"]
+}

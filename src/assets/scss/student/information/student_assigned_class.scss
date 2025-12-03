@@ -1,0 +1,27 @@
+.student-assigned-class {
+    .sacr1 {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+
+        .pr-btn {
+            padding: 0.75rem 1.25rem;
+            font-size: 1.25rem;
+        }
+
+        h3 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--main-color);
+            margin-bottom: 1rem;
+        }
+    }
+
+    .sacr2 {
+        .pr-btn {
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+        }
+    }
+}

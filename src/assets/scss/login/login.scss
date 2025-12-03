@@ -1,0 +1,75 @@
+#login-section {
+    background-color: var(--main-color-10);
+    padding: 150px 20px;
+
+    .ls-container {
+        padding: 100px;
+        max-width: 1400px;
+        margin: 0 auto;
+        background: #fff;
+        border-radius: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+
+        .lscc1,
+        .lscc2 {
+            flex: 1;
+        }
+
+        .lscc2 {
+            h2 {
+                font-size: 1.75rem;
+                font-weight: 800;
+                color: var(--main-color);
+                margin: 0;
+                text-transform: uppercase;
+                margin-bottom: 2rem;
+            }
+
+            .pr-btn, .disable-btn {
+                padding: 1rem 1.25rem;
+                font-size: 1.25rem;
+                margin-top: 1rem;
+            }
+
+            .no-account {
+                font-size: 1.25rem;
+                font-weight: 500;
+                margin-top: 1rem;
+                text-align: center;
+            }
+
+            .reg-now-container {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin-top: 1rem;
+
+                .line-left,
+                .line-right {
+                    flex: 1;
+                    height: 2px;
+                    background-color: var(--main-color);
+                }
+
+                .reg-now-text {
+                    font-size: 1.5rem;
+                    font-weight: 600;
+                    color: var(--main-color);
+                    margin: 0 1rem;
+                    cursor: pointer;
+                }
+            }
+        }
+
+        .lscc1 {
+            background-image: url("../../images/login_tutor_banner.webp");
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 400px;
+        }
+    }
+}

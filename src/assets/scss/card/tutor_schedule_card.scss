@@ -1,0 +1,44 @@
+.tutor-schedule-card {
+    width: 350px;
+    padding: 2rem;
+    border: 1px solid var(--main-color);
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px var(--main-color-20);
+    transition: all 0.3s ease;
+    cursor: pointer;
+
+    .student-name {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--main-color);
+        margin-bottom: 1em;
+    }
+
+    .subject,
+    .time {
+        font-size: 1.25rem;
+        font-weight: 500;
+        color: var(--main-black);
+        margin-bottom: 0.5rem;
+    }
+
+    .time {
+        font-size: 1.15rem;
+        margin-bottom: 1rem;
+    }
+
+    .format {
+        font-size: 1.25rem;
+        font-weight: 500;
+        color: var(--main-black);
+        padding: 0.5rem 1rem;
+        background: var(--main-color-10);
+        border-radius: 1rem;
+        text-align: center;
+    }
+
+    &:hover {
+        margin-top: -0.5rem;
+        box-shadow: 0 8px 20px var(--main-color-40);
+    }
+}

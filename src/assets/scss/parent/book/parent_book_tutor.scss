@@ -1,0 +1,206 @@
+#parent-book-tutor-section {
+    background: var(--main-color-10);
+    padding: 2rem;
+
+    .pbts-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: #fff;
+        border-radius: 1rem;
+        padding: 2rem;
+        text-align: center;
+
+        h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--main-color);
+            margin: 0;
+            margin-bottom: 3rem;
+        }
+
+        .form {
+            max-width: 800px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-bottom: 2rem;
+
+            .form-field {
+                text-align: start;
+
+                .note {
+                    font-size: 1.15rem;
+                    font-weight: 500;
+                    color: var(--main-black);
+                    margin: 0;
+                    margin-bottom: 0.5rem;
+                }
+            }
+
+            .form-input {
+                flex: 1;
+            }
+
+            .calendar-container,
+            .note-container,
+            .price-container,
+            .form-submit {
+                grid-column: span 2;
+            }
+
+            .note-container {
+                p {
+                    text-align: start;
+                    font-size: 1.25rem;
+                    line-height: 2rem;
+                    font-weight: 700;
+                    color: var(--main-color);
+                    margin: 0;
+                    margin-bottom: 1rem;
+
+                    span {
+                        font-weight: 500;
+                        color: var(--main-black);
+                    }
+                }
+            }
+
+            .price-container {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+
+                .price-container-col {
+                    p {
+                        font-size: 1.25rem;
+                        font-weight: 700;
+                        color: var(--main-black);
+                        margin: 0;
+                        margin-bottom: 0.5rem;
+                    }
+
+                    h4 {
+                        font-size: 1.5rem;
+                        font-weight: 800;
+                        color: var(--main-color);
+                        margin: 0;
+                    }
+                }
+            }
+        }
+
+        .study-type {
+            text-align: center;
+            margin-bottom: 2rem;
+
+            .study-type-container {
+                display: flex;
+                justify-content: center;
+                gap: 1rem;
+
+                .study-type-item {
+                    position: relative;
+                    width: 300px;
+                    padding: 0.75rem 1.25rem;
+                    border-radius: 1rem;
+                    font-size: 1.25rem;
+                    cursor: pointer;
+                    transition: all 0.2s ease-in-out;
+                    border: 1px solid var(--main-color);
+
+                    .tick {
+                        display: none;
+                        position: absolute;
+                        top: -1.5rem;
+                        right: -0.8rem;
+                        font-size: 2rem;
+                        color: var(--main-color);
+                        z-index: 1;
+                    }
+
+                    h4 {
+                        font-size: 1.25rem;
+                        font-weight: 600;
+                        color: var(--main-color);
+                        margin: 0;
+                        margin-bottom: 0.5rem;
+                    }
+
+                    p {
+                        font-size: 1rem;
+                        font-weight: 500;
+                        color: var(--main-black);
+                        margin: 0;
+                    }
+
+                    &:hover:not(.active) {
+                        box-shadow: 0 0 10px var(--main-color);
+                    }
+
+                    &.active {
+                        border: 4px solid var(--main-color);
+
+                        .tick {
+                            display: block;
+                        }
+                    }
+                }
+            }
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--main-black);
+            margin: 0;
+            margin-bottom: 1rem;
+        }
+
+        .note {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--main-black);
+            margin: 0;
+            margin-bottom: 1rem;
+        }
+
+        table {
+            margin-bottom: 3rem;
+
+            .slot-cell.booked,
+            .disabled {
+                background-color: #ddd;
+                color: #999;
+                cursor: not-allowed;
+            }
+        }
+
+        .payment-btn {
+            width: 400px;
+            padding: 0.75rem 1.25rem;
+            font-size: 1.25rem;
+            margin: 0 auto;
+        }
+
+        .group-btn {
+            display: flex;
+            justify-content: start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+
+            button {
+                padding: 0.5rem 1.5rem;
+                font-size: 1.25rem;
+                font-weight: 500;
+            }
+        }
+
+        .today {
+            text-align: left;
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+    }
+}

@@ -1,0 +1,12 @@
+import type { ResponseFromServer } from "../../types/app";
+import type { AuthResponse, ChangePassword, ForgotPassword, LoginEmail, RegisterParent, RegisterStudent, VerifyEmail, VerifyOtp } from "../../types/auth";
+export declare const loginApiThunk: import("@reduxjs/toolkit").AsyncThunk<ResponseFromServer<AuthResponse>, LoginEmail, import("@reduxjs/toolkit").AsyncThunkConfig>;
+export declare const verifyEmailApiThunk: import("@reduxjs/toolkit").AsyncThunk<ResponseFromServer<{}>, VerifyEmail, import("@reduxjs/toolkit").AsyncThunkConfig>;
+export declare const verifyOtpApiThunk: import("@reduxjs/toolkit").AsyncThunk<ResponseFromServer<{}>, VerifyOtp, import("@reduxjs/toolkit").AsyncThunkConfig>;
+export declare const registerStudentApiThunk: import("@reduxjs/toolkit").AsyncThunk<ResponseFromServer<{}>, RegisterStudent, import("@reduxjs/toolkit").AsyncThunkConfig>;
+export declare const registerParentApiThunk: import("@reduxjs/toolkit").AsyncThunk<ResponseFromServer<{}>, RegisterParent, import("@reduxjs/toolkit").AsyncThunkConfig>;
+export declare const registerTutorApiThunk: import("@reduxjs/toolkit").AsyncThunk<any, FormData, import("@reduxjs/toolkit").AsyncThunkConfig>;
+export declare const verifyEmailForgotPasswordApiThunk: import("@reduxjs/toolkit").AsyncThunk<ResponseFromServer<{}>, VerifyEmail, import("@reduxjs/toolkit").AsyncThunkConfig>;
+export declare const verifyOtpForgotPasswordApiThunk: import("@reduxjs/toolkit").AsyncThunk<ResponseFromServer<{}>, VerifyOtp, import("@reduxjs/toolkit").AsyncThunkConfig>;
+export declare const forgotPassswordApiThunk: import("@reduxjs/toolkit").AsyncThunk<ResponseFromServer<{}>, ForgotPassword, import("@reduxjs/toolkit").AsyncThunkConfig>;
+export declare const changePasswordApiThunk: import("@reduxjs/toolkit").AsyncThunk<ResponseFromServer<{}>, ChangePassword, import("@reduxjs/toolkit").AsyncThunkConfig>;

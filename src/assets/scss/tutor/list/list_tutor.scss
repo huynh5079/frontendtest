@@ -1,0 +1,41 @@
+#list-tutor-section {
+    background-color: var(--main-color-10);
+    padding: 100px 20px;
+
+    .lts-container {
+        max-width: 1600px;
+        margin: 0 auto;
+
+        .ltscr1 {
+            h2 {
+                font-size: 2rem;
+                font-weight: 800;
+                color: var(--main-color);
+                margin: 0;
+                text-align: center;
+                margin-bottom: 3rem;
+            }
+        }
+
+        .ltscr2 {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: start;
+            gap: 1rem;
+
+            .ltscr2c1 {
+                flex: 1;
+            }
+
+            .ltscr2c2 {
+                flex: 3;
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                align-items: start;
+                gap: 2rem;
+            }
+        }
+    }
+}

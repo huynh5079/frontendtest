@@ -1,0 +1,53 @@
+.fl-social {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+
+    .fl-social-icon {
+        position: relative;
+        padding: 0.5rem;
+        border: 1px solid currentColor;
+        border-radius: 9999px;
+        color: inherit;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+
+        &:hover {
+            color: white;
+            border-color: var(--main-color-50);
+            background-color: var(--main-color-50);
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        &::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: -2.2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(5px);
+            background: white;
+            color: var(--main-color);
+            font-weight: 600;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            opacity: 0;
+            pointer-events: none;
+            white-space: nowrap;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+
+        &:hover::after {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    }
+}

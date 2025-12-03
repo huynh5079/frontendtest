@@ -1,0 +1,39 @@
+#update-booking-tutor-for-student-modal {
+    width: 1000px;
+
+    h3 {
+        font-size: 2rem;
+        font-weight: 800;
+        text-align: center;
+        color: var(--main-color);
+        margin: 0;
+        margin-bottom: 2rem;
+    }
+
+    .form {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .schedule-container {
+        margin-bottom: 2rem;
+    }
+
+    .group-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        .pr-btn,
+        .sc-btn,
+        .disable-btn,
+        .delete-btn {
+            width: 300px;
+            padding: 0.5rem 1.25rem;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+    }
+}
