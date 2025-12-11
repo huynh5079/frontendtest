@@ -130,30 +130,79 @@
             border-radius: 1rem;
 
             .drftftscr4r1 {
-                display: flex;
-                align-items: start;
-                gap: 2rem;
-                margin-bottom: 1rem;
+                margin-bottom: 2rem;
 
-                .drftftscr4r1c1,
-                .drftftscr4r1c2 {
-                    flex: 1;
+                .detail-tutor-request {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 2rem;
                 }
 
-                h4 {
+                .detail-group {
+                    background: #fff;
+                    border-radius: 1rem;
+                    padding: 1.5rem 2rem;
+                    border: 1px solid #e5e7eb;
+                    box-shadow: 0 3px 10px var(--main-color-20);
+                }
+
+                .group-title {
                     font-size: 1.5rem;
-                    font-weight: 700;
+                    font-weight: 600;
+                    color: var(--main-black);
+                    margin-bottom: 1rem;
+                    padding-bottom: 1rem;
+                    border-bottom: 2px solid var(--main-color);
+                }
+
+                .group-content {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 1.5rem;
+                }
+
+                .detail-item {
+                    background: #fff;
+                    padding: 1rem;
+                    border-radius: 0.75rem;
+                    border: 1px solid var(--main-color);
+                }
+
+                .detail-item h4 {
+                    font-size: 1.5rem;
+                    font-weight: 600;
                     color: var(--main-color);
-                    margin: 0;
                     margin-bottom: 0.5rem;
                 }
 
-                p {
+                .detail-item p {
                     font-size: 1.25rem;
-                    font-weight: 500;
                     color: var(--main-black);
-                    margin: 0;
-                    margin-bottom: 1rem;
+                }
+
+                /* Lịch học */
+                .schedule-item {
+                    margin-top: 8px;
+                    padding: 0.75rem;
+                    border-radius: 8px;
+                    background: #fff;
+                    border: 4px solid var(--main-color);
+                }
+
+                .schedule-day {
+                    font-size: 1.25rem;
+                    font-weight: 600;
+                    color: var(--main-black);
+                    margin-bottom: 0.5rem;
+                }
+
+                .schedule-time {
+                    font-size: 1rem;
+                    color: var(--main-black);
+                }
+
+                .detail-item-schedule {
+                    grid-column: span 2; // Chiếm 2 cột
                 }
             }
 

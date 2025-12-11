@@ -13,6 +13,7 @@
         left: 0;
         top: 0;
         overflow-y: auto;
+        z-index: 10;
 
         &::-webkit-scrollbar {
             display: none;
@@ -27,5 +28,6 @@
         min-height: calc(100vh - 160px);
         padding: 2rem;
         overflow-y: auto;
+        z-index: 10;
     }
 }

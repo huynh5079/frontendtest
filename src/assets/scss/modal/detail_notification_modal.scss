@@ -1,0 +1,20 @@
+#detail-notification-modal {
+    h3 {
+        font-size: 2rem;
+        font-weight: 800;
+        text-align: center;
+        color: var(--main-color);
+        margin: 0;
+        margin-bottom: 2rem;
+    }
+
+    p {
+        max-width: 800px;
+        margin: 0 auto;
+        font-size: 1.25rem;
+        text-align: center;
+        font-weight: 500;
+        color: var(--main-black);
+        margin-bottom: 2rem;
+    }
+}

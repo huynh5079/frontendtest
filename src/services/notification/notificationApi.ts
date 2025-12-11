@@ -12,7 +12,7 @@ export const getMyNotificationsApi = async (
 
 export const readNotificationApi = async (notificationId: string) => {
     const data = await request.put(
-        `api/notification/me/${notificationId}/read`,
+        `/notifications/me/${notificationId}/read`,
     );
     return data.data;
 };

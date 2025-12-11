@@ -1,26 +1,48 @@
 import { useState, type ChangeEvent, type FC } from "react";
 
-const PriceRangeFilter: FC = () => {
+interface PriceRangeFilterProps {
+    minValue: number;
+    maxValue: number;
+    onChange: (min: number, max: number) => void;
+}
+
+const PriceRangeFilter: FC<PriceRangeFilterProps> = ({
+    minValue,
+    maxValue,
+    onChange,
+}) => {
     const minLimit = 50000;
     const maxLimit = 1000000;
     const step = 5000;
 
-    const [minValue, setMinValue] = useState<number>(200000);
-    const [maxValue, setMaxValue] = useState<number>(800000);
-
     const handleMinChange = (e: ChangeEvent<HTMLInputElement>) => {
         const value = Math.min(Number(e.target.value), maxValue - step);
-        setMinValue(value);
+        onChange(value, maxValue);
     };
 
     const handleMaxChange = (e: ChangeEvent<HTMLInputElement>) => {
         const value = Math.max(Number(e.target.value), minValue + step);
-        setMaxValue(value);
+        onChange(minValue, value);
     };
 
     return (
         <div className="price-slider">
             <div className="slider-container">
+                <div className="slider-track"></div>
+                <div
+                    className="slider-range"
+                    style={{
+                        left: `${
+                            ((minValue - minLimit) / (maxLimit - minLimit)) *
+                            100
+                        }%`,
+                        right: `${
+                            100 -
+                            ((maxValue - minLimit) / (maxLimit - minLimit)) *
+                                100
+                        }%`,
+                    }}
+                ></div>
                 <input
                     type="range"
                     min={minLimit}
@@ -39,22 +61,6 @@ const PriceRangeFilter: FC = () => {
                     onChange={handleMaxChange}
                     className="thumb thumb-right"
                 />
-
-                <div className="slider-track"></div>
-                <div
-                    className="slider-range"
-                    style={{
-                        left: `${
-                            ((minValue - minLimit) / (maxLimit - minLimit)) *
-                            100
-                        }%`,
-                        right: `${
-                            100 -
-                            ((maxValue - minLimit) / (maxLimit - minLimit)) *
-                                100
-                        }%`,
-                    }}
-                ></div>
             </div>
 
             <div className="price-values">

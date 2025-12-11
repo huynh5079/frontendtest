@@ -192,7 +192,6 @@ const TutorSchedulePage: FC = () => {
                         views={[Views.WEEK, Views.DAY, Views.MONTH]}
                         selectable
                         onSelectEvent={handleSelectEvent}
-                        onSelectSlot={() => {}}
                         eventPropGetter={eventStyleGetter}
                         popup
                         messages={{

@@ -4,6 +4,7 @@ import { DetailTutorPage } from "../pages/system/tutor/detail";
 import { ListCoursePage } from "../pages/system/course/list";
 import { DetailCoursePage } from "../pages/system/course/detail";
 import { LandingPage } from "../pages/system/landing";
+import { ChatPage } from "../pages/system/chat";
 import ParentLayout from "../layouts/parent/parentlayout";
 import { ParentBookTutor } from "../pages/parent/book";
 import ParentInformationPage from "../pages/parent/profile/information";
@@ -48,6 +49,10 @@ const routeParent: RouteObject[] = [
                     {
                         path: "information",
                         element: <ParentInformationPage />,
+                    },
+                    {
+                        path: "chat",
+                        element: <ChatPage />,
                     },
                 ],
             },

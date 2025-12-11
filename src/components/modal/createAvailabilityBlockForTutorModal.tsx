@@ -5,15 +5,18 @@ import { CiCalendar, CiText, CiStickyNote, CiRepeat } from "react-icons/ci";
 import Modal from "./modal";
 import type { CreateAvailabilityBlockForTutorModalProps } from "../../types/modal";
 import type { CreateTutorAvailabilityParams } from "../../types/tutorAvailabilityBlock";
-import { DateTimePickerElement, LoadingSpinner } from "../elements";
-import dayjs from "dayjs";
-import { useAppDispatch } from "../../app/store";
 import {
-    createAvailabilityBlockForTutorApiThunk,
-    getAllAvailabilityBlockForTutorApiThunk,
-} from "../../services/tutor/availabilityBlock/tutorAvailabilityBlockThunk";
+    DateTimePickerElement,
+    LoadingSpinner,
+    TimePickerElement,
+} from "../elements";
+import dayjs from "dayjs";
+import { useAppDispatch, useAppSelector } from "../../app/store";
+import { createAvailabilityBlockForTutorApiThunk } from "../../services/tutor/availabilityBlock/tutorAvailabilityBlockThunk";
 import { get } from "lodash";
 import { toast } from "react-toastify";
+import { getAllScheduleForTutorApiThunk } from "../../services/tutor/schedule/tutorScheduleThunk";
+import { selectProfileTutor } from "../../app/selector";
 
 // Validation schema
 const CreateAvailabilitySchema = Yup.object().shape({
@@ -23,7 +26,7 @@ const CreateAvailabilitySchema = Yup.object().shape({
         .required("Vui lòng chọn thời gian kết thúc")
         .min(
             Yup.ref("startTime"),
-            "Thời gian kết thúc phải sau thời gian bắt đầu"
+            "Thời gian kết thúc phải sau thời gian bắt đầu",
         ),
     notes: Yup.string().required("Vui lòng nhập ghi chú"),
     recurrenceRule: Yup.object()
@@ -38,7 +41,7 @@ const CreateAvailabilitySchema = Yup.object().shape({
                 otherwise: (schema) => schema.min(1, "Vui lòng chọn một ngày"),
             }),
             untilDate: Yup.date().required(
-                "Vui lòng chọn ngày kết thúc lặp lại"
+                "Vui lòng chọn ngày kết thúc lặp lại",
             ),
         })
         .required("Vui lòng chọn quy tắc lặp lại"),
@@ -72,13 +75,14 @@ const CreateAvailabilityBlockForTutorModal: FC<
     const [startDate, setStartDate] = useState<Date | null>(null);
     const [endDate, setEndDate] = useState<Date | null>(null);
     const [untilDate, setUntilDate] = useState<Date | null>(
-        dayjs().add(1, "week").toDate()
+        dayjs().add(1, "week").toDate(),
     );
     const dispatch = useAppDispatch();
+    const tutorProfile = useAppSelector(selectProfileTutor);
 
     const handleSubmit = async (
         values: CreateTutorAvailabilityParams,
-        helpers: FormikHelpers<CreateTutorAvailabilityParams>
+        helpers: FormikHelpers<CreateTutorAvailabilityParams>,
     ) => {
         const formattedValues: CreateTutorAvailabilityParams = {
             ...values,
@@ -99,16 +103,18 @@ const CreateAvailabilityBlockForTutorModal: FC<
             },
         };
 
+        helpers.setSubmitting(true);
         dispatch(createAvailabilityBlockForTutorApiThunk(formattedValues))
             .unwrap()
             .then((res) => {
                 toast.success(get(res, "data.message", "Xử lí thành công"));
                 setIsOpen(false);
                 dispatch(
-                    getAllAvailabilityBlockForTutorApiThunk({
-                        startTime: startDateProps,
-                        endTime: endDateProps,
-                    })
+                    getAllScheduleForTutorApiThunk({
+                        tutorProfileId: tutorProfile?.tutorProfileId!,
+                        startDate: startDateProps,
+                        endDate: endDateProps,
+                    }),
                 );
                 helpers.resetForm();
             })
@@ -160,13 +166,13 @@ const CreateAvailabilityBlockForTutorModal: FC<
                                     </label>
                                     <div className="form-input-container">
                                         <CiCalendar className="form-input-icon" />
-                                        <DateTimePickerElement
+                                        <TimePickerElement
                                             value={startDate}
                                             onChange={(date) => {
                                                 setStartDate(date);
                                                 setFieldValue(
                                                     "startTime",
-                                                    date
+                                                    date,
                                                 );
                                             }}
                                             placeholder="Chọn thời gian bắt đầu"
@@ -186,7 +192,7 @@ const CreateAvailabilityBlockForTutorModal: FC<
                                     </label>
                                     <div className="form-input-container">
                                         <CiCalendar className="form-input-icon" />
-                                        <DateTimePickerElement
+                                        <TimePickerElement
                                             value={endDate}
                                             onChange={(date) => {
                                                 setEndDate(date);
@@ -222,7 +228,7 @@ const CreateAvailabilityBlockForTutorModal: FC<
                                                         daysOfWeek: [],
                                                         untilDate:
                                                             untilDate?.toISOString(),
-                                                    }
+                                                    },
                                                 );
                                             }}
                                             value={
@@ -266,7 +272,7 @@ const CreateAvailabilityBlockForTutorModal: FC<
                                             {weekdays.map((day) => {
                                                 const checked =
                                                     values.recurrenceRule?.daysOfWeek?.includes(
-                                                        day.value
+                                                        day.value,
                                                     );
                                                 return (
                                                     <label
@@ -307,21 +313,21 @@ const CreateAvailabilityBlockForTutorModal: FC<
                                                                                   [
                                                                                       ...prev,
                                                                                       day.value,
-                                                                                  ]
-                                                                              )
+                                                                                  ],
+                                                                              ),
                                                                           )
                                                                         : prev.filter(
                                                                               (
-                                                                                  d
+                                                                                  d,
                                                                               ) =>
                                                                                   d !==
-                                                                                  day.value
+                                                                                  day.value,
                                                                           );
                                                                 }
 
                                                                 setFieldValue(
                                                                     "recurrenceRule.daysOfWeek",
-                                                                    updated
+                                                                    updated,
                                                                 );
                                                             }}
                                                         />
@@ -352,7 +358,7 @@ const CreateAvailabilityBlockForTutorModal: FC<
                                                     setUntilDate(date);
                                                     setFieldValue(
                                                         "recurrenceRule.untilDate",
-                                                        date
+                                                        date,
                                                     );
                                                 }}
                                                 placeholder="Chọn ngày kết thúc lặp lại"

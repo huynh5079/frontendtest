@@ -1,4 +1,4 @@
-import { type FC } from "react";
+import { useState, type FC } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { routes } from "../../../routes/routeName";
 import classNames from "classnames";
@@ -9,9 +9,16 @@ import { RiProfileFill } from "react-icons/ri";
 import { FaWallet } from "react-icons/fa";
 import { logout } from "../../../utils/helper";
 import { BiLogOut } from "react-icons/bi";
+import { Modal } from "../../modal";
+import { RemindLogin } from "../../../assets/images";
+import { navigateHook } from "../../../routes/routeApp";
+import { useAppSelector } from "../../../app/store";
+import { selectProfileTutor } from "../../../app/selector";
 
 const SidebarTutor: FC = () => {
     const location = useLocation();
+    const [isRemindOpen, setIsRemindOpen] = useState(false);
+    const tutor = useAppSelector(selectProfileTutor);
 
     const navItems = [
         {
@@ -45,6 +52,11 @@ const SidebarTutor: FC = () => {
                 {
                     to: routes.tutor.schedule,
                     icon: AiFillSchedule,
+                    label: "Lịch cá nhân",
+                },
+                {
+                    to: routes.tutor.study_schedule,
+                    icon: AiFillSchedule,
                     label: "Lịch dạy",
                 },
                 {
@@ -62,11 +74,27 @@ const SidebarTutor: FC = () => {
                     icon: MdClass,
                     label: "Lớp học",
                 },
+                {
+                    to: routes.tutor.notification.list,
+                    icon: MdClass,
+                    label: "Thông báo",
+                },
             ],
         },
     ];
 
     const isActive = (path: string) => location.pathname.startsWith(path);
+
+    // 🔥 HÀM CHẶN TRUY CẬP KHI CHƯA ĐƯỢC DUYỆT
+    const handleProtectedClick = (
+        e: React.MouseEvent<HTMLAnchorElement>,
+        to: string
+    ) => {
+        if (tutor?.reviewStatus !== "Approved") {
+            e.preventDefault(); // chặn bấm
+            setIsRemindOpen(true); // mở modal nhắc nhở
+        }
+    };
 
     return (
         <nav id="tutor-sidebar">
@@ -74,26 +102,43 @@ const SidebarTutor: FC = () => {
                 <div className="tscr1">
                     <TutorSidebarLogo />
                 </div>
+
                 <div className="tscr2">
                     {navItems.map((section, i) => (
                         <div key={i}>
                             <h4>{section.section}</h4>
-                            {section.links.map(({ to, icon: Icon, label }) => (
-                                <Link
-                                    key={to}
-                                    to={to}
-                                    className={classNames("tscr2-nav-item", {
-                                        "nav-active": isActive(to),
-                                    })}
-                                >
-                                    <div className="tscr2-nav-link">
-                                        <Icon className="tscr2-nav-icon" />
-                                        <span>{label}</span>
-                                    </div>
-                                </Link>
-                            ))}
+
+                            {section.links.map(({ to, icon: Icon, label }) => {
+                                const isManagementSection =
+                                    section.section === "Quản lý";
+
+                                return (
+                                    <Link
+                                        key={to}
+                                        to={to}
+                                        onClick={(e) =>
+                                            isManagementSection
+                                                ? handleProtectedClick(e, to)
+                                                : undefined
+                                        }
+                                        className={classNames(
+                                            "tscr2-nav-item",
+                                            {
+                                                "nav-active": isActive(to),
+                                            }
+                                        )}
+                                    >
+                                        <div className="tscr2-nav-link">
+                                            <Icon className="tscr2-nav-icon" />
+                                            <span>{label}</span>
+                                        </div>
+                                    </Link>
+                                );
+                            })}
                         </div>
                     ))}
+
+                    {/* LOGOUT */}
                     <h4>Cài Đặt</h4>
                     <div onClick={logout} className="tscr2-nav-item">
                         <div className="tscr2-nav-link">
@@ -103,6 +148,36 @@ const SidebarTutor: FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* MODAL NHẮC NHỞ */}
+            <Modal
+                isOpen={isRemindOpen}
+                setIsOpen={setIsRemindOpen}
+                title="Thông báo"
+            >
+                <section id="remind-login-modal">
+                    <div className="rlm-container">
+                        <img src={RemindLogin} alt="" />
+                        <h3>
+                            Bạn cần được phê duyệt trước khi sử dụng chức năng
+                            này
+                        </h3>
+                        <h4>Hãy chờ hoặc hoàn thiện hồ sơ để được xét duyệt</h4>
+
+                        <button
+                            onClick={() => {
+                                navigateHook(routes.tutor.information);
+                                setIsRemindOpen(false);
+                            }}
+                            className="sc-btn"
+                        >
+                            Đi đến trang cá nhân
+                        </button>
+
+                        <p onClick={() => setIsRemindOpen(false)}>Để sau</p>
+                    </div>
+                </section>
+            </Modal>
         </nav>
     );
 };

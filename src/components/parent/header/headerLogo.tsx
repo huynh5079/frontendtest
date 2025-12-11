@@ -7,7 +7,7 @@ const HeaderParentLogo: FC = () => {
 
     return (
         <div className="hp-logo">
-            <h2 className="hp-logo-text" onClick={() => navigateHook(routes.student.home)}>
+            <h2 className="hp-logo-text" onClick={() => navigateHook(routes.parent.home)}>
                 {text.split("").map((char, index) => (
                     <span
                         key={index}

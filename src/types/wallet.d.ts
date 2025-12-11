@@ -32,7 +32,6 @@ export type WalletTransactionHistory = {
 export type DepositWalletParams = {
     amount: number;
     contextType: string;
-    contextId: string;
     description: string;
     extraData: string;
 };
@@ -49,4 +48,9 @@ export type TranferWalletParams = {
     amount: number;
     toUserId: string;
     note: string;
+};
+
+export type TranferToAdminParams = {
+    Amount: number;
+    Note: string;
 };

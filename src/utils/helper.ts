@@ -1,10 +1,16 @@
 import { routes } from "../routes/routeName";
 import type { OptionMultiSelectData, PieChartData } from "../types/app";
-import { parseISO } from "date-fns";
+import { format, parseISO } from "date-fns";
 import type { TutorSchedules } from "../types/booking";
 import { useEffect } from "react";
 import type { ScheduleString } from "../types/tutor";
 import type { Schedule } from "../types/student";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import "dayjs/locale/vi";
+
+dayjs.extend(relativeTime);
+dayjs.locale("vi");
 
 interface TimeSlot {
     start: string;
@@ -205,28 +211,6 @@ export const useDocumentTitle = (title: string) => {
     }, [title]);
 };
 
-export const timeAgo = (dateString: string): string => {
-    const now = new Date();
-    const past = new Date(dateString);
-
-    // Cộng thêm 7 giờ (7 * 60 * 60 * 1000 ms)
-    past.setHours(past.getHours() + 7);
-
-    const diff = (now.getTime() - past.getTime()) / 1000; // tính giây
-
-    if (diff < 60) return `${Math.floor(diff)} giây trước`;
-    const minutes = diff / 60;
-    if (minutes < 60) return `${Math.floor(minutes)} phút trước`;
-    const hours = minutes / 60;
-    if (hours < 24) return `${Math.floor(hours)} giờ trước`;
-    const days = hours / 24;
-    if (days < 30) return `${Math.floor(days)} ngày trước`;
-    const months = days / 30;
-    if (months < 12) return `${Math.floor(months)} tháng trước`;
-    const years = months / 12;
-    return `${Math.floor(years)} năm trước`;
-};
-
 export const convertScheduleStringToSchedule = (
     input: ScheduleString[],
 ): Schedule[] => {
@@ -261,7 +245,90 @@ export const getStatusText = (status: string | null | undefined): string => {
             return "Đang học";
         case "Cancelled":
             return "Đã huỷ";
+        case "Successed":
+            return "Thành công";
+        case "Failed":
+            return "Thất bại";
+        case "Matched":
+            return "Đã kết nối";
+        case "Completed":
+            return "Đã hoàn thành";
+        case "Accepted":
+            return "Đã chấp nhận";
+        case "Read":
+            return "Đã đọc";
+        case "Unread":
+            return "Chưa đọc";
         default:
             return "Không có";
     }
 };
+
+export const getModeText = (status: string | null | undefined): string => {
+    switch (status) {
+        case "Offline":
+            return "Học tại lớp";
+        case "Online":
+            return "Học trực tuyến";
+        default:
+            return "Không có";
+    }
+};
+
+export const getAttendanceText = (
+    status: string | null | undefined,
+): string => {
+    switch (status) {
+        case "Absent":
+            return "Vắng học";
+        case "Present":
+            return "Có mặt";
+        default:
+            return "Chưa học";
+    }
+};
+
+export const getQuizTypeText = (status: string | null | undefined): string => {
+    switch (status) {
+        case "Practice":
+            return "Bài tập ôn tập";
+        case "Test":
+            return "Kiểm tra";
+        default:
+            return "Chưa học";
+    }
+};
+
+export const timeAgo = (date: string) => {
+    return dayjs(date).fromNow();
+};
+
+export const formatTime = (isoString?: string | null) => {
+    if (!isoString) return "--:--"; // hoặc "" tùy bạn
+
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return "--:--";
+
+    return date.toLocaleTimeString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+    });
+};
+
+export const formatTimeAdd7 = (isoString?: string | null): string => {
+    if (!isoString) return "--:--";
+
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return "--:--";
+
+    // Cộng thêm 7 giờ (UTC+7)
+    const localDate = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+
+    return localDate.toLocaleTimeString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+    });
+};
+

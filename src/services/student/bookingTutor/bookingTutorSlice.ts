@@ -7,6 +7,7 @@ import {
     getAllClassRequestForStudentApiThunk,
     getDetailClassRequestForStudentApiThunk,
 } from "./bookingTutorThunk";
+import { ResponseFromServer } from "../../../types/app";
 
 const initialState: BookingTutorStudentState = {
     lists: [],
@@ -21,15 +22,18 @@ export const bookingTutorStudentSlice = createSlice({
         builder
             .addCase(
                 getAllClassRequestForStudentApiThunk.fulfilled,
-                (state, action: PayloadAction<ClassRequests[]>) => {
-                    state.lists = action.payload;
-                },
+                (
+                    state,
+                    action: PayloadAction<ResponseFromServer<ClassRequests[]>>
+                ) => {
+                    state.lists = action.payload.data;
+                }
             )
             .addCase(
                 getDetailClassRequestForStudentApiThunk.fulfilled,
                 (state, action: PayloadAction<ClassRequests>) => {
                     state.detail = action.payload;
-                },
+                }
             );
     },
 });

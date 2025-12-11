@@ -376,3 +376,23 @@ select {
 .rbc-today {
   background-color: transparent !important;
 }
+
+.pagination {
+    max-width: 500px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+
+    span {
+        font-size: 1.25rem;
+        font-weight: 500;
+    }
+
+    .sc-btn, .disable-btn {
+        padding: 0.5rem 1.25rem;
+        font-size: 1.25rem
+    }
+}

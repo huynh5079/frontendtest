@@ -1,10 +1,13 @@
-import { useEffect, useRef, useState, type FC } from "react";
+import { JSX, useEffect, useRef, useState, type FC } from "react";
 import { PiBellRingingBold } from "react-icons/pi";
+import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
 import { useAppDispatch, useAppSelector } from "../../../app/store";
 import {
     selectIsAuthenticated,
     selectNotifications,
+    selectProfileTutor,
     selectUserLogin,
+    selectChatUnreadCount,
 } from "../../../app/selector";
 import { navigateHook } from "../../../routes/routeApp";
 import { getMyNotificationsApiThunk } from "../../../services/notification/notificationThunk";
@@ -14,43 +17,191 @@ import connection, {
 import * as signalR from "@microsoft/signalr";
 import type { NotificationResponseItem } from "../../../types/notification";
 import { addNotification } from "../../../services/notification/notificationSlice";
+import {
+    getUnreadCountApiThunk,
+    getConversationsApiThunk,
+    markConversationAsReadApiThunk,
+    getOnlineUsersApiThunk,
+} from "../../../services/chat/chatThunk";
+import { selectConversations, selectOnlineUsers } from "../../../app/selector";
+import chatConnection, {
+    startChatConnection,
+} from "../../../signalR/signalRChat";
+import {
+    addMessage,
+    setCurrentConversation,
+} from "../../../services/chat/chatSlice";
+import type { MessageDto, ConversationDto } from "../../../types/chat";
+import { ChatModal } from "../../chat";
 import { toast } from "react-toastify";
 import { routes } from "../../../routes/routeName";
-import { logout } from "../../../utils/helper";
+import { logout, timeAgo } from "../../../utils/helper";
+import {
+    AiOutlineCheckCircle,
+    AiOutlineClockCircle,
+    AiOutlineCloseCircle,
+    AiOutlineStop, // AccountBlocked
+    AiOutlineSafetyCertificate, // TutorApproved
+    AiOutlineNotification, // SystemAnnouncement
+} from "react-icons/ai";
+
+import {
+    MdAccountBalanceWallet,
+    MdArrowDownward,
+    MdArrowUpward,
+    MdPayment,
+    MdPersonAddAlt,
+    MdCancel,
+    MdLibraryAdd,
+    MdAssignmentTurnedIn,
+    MdAssignmentLate,
+    MdAssignment,
+    MdDoneAll,
+    MdFactCheck,
+    MdSchedule,
+} from "react-icons/md";
+
+import {
+    FaHandHoldingUsd,
+    FaWallet,
+    FaUndo,
+    FaMoneyCheck,
+} from "react-icons/fa";
+
+import { GiReceiveMoney, GiPayMoney } from "react-icons/gi";
+
+import {
+    RiMailSendLine,
+    RiMailCheckLine,
+    RiMailCloseLine,
+} from "react-icons/ri";
+
+import { MdRateReview } from "react-icons/md";
+
+export const notificationIconMap: Record<string, JSX.Element> = {
+    // 1. Auth & System
+    AccountVerified: <AiOutlineCheckCircle className="noti-icon" />,
+    AccountBlocked: <AiOutlineStop className="noti-icon" />,
+    TutorApproved: <AiOutlineSafetyCertificate className="noti-icon" />,
+    TutorRejected: <AiOutlineCloseCircle className="noti-icon" />,
+    SystemAnnouncement: <AiOutlineNotification className="noti-icon" />,
+
+    // 2. Wallet & Payment
+    WalletDeposit: <MdAccountBalanceWallet className="noti-icon" />,
+    WalletWithdraw: <MdAccountBalanceWallet className="noti-icon" />,
+    WalletTransferIn: <MdArrowDownward className="noti-icon" />,
+    WalletTransferOut: <MdArrowUpward className="noti-icon" />,
+    PaymentFailed: <MdPayment className="noti-icon" />,
+
+    // 3. Escrow
+    EscrowPaid: <FaMoneyCheck className="noti-icon" />,
+    EscrowReleased: <FaHandHoldingUsd className="noti-icon" />,
+    EscrowRefunded: <FaUndo className="noti-icon" />,
+    PayoutReceived: <FaWallet className="noti-icon" />,
+
+    // 4. Class & Enrollment
+    ClassCancelled: <MdCancel className="noti-icon" />,
+    ClassEnrollmentSuccess: <MdPersonAddAlt className="noti-icon" />,
+    StudentEnrolledInClass: <MdPersonAddAlt className="noti-icon" />,
+    ClassCreatedFromRequest: <MdLibraryAdd className="noti-icon" />,
+
+    // 5. Tutor Deposit
+    TutorDepositRefunded: <GiReceiveMoney className="noti-icon" />,
+    TutorDepositForfeited: <GiPayMoney className="noti-icon" />,
+
+    // 6. Tutor Application
+    TutorApplicationReceived: <MdAssignment className="noti-icon" />,
+    TutorApplicationAccepted: <MdAssignmentTurnedIn className="noti-icon" />,
+    TutorApplicationRejected: <MdAssignmentLate className="noti-icon" />,
+
+    // 7. Class Request
+    ClassRequestReceived: <RiMailSendLine className="noti-icon" />,
+    ClassRequestAccepted: <RiMailCheckLine className="noti-icon" />,
+    ClassRequestRejected: <RiMailCloseLine className="noti-icon" />,
+
+    // 8. Lesson & Attendance
+    LessonCompleted: <MdDoneAll className="noti-icon" />,
+    AttendanceMarked: <MdFactCheck className="noti-icon" />,
+
+    // 9. Reschedule Lessons
+    LessonRescheduleRequest: <MdSchedule className="noti-icon" />,
+    LessonRescheduleAccepted: <MdSchedule className="noti-icon" />,
+    LessonRescheduleRejected: <MdSchedule className="noti-icon" />,
+
+    // 10. Feedback
+    FeedbackCreated: <MdRateReview className="noti-icon" />,
+};
 
 const HeaderTutor: FC = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isNotificateOpen, setIsNotificateOpen] = useState(false);
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+    const [selectedConversation, setSelectedConversation] =
+        useState<ConversationDto | null>(null);
+    const [currentTime, setCurrentTime] = useState(new Date());
     const menuRef = useRef<HTMLDivElement | null>(null);
     const notificateRef = useRef<HTMLDivElement | null>(null);
+    const chatRef = useRef<HTMLDivElement | null>(null);
     const [activeTab, setActiveTab] = useState("all");
+    const tutorProfile = useAppSelector(selectProfileTutor);
 
     const dispatch = useAppDispatch();
     const isAuthenticated = useAppSelector(selectIsAuthenticated);
     const notifications = useAppSelector(selectNotifications);
     const userLogin = useAppSelector(selectUserLogin);
-    const countNotificationUnread = notifications.filter(
-        (n) => n.status !== "Read",
-    ).length;
-
-    const filteredNotifications = notifications.filter((n) => {
-        if (activeTab === "all") return true;
-        if (activeTab === "unread") return n.status !== "Read";
-        if (activeTab === "read") return n.status === "Read";
-        return true;
-    });
+    const chatUnreadCount = useAppSelector(selectChatUnreadCount);
+    const conversations = useAppSelector(selectConversations);
+    const onlineUsers = useAppSelector(selectOnlineUsers);
+    const unreadNotifications = notifications.filter(
+        (n) => n.status !== "Read"
+    );
+    const countNotificationUnread = unreadNotifications.length;
 
     const handleClickSubMenu = (route: string) => {
         navigateHook(route);
         setIsMenuOpen(false);
         setIsNotificateOpen(false);
+        setIsChatOpen(false);
+    };
+
+    const handleChatIconClick = () => {
+        setIsChatOpen(!isChatOpen);
+        if (!isChatOpen) {
+            dispatch(getConversationsApiThunk());
+        }
+    };
+
+    const handleConversationClick = async (conv: ConversationDto) => {
+        dispatch(setCurrentConversation(conv));
+        setSelectedConversation(conv);
+        setIsChatModalOpen(true);
+        setIsChatOpen(false);
+
+        // Mark conversation as read
+        if (conv.otherUserId) {
+            dispatch(markConversationAsReadApiThunk(conv.otherUserId));
+        }
+
+        // Refresh unread count
+        dispatch(getUnreadCountApiThunk());
+        dispatch(getConversationsApiThunk());
+        dispatch(getOnlineUsersApiThunk());
+    };
+
+    const handleNewMessage = (message: MessageDto) => {
+        dispatch(addMessage(message));
+        dispatch(getConversationsApiThunk());
+        toast.info(`💬 Tin nhắn mới từ ${message.senderName}`);
     };
 
     // Notification SignalR
     useEffect(() => {
         if (!isAuthenticated) return;
 
-        dispatch(getMyNotificationsApiThunk({ pageNumber: 1, pageSize: 5 }));
+        dispatch(getMyNotificationsApiThunk({ pageNumber: 1, pageSize: 50 }));
+        dispatch(getUnreadCountApiThunk());
+        dispatch(getConversationsApiThunk());
 
         const initConnection = async () => {
             if (connection.state !== signalR.HubConnectionState.Connected) {
@@ -59,10 +210,17 @@ const HeaderTutor: FC = () => {
             connection.on("ReceiveNotification", handleNewNotification);
         };
 
+        const initChatConnection = async () => {
+            await startChatConnection();
+            chatConnection.on("ReceiveMessage", handleNewMessage);
+        };
+
         initConnection();
+        initChatConnection();
 
         return () => {
             connection.off("ReceiveNotification", handleNewNotification);
+            chatConnection.off("ReceiveMessage", handleNewMessage);
         };
     }, [isAuthenticated]);
 
@@ -86,6 +244,12 @@ const HeaderTutor: FC = () => {
             ) {
                 setIsNotificateOpen(false);
             }
+            if (
+                chatRef.current &&
+                !chatRef.current.contains(event.target as Node)
+            ) {
+                setIsChatOpen(false);
+            }
         };
         document.addEventListener("mousedown", handleClickOutside);
         return () => {
@@ -96,89 +260,185 @@ const HeaderTutor: FC = () => {
     return (
         <header id="tutor-header">
             <div className="th-conatiner">
-                <div ref={notificateRef} className="notification-wrapper">
-                    <PiBellRingingBold
-                        className="icon"
-                        onClick={() => setIsNotificateOpen(!isNotificateOpen)}
+                <div className="status-wrapper">
+                    {tutorProfile?.reviewStatus === "Pending" && (
+                        <div className="pending">
+                            <AiOutlineClockCircle className="icon" />
+                            Chờ xét duyệt
+                        </div>
+                    )}
+                    {tutorProfile?.reviewStatus === "Approved" && (
+                        <div className="approved">
+                            <AiOutlineCheckCircle className="icon" />
+                            Đã được phê duyệt
+                        </div>
+                    )}
+                    {tutorProfile?.reviewStatus === "Rejected" && (
+                        <div className="rejected">
+                            <AiOutlineCloseCircle className="icon" />
+                            Đã bị từ chối
+                        </div>
+                    )}
+                </div>
+                {/* CHAT */}
+                <div
+                    ref={chatRef}
+                    className="notification-wrapper chat-icon-wrapper"
+                >
+                    <IoChatbubbleEllipsesOutline
+                        className="icon-bell"
+                        onClick={handleChatIconClick}
                     />
-                    {isNotificateOpen && (
-                        <div className="sub-notification">
-                            <h4>Thông báo</h4>
-                            <div className="tabs">
-                                <div
-                                    className={`tab ${
-                                        activeTab === "all" ? "active" : ""
-                                    }`}
-                                    onClick={() => setActiveTab("all")}
-                                >
-                                    Tất cả
-                                    <span
-                                        className={`underline left ${
-                                            activeTab === "all" ? "full" : ""
-                                        }`}
-                                    />
-                                    <span
-                                        className={`underline right ${
-                                            activeTab === "all" ? "full" : ""
-                                        }`}
-                                    />
-                                </div>
-                                <div
-                                    className={`tab ${
-                                        activeTab === "unread" ? "active" : ""
-                                    }`}
-                                    onClick={() => setActiveTab("unread")}
-                                >
-                                    Chưa đọc{" "}
-                                    {countNotificationUnread > 0 &&
-                                        `(${countNotificationUnread})`}
-                                    <span
-                                        className={`underline left ${
-                                            activeTab === "unread" ? "full" : ""
-                                        }`}
-                                    />
-                                    <span
-                                        className={`underline right ${
-                                            activeTab === "unread" ? "full" : ""
-                                        }`}
-                                    />
-                                </div>
-                                <div
-                                    className={`tab ${
-                                        activeTab === "read" ? "active" : ""
-                                    }`}
-                                    onClick={() => setActiveTab("read")}
-                                >
-                                    Đã đọc
-                                    <span
-                                        className={`underline left ${
-                                            activeTab === "read" ? "full" : ""
-                                        }`}
-                                    />
-                                    <span
-                                        className={`underline right ${
-                                            activeTab === "read" ? "full" : ""
-                                        }`}
-                                    />
-                                </div>
+
+                    {chatUnreadCount > 0 && (
+                        <div className="noti-number">{chatUnreadCount}</div>
+                    )}
+
+                    {isChatOpen && (
+                        <div className="sub-chat">
+                            <div className="chat-header">
+                                <h4>Tin nhắn</h4>
                             </div>
+
+                            {/* Conversations List */}
                             <ul>
-                                {filteredNotifications.length === 0 && (
-                                    <div>Không có thông báo</div>
+                                {conversations.length === 0 && (
+                                    <div className="no-conversation">
+                                        Chưa có cuộc trò chuyện nào
+                                    </div>
                                 )}
-                                {filteredNotifications.map((n) => (
+
+                                {conversations.slice(0, 6).map((conv) => (
                                     <li
-                                        key={n.id}
-                                        className={
-                                            n.status === "Read"
-                                                ? ""
-                                                : "n-unread"
+                                        key={conv.id}
+                                        onClick={() =>
+                                            handleConversationClick(conv)
                                         }
+                                        className="chat-content"
                                     >
-                                        {n.title}
+                                        <div className="chat-img">
+                                            <img
+                                                src={
+                                                    conv.otherUserAvatarUrl ||
+                                                    "/default-avatar.png"
+                                                }
+                                                alt={
+                                                    conv.otherUserName || "User"
+                                                }
+                                                className="img"
+                                            />
+                                            {conv.otherUserId &&
+                                                onlineUsers.includes(
+                                                    conv.otherUserId
+                                                ) && (
+                                                    <span title="Đang online" />
+                                                )}
+                                        </div>
+                                        <div className="chat-info">
+                                            <div className="chat-name">
+                                                {conv.otherUserName ||
+                                                    conv.title}
+                                            </div>
+                                            <div className="chat-message">
+                                                {conv.lastMessageContent ||
+                                                    "Chưa có tin nhắn"}
+
+                                                <span className="chat-dot" />
+
+                                                {conv.lastMessageAt && (
+                                                    <span className="chat-time">
+                                                        {timeAgo(
+                                                            conv.lastMessageAt
+                                                        )}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {/* Force re-render when currentTime changes */}
+                                            {currentTime && null}
+                                        </div>
+                                        {conv.unreadCount > 0 && (
+                                            <span>{conv.unreadCount}</span>
+                                        )}
                                     </li>
                                 ))}
                             </ul>
+
+                            <div className="button-container">
+                                <button
+                                    className="pr-btn"
+                                    onClick={() => {
+                                        handleClickSubMenu(routes.student.chat);
+                                    }}
+                                >
+                                    Xem tất cả
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Chat Modal */}
+                {isChatModalOpen && selectedConversation && (
+                    <ChatModal
+                        conversationId={selectedConversation.id}
+                        isOpen={isChatModalOpen}
+                        onClose={() => {
+                            setIsChatModalOpen(false);
+                            setSelectedConversation(null);
+                            dispatch(setCurrentConversation(null));
+                        }}
+                    />
+                )}
+
+                <div ref={notificateRef} className="notification-wrapper">
+                    <PiBellRingingBold
+                        className="icon-bell"
+                        onClick={() => setIsNotificateOpen(!isNotificateOpen)}
+                    />
+                    {countNotificationUnread > 0 && (
+                        <div className="noti-number">
+                            {countNotificationUnread}
+                        </div>
+                    )}
+                    {isNotificateOpen && (
+                        <div className="sub-notification">
+                            <div className="noti-header">
+                                <h4>Thông báo</h4>
+                                {countNotificationUnread > 0 && (
+                                    <p>
+                                        {countNotificationUnread} thông báo mới
+                                    </p>
+                                )}
+                            </div>
+                            <ul>
+                                {unreadNotifications.length === 0 && (
+                                    <div>Không có thông báo</div>
+                                )}
+                                {unreadNotifications.slice(0, 5).map((n) => (
+                                    <li key={n.id}>
+                                        <div className="noti-item">
+                                            {notificationIconMap[n.type]}
+                                            <div className="noti-info">
+                                                <h5>{n.title}</h5>
+                                                <p>{timeAgo(n.createdAt)}</p>
+                                            </div>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                            <div className="button-container">
+                                <button
+                                    className="pr-btn"
+                                    onClick={() => {
+                                        navigateHook(
+                                            routes.tutor.notification.list
+                                        );
+                                        setIsNotificateOpen(false);
+                                    }}
+                                >
+                                    Xem tất cả
+                                </button>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -195,7 +455,7 @@ const HeaderTutor: FC = () => {
                                 <li
                                     onClick={() =>
                                         handleClickSubMenu(
-                                            routes.tutor.information,
+                                            routes.tutor.information
                                         )
                                     }
                                 >
@@ -204,7 +464,7 @@ const HeaderTutor: FC = () => {
                                 <li
                                     onClick={() =>
                                         handleClickSubMenu(
-                                            routes.tutor.change_password,
+                                            routes.tutor.change_password
                                         )
                                     }
                                 >
@@ -220,7 +480,7 @@ const HeaderTutor: FC = () => {
                                 <li
                                     onClick={() =>
                                         handleClickSubMenu(
-                                            routes.tutor.schedule,
+                                            routes.tutor.schedule
                                         )
                                     }
                                 >

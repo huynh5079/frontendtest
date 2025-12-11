@@ -1,5 +1,5 @@
-import { type FC, useState } from "react";
-import { FaBookOpen, FaGraduationCap, FaMapMarkerAlt } from "react-icons/fa";
+import { type FC, useState, useEffect } from "react";
+import { FaBookOpen, FaGraduationCap } from "react-icons/fa";
 import { PriceRangeFilter } from "../../elements";
 
 const subjects = {
@@ -11,68 +11,89 @@ const subjects = {
 
 const teachingForm = ["Trực tuyến", "Học tại lớp"];
 
-const FilterCourse: FC = () => {
-    const [level, setLevel] = useState("");
+interface FilterCourseProps {
+    onFilterChange: (filters: {
+        titleSearch: string;
+        educationLevel: string;
+        subject: string;
+        modes: string[];
+        minPrice: number;
+        maxPrice: number;
+    }) => void;
+}
+
+const FilterCourse: FC<FilterCourseProps> = ({ onFilterChange }) => {
+    const [titleSearch, setTitleSearch] = useState(""); // tìm theo title lớp
+    const [educationLevel, setEducationLevel] = useState("");
     const [selectedSubject, setSelectedSubject] = useState<string>("");
-    const [selectedForms, setSelectedForms] = useState<string[]>([]);
+    const [selectedModes, setSelectedModes] = useState<string[]>([]);
+    const [minPrice, setMinPrice] = useState<number>(200000);
+    const [maxPrice, setMaxPrice] = useState<number>(800000);
+
+    useEffect(() => {
+        onFilterChange({
+            titleSearch,
+            educationLevel,
+            subject: selectedSubject,
+            modes: selectedModes,
+            minPrice,
+            maxPrice,
+        });
+    }, [
+        titleSearch,
+        educationLevel,
+        selectedSubject,
+        selectedModes,
+        minPrice,
+        maxPrice,
+    ]);
 
     const handleLevelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setLevel(e.target.value);
-        setSelectedSubject(""); // reset môn khi đổi cấp
+        setEducationLevel(e.target.value);
+        setSelectedSubject("");
     };
 
-    const handleSubjectChange = (subject: string) => {
-        setSelectedSubject(subject); // luôn ghi đè = chỉ chọn 1
-    };
+    const handleSubjectChange = (subject: string) =>
+        setSelectedSubject(subject);
 
-    const handleFormChange = (subject: string) => {
-        setSelectedForms((prev) =>
-            prev.includes(subject)
-                ? prev.filter((s) => s !== subject)
-                : [...prev, subject],
+    const handleModeChange = (mode: string) => {
+        setSelectedModes((prev) =>
+            prev.includes(mode)
+                ? prev.filter((m) => m !== mode)
+                : [...prev, mode],
         );
     };
 
-    const renderRadioSubjects = (subject: string) => (
-        <label key={subject} className="block">
-            <input
-                type="radio"
-                name="subject"
-                value={subject}
-                checked={selectedSubject === subject}
-                onChange={() => handleSubjectChange(subject)}
-                className="mr-2"
-            />
-            {subject}
-        </label>
-    );
+    // Môn học hiển thị dựa trên level
+    const levelMap: Record<string, keyof typeof subjects> = {
+        "Tiểu học": "elementary",
+        "Trung học cơ sở": "middle",
+        "Trung học phổ thông": "high",
+    };
 
-    const renderCheckboxForms = (form: string) => (
-        <label key={form} className="block">
-            <input
-                type="checkbox"
-                value={form}
-                checked={selectedForms.includes(form)}
-                onChange={() => handleFormChange(form)}
-                className="mr-2"
-            />
-            {form}
-        </label>
-    );
+    const levelSubjects: string[] =
+        educationLevel && subjects[levelMap[educationLevel]]
+            ? subjects[levelMap[educationLevel]]
+            : [];
 
-    // Môn học cần hiển thị = chung + môn riêng theo cấp
-    const subjectsToShow = [
-        ...subjects.common,
-        ...(level ? subjects[level as keyof typeof subjects] : []),
-    ];
+    const subjectsToShow = [...subjects.common, ...levelSubjects];
 
     return (
         <div className="filter-course-container">
             <h3>Bộ lọc</h3>
 
-            {/* Tìm kiếm */}
+            {/* Tìm kiếm theo title lớp */}
             <div className="fccr1">
-                <input type="text" placeholder="Tìm kiếm tên gia sư" />
+                <h4>
+                    <FaGraduationCap className="icon" />
+                    Tên lớp học
+                </h4>
+                <input
+                    type="text"
+                    placeholder="Tìm kiếm tên lớp học"
+                    value={titleSearch}
+                    onChange={(e) => setTitleSearch(e.target.value)}
+                />
             </div>
 
             {/* Cấp bậc */}
@@ -81,27 +102,13 @@ const FilterCourse: FC = () => {
                     <FaGraduationCap className="icon" />
                     Trình độ giảng dạy
                 </h4>
-                <select value={level} onChange={handleLevelChange}>
+                <select value={educationLevel} onChange={handleLevelChange}>
                     <option value="">-- Chọn bậc giảng dạy --</option>
-                    <option value="elementary">Tiểu học</option>
-                    <option value="middle">Trung học cơ sở</option>
-                    <option value="high">Trung học phổ thông</option>
-                </select>
-            </div>
-
-            {/* Địa điểm */}
-            <div className="fccr3">
-                <h4>
-                    <FaMapMarkerAlt className="icon" />
-                    Địa điểm
-                </h4>
-                <select>
-                    <option value="">-- Chọn tỉnh/thành phố --</option>
-                    <option value="TP Hà Nội">TP Hà Nội</option>
-                    <option value="TP Huế">TP Huế</option>
-                    <option value="TP Đà Nẵng">TP Đà Nẵng</option>
-                    <option value="TPHCM">TPHCM</option>
-                    <option value="Cần Thơ">Cần Thơ</option>
+                    <option value="Tiểu học">Tiểu học</option>
+                    <option value="Trung học cơ sở">Trung học cơ sở</option>
+                    <option value="Trung học phổ thông">
+                        Trung học phổ thông
+                    </option>
                 </select>
             </div>
 
@@ -111,7 +118,19 @@ const FilterCourse: FC = () => {
                     <FaBookOpen className="icon" />
                     Môn học
                 </h4>
-                {subjectsToShow.map(renderRadioSubjects)}
+                {subjectsToShow.map((subject) => (
+                    <label key={subject} className="block">
+                        <input
+                            type="radio"
+                            name="subject"
+                            value={subject}
+                            checked={selectedSubject === subject}
+                            onChange={() => handleSubjectChange(subject)}
+                            className="mr-2"
+                        />
+                        {subject}
+                    </label>
+                ))}
             </div>
 
             {/* Hình thức */}
@@ -120,7 +139,21 @@ const FilterCourse: FC = () => {
                     <FaBookOpen className="icon" />
                     Hình thức dạy học
                 </h4>
-                {teachingForm.map(renderCheckboxForms)}
+                {[
+                    { value: "Online", label: "Học trực tuyến" },
+                    { value: "Offline", label: "Học tại nhà" },
+                ].map((mode) => (
+                    <label key={mode.value} className="block">
+                        <input
+                            type="checkbox"
+                            value={mode.value}
+                            checked={selectedModes.includes(mode.value)}
+                            onChange={() => handleModeChange(mode.value)}
+                            className="mr-2"
+                        />
+                        {mode.label}
+                    </label>
+                ))}
             </div>
 
             {/* Giá tiền */}
@@ -129,23 +162,29 @@ const FilterCourse: FC = () => {
                     <FaBookOpen className="icon" />
                     Giá tiền
                 </h4>
-                <PriceRangeFilter />
+                <PriceRangeFilter
+                    minValue={minPrice}
+                    maxValue={maxPrice}
+                    onChange={(min, max) => {
+                        setMinPrice(min);
+                        setMaxPrice(max);
+                    }}
+                />
             </div>
 
-            {/* Đánh giá */}
-            <div className="fccr7">
-                <h4>
-                    <FaGraduationCap className="icon" />
-                    Đánh giá
-                </h4>
-                <select>
-                    <option value="">-- Chọn mức đánh giá --</option>
-                    <option value="asc">Từ thấp đến cao</option>
-                    <option value="desc">Từ cao đến thấp</option>
-                </select>
-            </div>
-
-            <button className="pr-btn">Làm mới</button>
+            <button
+                className="pr-btn"
+                onClick={() => {
+                    setTitleSearch("");
+                    setEducationLevel("");
+                    setSelectedSubject("");
+                    setSelectedModes([]);
+                    setMinPrice(200000);
+                    setMaxPrice(800000);
+                }}
+            >
+                Làm mới
+            </button>
         </div>
     );
 };

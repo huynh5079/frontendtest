@@ -1,5 +1,8 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import type { BookingForTutor } from "../../../types/tutor";
+import type {
+    AcceptBookingForTutorParams,
+    BookingForTutor,
+} from "../../../types/tutor";
 import {
     acceptBookingForTutorApi,
     getAllBookingForTutorApi,
@@ -41,20 +44,23 @@ export const getDetailBookingForTutorApiThunk = createAsyncThunk<
     }
 });
 
-export const acceptBookingForTutorApiThunk = createAsyncThunk<{}, string>(
-    ACCEPT_BOOKING_FOR_TUTOR,
-    async (payload, { rejectWithValue }) => {
-        try {
-            const response = await acceptBookingForTutorApi(payload);
-            return response;
-        } catch (err: any) {
-            return rejectWithValue({
-                errorMessage: err.message,
-                data: err.response.data,
-            });
-        }
+export const acceptBookingForTutorApiThunk = createAsyncThunk<
+    {},
+    { boookingId: string; params: AcceptBookingForTutorParams }
+>(ACCEPT_BOOKING_FOR_TUTOR, async (payload, { rejectWithValue }) => {
+    try {
+        const response = await acceptBookingForTutorApi(
+            payload.boookingId,
+            payload.params
+        );
+        return response;
+    } catch (err: any) {
+        return rejectWithValue({
+            errorMessage: err.message,
+            data: err.response.data,
+        });
     }
-);
+});
 
 export const rejectBookingForTutorApiThunk = createAsyncThunk<{}, string>(
     REJECT_BOOKING_FOR_TUTOR,

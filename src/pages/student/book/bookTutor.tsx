@@ -1,4 +1,7 @@
-import { useEffect, useState, type FC } from "react";
+// ========================
+// 1. IMPORTS
+// ========================
+import { ChangeEvent, useEffect, useState, type FC } from "react";
 import {
     MdAttachMoney,
     MdDateRange,
@@ -10,58 +13,103 @@ import {
     MdSchool,
 } from "react-icons/md";
 import { useAppDispatch, useAppSelector } from "../../../app/store";
+
 import {
     selectBalance,
+    selectListLearningScheduleForStudent,
     selectListTutorSchedule,
     selectPublicTutor,
 } from "../../../app/selector";
+
 import { useParams } from "react-router-dom";
-import { publicGetDetailTutorApiThunk } from "../../../services/public/tutor/tutorThunk";
-import { getAllTutorScheduleApiThunk } from "../../../services/booking/bookingThunk";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
+
 import {
     csvToArray,
     formatDateToYMD,
     groupSchedulesByWeek,
     useDocumentTitle,
 } from "../../../utils/helper";
+
 import {
     DatePickerElement,
     LoadingSpinner,
     WeekCalendar,
 } from "../../../components/elements";
-import { Formik, Form, Field, ErrorMessage } from "formik";
-import * as Yup from "yup";
-import type {
-    CreateClassRequestParams,
-    Schedule,
-} from "../../../types/student";
+
+import { publicGetDetailTutorApiThunk } from "../../../services/public/tutor/tutorThunk";
+
 import { createClassRequestForStudentApiThunk } from "../../../services/student/bookingTutor/bookingTutorThunk";
+
+import {
+    checkBalanceApiThunk,
+    tranferToAdminApiThunk,
+} from "../../../services/wallet/walletThunk";
+
+import { RemindWalletModal } from "../../../components/modal";
 import { navigateHook } from "../../../routes/routeApp";
 import { routes } from "../../../routes/routeName";
 import { toast } from "react-toastify";
 import { get } from "lodash";
+import type {
+    Schedule,
+    CreateClassRequestParams,
+} from "../../../types/student";
 import type { WalletBalance } from "../../../types/wallet";
-import {
-    checkBalanceApiThunk,
-    transferWalletApiThunk,
-} from "../../../services/wallet/walletThunk";
+import { getAllTutorScheduleApiThunk } from "../../../services/booking/bookingThunk";
+import { getAllLearingScheduleForStudentApiThunk } from "../../../services/student/learningSchedule/learningScheduleThunk";
 
+export type ScheduleItem = {
+    id: string;
+    tutorId: string;
+    startTime: string;
+    endTime: string;
+    entryType: string;
+
+    // optional cho phần chỉ child mới có
+    lessonId?: string;
+    classId?: string;
+    title?: string | null;
+    attendanceStatus?: string | null;
+};
+
+// ========================
+// 2. COMPONENT
+// ========================
 const StudentBookTutor: FC = () => {
+    // ========================
+    // 2.1 PARAMS + REDUX
+    // ========================
     const { id } = useParams();
     const dispatch = useAppDispatch();
     const bookingPrice = 50000;
 
     const tutor = useAppSelector(selectPublicTutor);
-    const tutorSchedules = useAppSelector(selectListTutorSchedule);
+    const learningSchedules =
+        useAppSelector(selectListLearningScheduleForStudent) || [];
+    const tutorSchedules = useAppSelector(selectListTutorSchedule) || [];
     const balance: WalletBalance | null = useAppSelector(selectBalance);
 
+    const mergedSchedules: ScheduleItem[] = [
+        ...learningSchedules,
+        ...tutorSchedules,
+    ];
+
+    // ========================
+    // 2.2 STATES
+    // ========================
+    const [classOptions, setClassOptions] = useState<string[]>([]);
+    const [isRemindWalletOpen, setIsRemindWalletOpen] = useState(false);
+
     const busySchedules = groupSchedulesByWeek(
-        Array.isArray(tutorSchedules) ? tutorSchedules : []
+        Array.isArray(mergedSchedules) ? mergedSchedules : []
     );
     const tutorSubjects = csvToArray(tutor?.teachingSubjects || "");
 
-    const [classOptions, setClassOptions] = useState<string[]>([]);
-
+    // ========================
+    // 2.3 SIDE EFFECTS
+    // ========================
     useEffect(() => {
         dispatch(publicGetDetailTutorApiThunk(id!));
         dispatch(checkBalanceApiThunk());
@@ -69,6 +117,9 @@ const StudentBookTutor: FC = () => {
 
     useDocumentTitle("Đặt lịch gia sư");
 
+    // ========================
+    // 3. FORMIK CONFIG
+    // ========================
     const initialValues: CreateClassRequestParams = {
         studentUserId: null,
         tutorId: tutor?.tutorProfileId || null,
@@ -91,14 +142,12 @@ const StudentBookTutor: FC = () => {
             is: "Offline",
             then: (schema) => schema.required("Vui lòng nhập địa chỉ học"),
         }),
-        mode: Yup.string()
-            .oneOf(["Offline", "Online"])
-            .required("Vui lòng chọn hình thức học"),
+        mode: Yup.string().oneOf(["Offline", "Online"]).required(),
         classStartDate: Yup.string().required("Vui lòng chọn ngày bắt đầu"),
-        budget: Yup.number().min(0, "Học phí phải >= 0"),
+        budget: Yup.number().min(0),
         schedules: Yup.array()
             .of(
-                Yup.object().shape({
+                Yup.object({
                     dayOfWeek: Yup.number().required(),
                     startTime: Yup.string().required(),
                     endTime: Yup.string().required(),
@@ -107,11 +156,17 @@ const StudentBookTutor: FC = () => {
             .min(1, "Vui lòng chọn lịch đúng số buổi"),
     });
 
+    // ========================
+    // 4. RENDER
+    // ========================
     return (
         <section id="student-book-tutor-section">
             <div className="sbts-container">
                 <h2>Đặt lịch gia sư</h2>
 
+                {/** ========================
+                     FORMIK FORM
+                ========================= */}
                 <Formik
                     initialValues={initialValues}
                     validationSchema={validationSchema}
@@ -124,50 +179,55 @@ const StudentBookTutor: FC = () => {
                                 : bookingPrice;
 
                         if (balance?.balance && balance.balance < totalAmount) {
-                            toast.error(
-                                "Số dư ví của bạn không đủ, vui lòng nạp thêm tiền."
-                            );
+                            setIsRemindWalletOpen(true);
                             setSubmitting(false);
                             return;
                         }
 
-                        dispatch(createClassRequestForStudentApiThunk(values))
+                        dispatch(
+                            tranferToAdminApiThunk({
+                                Amount: totalAmount,
+                                Note: "Phí đặt lịch gia sư",
+                            })
+                        )
                             .unwrap()
                             .then(() => {
                                 dispatch(
-                                    transferWalletApiThunk({
-                                        toUserId:
-                                            "0E85EF35-39C1-418A-9A8C-0F83AC9520A6",
-                                        amount: totalAmount,
-                                        note: "Phí đặt lịch gia sư",
-                                    })
+                                    createClassRequestForStudentApiThunk(values)
                                 )
                                     .unwrap()
                                     .then((res) => {
-                                        const message = get(
-                                            res,
-                                            "data.message",
-                                            "Đặt lịch thành công"
+                                        toast.success(
+                                            get(
+                                                res,
+                                                "data.message",
+                                                "Đặt lịch thành công"
+                                            )
                                         );
-                                        toast.success(message);
                                         navigateHook(routes.student.home);
+                                    })
+                                    .catch((err) => {
+                                        toast.error(
+                                            get(
+                                                err,
+                                                "data.message",
+                                                "Có lỗi xảy ra"
+                                            )
+                                        );
                                     });
                             })
-                            .catch((error) => {
-                                const errorData = get(
-                                    error,
-                                    "data.message",
-                                    "Có lỗi xảy ra"
+                            .catch((err) => {
+                                toast.error(
+                                    get(err, "data.message", "Có lỗi xảy ra")
                                 );
-                                toast.error(errorData);
                             })
-                            .finally(() => {
-                                setSubmitting(false);
-                            });
+                            .finally(() => setSubmitting(false));
                     }}
                 >
                     {({ values, setFieldValue, isSubmitting }) => {
-                        // Load lịch dạy theo startDate
+                        // ========================
+                        // 4.1 EFFECT: LOAD SCHEDULE WHEN DATE CHANGES
+                        // ========================
                         useEffect(() => {
                             if (
                                 tutor?.tutorProfileId &&
@@ -176,6 +236,7 @@ const StudentBookTutor: FC = () => {
                                 const start = formatDateToYMD(
                                     new Date(values.classStartDate)
                                 );
+
                                 const endDate = new Date(values.classStartDate);
                                 endDate.setDate(endDate.getDate() + 30);
                                 const end = formatDateToYMD(endDate);
@@ -189,6 +250,12 @@ const StudentBookTutor: FC = () => {
                                         endDate: end,
                                     })
                                 );
+                                dispatch(
+                                    getAllLearingScheduleForStudentApiThunk({
+                                        startDate: start,
+                                        endDate: end,
+                                    })
+                                );
                             }
                         }, [
                             dispatch,
@@ -196,7 +263,9 @@ const StudentBookTutor: FC = () => {
                             values.classStartDate,
                         ]);
 
-                        // Cập nhật classOptions theo teachingLevel
+                        // ========================
+                        // 4.2 HANDLER: SUBJECT CHANGE → UPDATE CLASS OPTIONS
+                        // ========================
                         const handleSubjectChange = (value: string) => {
                             setFieldValue("subject", value);
                             setFieldValue("educationLevel", "");
@@ -212,6 +281,7 @@ const StudentBookTutor: FC = () => {
                                         (_, i) => `Lớp ${i + 1}`
                                     )
                                 );
+
                             if (level.includes("trung học cơ sở"))
                                 options.push(
                                     ...Array.from(
@@ -219,6 +289,7 @@ const StudentBookTutor: FC = () => {
                                         (_, i) => `Lớp ${i + 6}`
                                     )
                                 );
+
                             if (level.includes("trung học phổ thông"))
                                 options.push(
                                     ...Array.from(
@@ -230,24 +301,33 @@ const StudentBookTutor: FC = () => {
                             setClassOptions(options);
                         };
 
+                        // ========================
+                        // 4.3 EFFECT: UPDATE BUDGET WHEN SCHEDULE CHANGES
+                        // ========================
                         useEffect(() => {
                             const count = values.schedules.length;
-                            let fee = 0;
-                            if (count === 1) fee = 500000;
-                            else if (count === 2) fee = 800000;
-                            else if (count === 3) fee = 1000000;
-                            else if (count === 4) fee = 1200000;
-                            else if (count === 5) fee = 1500000;
-                            else if (count === 6) fee = 1800000;
-                            setFieldValue("budget", fee);
+                            const feeMap: { [key: number]: number } = {
+                                1: 500000,
+                                2: 800000,
+                                3: 1000000,
+                                4: 1200000,
+                                5: 1500000,
+                                6: 1800000,
+                            };
+                            setFieldValue("budget", feeMap[count] || 0);
                         }, [values.schedules, setFieldValue]);
 
+                        // ========================
+                        // 4.4 UI FORM SECTIONS
+                        // ========================
                         const priceOffline = bookingPrice;
                         const priceOnline = bookingPrice + values.budget;
 
                         return (
                             <Form className="form">
-                                {/* Môn học */}
+                                {/* ========================
+                                    SECTION: MÔN HỌC
+                                ======================== */}
                                 <div className="form-field">
                                     <label className="form-label">
                                         Môn học
@@ -258,7 +338,9 @@ const StudentBookTutor: FC = () => {
                                             as="select"
                                             name="subject"
                                             className="form-input"
-                                            onChange={(e: any) =>
+                                            onChange={(
+                                                e: ChangeEvent<HTMLSelectElement>
+                                            ) =>
                                                 handleSubjectChange(
                                                     e.target.value
                                                 )
@@ -281,7 +363,9 @@ const StudentBookTutor: FC = () => {
                                     />
                                 </div>
 
-                                {/* Lớp */}
+                                {/* ========================
+                                    SECTION: LỚP
+                                ======================== */}
                                 <div className="form-field">
                                     <label className="form-label">Lớp</label>
                                     <div className="form-input-container">
@@ -294,9 +378,9 @@ const StudentBookTutor: FC = () => {
                                             <option value="">
                                                 -- Chọn lớp --
                                             </option>
-                                            {classOptions.map((cls) => (
-                                                <option key={cls} value={cls}>
-                                                    {cls}
+                                            {classOptions.map((c) => (
+                                                <option key={c} value={c}>
+                                                    {c}
                                                 </option>
                                             ))}
                                         </Field>
@@ -308,7 +392,9 @@ const StudentBookTutor: FC = () => {
                                     />
                                 </div>
 
-                                {/* Mô tả */}
+                                {/* ========================
+                                    SECTION: MÔ TẢ
+                                ======================== */}
                                 <div className="form-field">
                                     <label className="form-label">Mô tả</label>
                                     <div className="form-input-container">
@@ -327,7 +413,9 @@ const StudentBookTutor: FC = () => {
                                     />
                                 </div>
 
-                                {/* Yêu cầu đặc biệt */}
+                                {/* ========================
+                                    SECTION: YÊU CẦU ĐẶC BIỆT
+                                ======================== */}
                                 <div className="form-field">
                                     <label className="form-label">
                                         Yêu cầu đặc biệt
@@ -341,14 +429,11 @@ const StudentBookTutor: FC = () => {
                                             placeholder="Nhập yêu cầu đặc biệt"
                                         />
                                     </div>
-                                    <ErrorMessage
-                                        name="specialRequirements"
-                                        component="div"
-                                        className="text-error"
-                                    />
                                 </div>
 
-                                {/* Ngày bắt đầu */}
+                                {/* ========================
+                                    SECTION: NGÀY BẮT ĐẦU
+                                ======================== */}
                                 <div className="form-field">
                                     <label className="form-label">
                                         Ngày bắt đầu
@@ -373,18 +458,14 @@ const StudentBookTutor: FC = () => {
                                         />
                                     </div>
                                     <p className="note">
-                                        Sau khi bạn chọn ngày bắt đầu học, lịch
-                                        học trong tuần sẽ hiện ra để bạn lựa
-                                        chọn buổi học phù hợp.
+                                        Sau khi chọn ngày, lịch học theo tuần sẽ
+                                        hiện ra.
                                     </p>
-                                    <ErrorMessage
-                                        name="classStartDate"
-                                        component="div"
-                                        className="text-error"
-                                    />
                                 </div>
 
-                                {/* Hình thức học */}
+                                {/* ========================
+                                    SECTION: MODE (ONLINE/OFFLINE)
+                                ======================== */}
                                 <div className="form-field">
                                     <label className="form-label">
                                         Hình thức học
@@ -404,14 +485,11 @@ const StudentBookTutor: FC = () => {
                                             </option>
                                         </Field>
                                     </div>
-                                    <ErrorMessage
-                                        name="mode"
-                                        component="div"
-                                        className="text-error"
-                                    />
                                 </div>
 
-                                {/* Địa chỉ nếu Offline */}
+                                {/* ========================
+                                    SECTION: ĐỊA CHỈ (OFFLINE ONLY)
+                                ======================== */}
                                 {values.mode === "Offline" && (
                                     <div className="form-field">
                                         <label className="form-label">
@@ -426,21 +504,19 @@ const StudentBookTutor: FC = () => {
                                                 placeholder="Nhập địa chỉ học"
                                             />
                                         </div>
-                                        <ErrorMessage
-                                            name="location"
-                                            component="div"
-                                            className="text-error"
-                                        />
                                     </div>
                                 )}
 
+                                {/* ========================
+                                    SECTION: HỌC PHÍ
+                                ======================== */}
                                 <div className="form-field">
                                     <label className="form-label">
                                         Học phí 1 tháng
                                     </label>
                                     <div className="form-input-container">
                                         <MdAttachMoney className="form-input-icon" />
-                                        <Field
+                                        <input
                                             type="text"
                                             className="form-input"
                                             value={
@@ -453,29 +529,17 @@ const StudentBookTutor: FC = () => {
                                             readOnly
                                         />
                                     </div>
-
                                     <p className="note">
-                                        Học phí sẽ tự động cập nhật khi bạn chọn
-                                        buổi học
+                                        Học phí tự động cập nhật theo số buổi
+                                        dạy.
                                     </p>
                                 </div>
 
-                                <div className="note-container">
-                                    <p>
-                                        Lưu ý:{" "}
-                                        <span>
-                                            Đối với hình thức học tại nhà, chúng
-                                            tôi chỉ thu phí khi đặt lịch. Còn
-                                            với hình thức học trực tuyến, học
-                                            viên cần thanh toán trước học phí 1
-                                            tháng cùng với phí đặt lịch.
-                                        </span>
-                                    </p>
-                                </div>
-
+                                {/* ========================
+                                    SECTION: WEEK CALENDAR
+                                ======================== */}
                                 {values.classStartDate && (
                                     <div className="calendar-container">
-                                        {/* Lịch tuần */}
                                         <WeekCalendar
                                             busySchedules={busySchedules}
                                             onSelectedChange={(
@@ -490,6 +554,9 @@ const StudentBookTutor: FC = () => {
                                     </div>
                                 )}
 
+                                {/* ========================
+                                    SECTION: TỔNG TIỀN
+                                ======================== */}
                                 <div className="price-container">
                                     <div className="price-container-col">
                                         <h4>Phí đặt lịch</h4>
@@ -500,10 +567,11 @@ const StudentBookTutor: FC = () => {
                                         </p>
                                     </div>
                                 </div>
+
                                 {values.mode === "Online" && (
                                     <div className="price-container">
                                         <div className="price-container-col">
-                                            <h4>Học phí một tháng</h4>
+                                            <h4>Học phí 1 tháng</h4>
                                         </div>
                                         <div className="price-container-col">
                                             <p>
@@ -529,6 +597,9 @@ const StudentBookTutor: FC = () => {
                                     </div>
                                 </div>
 
+                                {/* ========================
+                                    SECTION: SUBMIT BUTTON
+                                ======================== */}
                                 <div className="form-submit">
                                     <button
                                         type="submit"
@@ -551,6 +622,15 @@ const StudentBookTutor: FC = () => {
                     }}
                 </Formik>
             </div>
+
+            {/* ========================
+                MODAL REMIND BALANCE
+            ======================== */}
+            <RemindWalletModal
+                isOpen={isRemindWalletOpen}
+                setIsOpen={setIsRemindWalletOpen}
+                routes={routes.student.information + "?tab=wallet"}
+            />
         </section>
     );
 };

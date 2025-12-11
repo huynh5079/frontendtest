@@ -47,12 +47,10 @@ const DnDCalendar = withDragAndDrop(Calendar);
 
 interface WeekCalendarFindTutorProps {
     onSelectedChange?: (schedules: Schedule[]) => void;
-    sessionsPerWeek?: number | ""; // 🔹 Thêm prop
 }
 
 const WeekCalendarFindTutor: React.FC<WeekCalendarFindTutorProps> = ({
     onSelectedChange,
-    sessionsPerWeek,
 }) => {
     const [events, setEvents] = useState<EventType[]>([]);
     const [selectedSlots, setSelectedSlots] = useState<Slot[]>([]);
@@ -82,24 +80,12 @@ const WeekCalendarFindTutor: React.FC<WeekCalendarFindTutorProps> = ({
         }
 
         return allSlots.some(
-            (slot) => !(isBefore(end, slot.start) || isAfter(start, slot.end))
+            (slot) => !(isBefore(end, slot.start) || isAfter(start, slot.end)),
         );
     };
 
     // 🔹 Xử lý chọn khung giờ
     const handleSelectSlot = (slotInfo: any) => {
-        // 🔹 Ngăn chọn quá số buổi
-        if (
-            sessionsPerWeek !== "" &&
-            sessionsPerWeek &&
-            selectedSlots.length >= sessionsPerWeek
-        ) {
-            toast.error(
-                `⚠ Bạn chỉ được chọn tối đa ${sessionsPerWeek} buổi trong tuần`
-            );
-            return;
-        }
-
         const start = slotInfo.start as Date;
         const end = slotInfo.end as Date;
         const dayOfWeek = format(start, "EEEE", { locale: vi });
@@ -140,7 +126,7 @@ const WeekCalendarFindTutor: React.FC<WeekCalendarFindTutorProps> = ({
                       end,
                       title: ``,
                   }
-                : e
+                : e,
         );
 
         const updatedSlots = selectedSlots.map((slot) =>
@@ -153,7 +139,7 @@ const WeekCalendarFindTutor: React.FC<WeekCalendarFindTutorProps> = ({
                       startDate: start,
                       endDate: end,
                   }
-                : slot
+                : slot,
         );
 
         setEvents(updatedEvents);
@@ -183,17 +169,9 @@ const WeekCalendarFindTutor: React.FC<WeekCalendarFindTutorProps> = ({
         <div className="week-calendar">
             {selectedSlots.length > 0 && (
                 <>
-                    {" "}
-                    <button
-                        onClick={handleClearAll}
-                        className="delete-btn delete-all"
-                    >
-                        {" "}
-                        Xoá tất cả{" "}
-                    </button>{" "}
                     <div className="list-event">
                         {" "}
-                        <h6>Danh sách khung giờ</h6>{" "}
+                        <h6 style={{textAlign: "center"}}>Danh sách khung giờ</h6>{" "}
                         {selectedSlots.map((slot, index) => (
                             <div key={index} className="event-item">
                                 {" "}
@@ -236,7 +214,7 @@ const WeekCalendarFindTutor: React.FC<WeekCalendarFindTutorProps> = ({
                     dayFormat: (
                         date: Date,
                         culture: string | undefined,
-                        localizer: any
+                        localizer: any,
                     ) => localizer.format(date, "EEEE", culture),
                 }}
                 eventPropGetter={(event: any) => {

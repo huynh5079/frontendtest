@@ -80,6 +80,7 @@ interface FormFieldProps {
     multiple?: boolean;
     onChangeFile?: (files: File[]) => void;
     onChange?: (e: any) => void; // <-- thêm dòng này
+    className?: string;
 }
 
 const FormField: FC<FormFieldProps> = ({
@@ -92,8 +93,9 @@ const FormField: FC<FormFieldProps> = ({
     options,
     multiple,
     onChangeFile,
+    className,
 }) => (
-    <div className="form-field">
+    <div className={`form-field ${className}`}>
         <label className="form-label">{label}</label>
         <div className="form-input-container">
             <Icon className="form-input-icon" />
@@ -209,22 +211,32 @@ const Step1: FC<any> = ({ values, setFieldValue }) => (
             placeholder="Mô tả bản thân"
             icon={MdOutlineDescription}
             as="textarea"
+            className="form-field-textarea"
         />
     </div>
 );
 
-const Step2: FC<any> = ({ setFieldValue }) => {
+const Step2: FC<any> = ({ values, setFieldValue }) => {
     const [filteredSubjects, setFilteredSubjects] = useState<
         OptionMultiSelectData[]
     >([]);
 
+    // Khi cấp độ giảng dạy thay đổi
     const handleLevelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedLevel = e.target.value;
         setFieldValue("teachingLevel", selectedLevel);
+
         const allowedSubjects = levelSubjectsMap[selectedLevel] || [];
-        setFilteredSubjects(
-            subjectsOptions.filter((s) => allowedSubjects.includes(s.value)),
+        const newSubjects = subjectsOptions.filter((s) =>
+            allowedSubjects.includes(s.value),
         );
+        setFilteredSubjects(newSubjects);
+
+        // Xóa môn đã chọn trước đó nếu không thuộc cấp độ mới
+        const filteredSelected = (values.teachingSubjects || []).filter(
+            (sub: string) => allowedSubjects.includes(sub),
+        );
+        setFieldValue("teachingSubjects", filteredSelected);
     };
 
     return (
@@ -252,21 +264,31 @@ const Step2: FC<any> = ({ setFieldValue }) => {
                 placeholder="Nhập tên trường"
                 icon={FaUniversity}
             />
-            <FormField
-                name="teachingLevel"
-                label="Cấp độ giảng dạy"
-                icon={MdOutlineLeaderboard}
-                as="select"
-                options={[
-                    { value: "Tiểu học", label: "Tiểu học" },
-                    { value: "Trung học cơ sở", label: "Trung học cơ sở" },
-                    {
-                        value: "Trung học phổ thông",
-                        label: "Trung học phổ thông",
-                    },
-                ]}
-                onChange={(e: any) => handleLevelChange(e)}
-            />
+            <div className="form-field">
+                <label className="form-label">Cấp độ giảng dạy</label>
+                <div className="form-input-container">
+                    <MdOutlineLeaderboard className="form-input-icon" />
+                    <select
+                        name="teachingLevel"
+                        className="form-input"
+                        value={values.teachingLevel}
+                        onChange={handleLevelChange}
+                    >
+                        <option value="">-- Chọn cấp độ --</option>
+                        <option value="Tiểu học">Tiểu học</option>
+                        <option value="Trung học cơ sở">Trung học cơ sở</option>
+                        <option value="Trung học phổ thông">
+                            Trung học phổ thông
+                        </option>
+                    </select>
+                </div>
+                <ErrorMessage
+                    name="teachingLevel"
+                    component="p"
+                    className="text-error"
+                />
+            </div>
+
             <div className="form-field">
                 <MultiSelect
                     label="Môn dạy"
@@ -278,6 +300,9 @@ const Step2: FC<any> = ({ setFieldValue }) => {
                             selected.map((s) => s.value),
                         )
                     }
+                    value={filteredSubjects.filter((s) =>
+                        (values.teachingSubjects || []).includes(s.value),
+                    )}
                 />
                 <ErrorMessage
                     name="teachingSubjects"
@@ -449,58 +474,60 @@ const RegisterTutorPage: FC = () => {
                                 ))}
                             </div>
 
-                            {/* --- Step Content --- */}
-                            {isStep === 1 && (
-                                <Step1
-                                    values={values}
-                                    setFieldValue={setFieldValue}
-                                />
-                            )}
-                            {isStep === 2 && (
-                                <Step2
-                                    values={values}
-                                    setFieldValue={setFieldValue}
-                                />
-                            )}
-                            {isStep === 3 && (
-                                <Step3 setFieldValue={setFieldValue} />
-                            )}
+                            <div className="rtscr2-content">
+                                {/* --- Step Content --- */}
+                                {isStep === 1 && (
+                                    <Step1
+                                        values={values}
+                                        setFieldValue={setFieldValue}
+                                    />
+                                )}
+                                {isStep === 2 && (
+                                    <Step2
+                                        values={values}
+                                        setFieldValue={setFieldValue}
+                                    />
+                                )}
+                                {isStep === 3 && (
+                                    <Step3 setFieldValue={setFieldValue} />
+                                )}
 
-                            <div className="group-btn">
-                                {isStep > 1 && (
-                                    <button
-                                        type="button"
-                                        className="sc-btn"
-                                        onClick={handlePrevStep}
-                                    >
-                                        Quay lại
-                                    </button>
-                                )}
-                                {isStep < 3 ? (
-                                    <button
-                                        type="button"
-                                        className="pr-btn"
-                                        onClick={handleNextStep}
-                                    >
-                                        Tiếp theo
-                                    </button>
-                                ) : (
-                                    <button
-                                        type="submit"
-                                        className={
-                                            isSubmitting
-                                                ? "disable-btn"
-                                                : "pr-btn"
-                                        }
-                                        disabled={isSubmitting}
-                                    >
-                                        {isSubmitting ? (
-                                            <LoadingSpinner />
-                                        ) : (
-                                            "Đăng ký"
-                                        )}
-                                    </button>
-                                )}
+                                <div className="group-btn">
+                                    {isStep > 1 && (
+                                        <button
+                                            type="button"
+                                            className="sc-btn"
+                                            onClick={handlePrevStep}
+                                        >
+                                            Quay lại
+                                        </button>
+                                    )}
+                                    {isStep < 3 ? (
+                                        <button
+                                            type="button"
+                                            className="pr-btn"
+                                            onClick={handleNextStep}
+                                        >
+                                            Tiếp theo
+                                        </button>
+                                    ) : (
+                                        <button
+                                            type="submit"
+                                            className={
+                                                isSubmitting
+                                                    ? "disable-btn"
+                                                    : "pr-btn"
+                                            }
+                                            disabled={isSubmitting}
+                                        >
+                                            {isSubmitting ? (
+                                                <LoadingSpinner />
+                                            ) : (
+                                                "Đăng ký"
+                                            )}
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </Form>
                     )}

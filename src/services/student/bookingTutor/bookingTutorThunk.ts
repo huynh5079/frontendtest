@@ -13,6 +13,7 @@ import type {
     Schedule,
     UpdateInfoClassRequestParams,
 } from "../../../types/student";
+import { ResponseFromServer } from "../../../types/app";
 
 const CREATE_CLASS_REQUEST_FOR_STUDENT = "CREATE_CLASS_REQUEST_FOR_STUDENT";
 const GET_ALL_CLASS_REQUEST_FOR_STUDENT = "GET_ALL_CLASS_REQUEST_FOR_STUDENT";
@@ -40,7 +41,7 @@ export const createClassRequestForStudentApiThunk = createAsyncThunk<
 });
 
 export const getAllClassRequestForStudentApiThunk = createAsyncThunk<
-    ClassRequests[]
+    ResponseFromServer<ClassRequests[]>
 >(GET_ALL_CLASS_REQUEST_FOR_STUDENT, async (_, { rejectWithValue }) => {
     try {
         const response = await getAllClassRequestForStudentApi();
@@ -68,7 +69,7 @@ export const getDetailClassRequestForStudentApiThunk = createAsyncThunk<
                 data: err.response.data,
             });
         }
-    },
+    }
 );
 
 export const updateInfoClassRequestForStudentApiThunk = createAsyncThunk<
@@ -83,7 +84,7 @@ export const updateInfoClassRequestForStudentApiThunk = createAsyncThunk<
         try {
             const response = await updateInfoClassRequestForStudentApi(
                 payload.classRequestId,
-                payload.params,
+                payload.params
             );
             return response;
         } catch (err: any) {
@@ -92,7 +93,7 @@ export const updateInfoClassRequestForStudentApiThunk = createAsyncThunk<
                 data: err.response.data,
             });
         }
-    },
+    }
 );
 
 export const updateScheduleClassRequestForStudentApiThunk = createAsyncThunk<
@@ -107,7 +108,7 @@ export const updateScheduleClassRequestForStudentApiThunk = createAsyncThunk<
         try {
             const response = await UpdateScheduleClassRequestForStudentApi(
                 payload.classRequestId,
-                payload.params,
+                payload.params
             );
             return response;
         } catch (err: any) {
@@ -116,7 +117,7 @@ export const updateScheduleClassRequestForStudentApiThunk = createAsyncThunk<
                 data: err.response.data,
             });
         }
-    },
+    }
 );
 
 export const cancelClassRequestForStudentApiThunk = createAsyncThunk<

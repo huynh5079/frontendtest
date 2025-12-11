@@ -19,6 +19,11 @@ request.interceptors.request.use(
             }`;
         }
 
+        // Xóa Content-Type nếu là FormData để browser tự set boundary
+        if (config.data instanceof FormData) {
+            delete config.headers["Content-Type"];
+        }
+
         return config;
     },
     (error) => {

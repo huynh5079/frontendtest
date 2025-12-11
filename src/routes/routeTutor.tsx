@@ -21,6 +21,10 @@ import {
     DetailRequestFindtutorForTutorPage,
     ListReuqestFindtutorForTutorPage,
 } from "../pages/tutor/requestFindTutor";
+import { TutorDetailLessonPage, TutorStudySchedulePage } from "../pages/tutor/studySchedule";
+import TutorVideoAnalysisPage from "../pages/tutor/studySchedule/videoAnalysis";
+import { TutorListNotificationPage } from "../pages/tutor/notification";
+import { ChatPage } from "../pages/system/chat";
 
 const routeTutor: RouteObject[] = [
     {
@@ -41,6 +45,18 @@ const routeTutor: RouteObject[] = [
                     {
                         path: "schedule",
                         element: <TutorSchedulePage />,
+                    },
+                    {
+                        path: "study_schedule",
+                        element: <TutorStudySchedulePage />,
+                    },
+                    {
+                        path: "study_schedule/lesson/:id/detail",
+                        element: <TutorDetailLessonPage />,
+                    },
+                    {
+                        path: "study_schedule/lesson/:id/detail/video/:videoId",
+                        element: <TutorVideoAnalysisPage />,
                     },
                     {
                         path: "class",
@@ -79,8 +95,16 @@ const routeTutor: RouteObject[] = [
                         element: <TutorChangePasswordPage />,
                     },
                     {
+                        path: "notification",
+                        element: <TutorListNotificationPage />,
+                    },
+                    {
                         path: "wallet",
                         element: <TutorWalletPage />,
+                    },
+                    {
+                        path: "chat",
+                        element: <ChatPage />,
                     },
                 ],
             },

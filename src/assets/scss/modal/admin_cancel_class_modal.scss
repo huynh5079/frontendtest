@@ -1,0 +1,159 @@
+#admin-cancel-class-modal {
+    .accm-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        padding: 0.5rem 0;
+        min-width: 100%;
+
+        .accm-warning {
+            font-size: 1rem;
+            color: #333;
+            margin: 0 0 0.5rem 0;
+            line-height: 1.5;
+        }
+
+        .accm-warning-box {
+            background-color: #fffef0;
+            border: 1px solid #ff9800;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin: 0.5rem 0;
+
+            .accm-warning-header {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                margin-bottom: 0.75rem;
+
+                .accm-warning-icon {
+                    font-size: 1.25rem;
+                }
+
+                strong {
+                    font-size: 1rem;
+                    color: #333;
+                }
+            }
+
+            .accm-warning-list {
+                margin: 0;
+                padding-left: 1.5rem;
+                list-style-type: disc;
+                color: #333;
+                font-size: 0.95rem;
+                line-height: 1.6;
+
+                li {
+                    margin-bottom: 0.25rem;
+
+                    &:last-child {
+                        margin-bottom: 0;
+                    }
+                }
+            }
+        }
+
+        .form-field {
+            margin-bottom: 0;
+
+            .form-label {
+                font-weight: 600;
+                margin-bottom: 0.5rem;
+                display: block;
+                font-size: 1rem;
+                color: #333;
+            }
+
+            .form-input {
+                width: 100%;
+                padding: 0.75rem 1rem;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                font-size: 1rem;
+                background-color: #fff;
+
+                &:focus {
+                    outline: none;
+                    border-color: var(--main-color);
+                }
+
+                &::placeholder {
+                    color: #999;
+                }
+
+                &:disabled {
+                    background-color: #f5f5f5;
+                    cursor: not-allowed;
+                }
+            }
+
+            textarea.form-input {
+                resize: vertical;
+                min-height: 90px;
+                font-family: inherit;
+                line-height: 1.5;
+            }
+
+            select.form-input {
+                cursor: pointer;
+                appearance: none;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 1rem center;
+                padding-right: 3rem;
+            }
+        }
+
+        .group-btn {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1rem;
+
+            .sc-btn {
+                background-color: #fff;
+                color: var(--main-color);
+                border: 1px solid var(--main-color);
+                padding: 0.75rem 1.5rem;
+                border-radius: 6px;
+                font-size: 1rem;
+                font-weight: 600;
+                cursor: pointer;
+
+                &:disabled {
+                    opacity: 0.6;
+                    cursor: not-allowed;
+                }
+            }
+
+            .pr-btn {
+                background-color: var(--main-color);
+                color: white;
+                border: 1px solid var(--main-color);
+                padding: 0.75rem 1.5rem;
+                border-radius: 6px;
+                font-size: 1rem;
+                font-weight: 600;
+                cursor: pointer;
+
+                &:disabled {
+                    opacity: 0.6;
+                    cursor: not-allowed;
+                }
+            }
+
+            .disable-btn {
+                background-color: #ccc;
+                color: white;
+                border: none;
+                padding: 0.75rem 1.5rem;
+                border-radius: 6px;
+                font-size: 1rem;
+                font-weight: 600;
+                cursor: not-allowed;
+                opacity: 0.6;
+            }
+        }
+    }
+}

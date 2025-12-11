@@ -37,7 +37,7 @@ export type ProfileStudent = {
 };
 
 export type UpdateStudentProfileParams = {
-    educationLevelId: string;
+    educationLevel: string;
     preferredSubjects: string;
     username: string;
     phone: string;

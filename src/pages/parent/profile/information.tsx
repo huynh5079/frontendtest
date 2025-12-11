@@ -7,6 +7,7 @@ import {
     ParentChildReportLearning,
     ParentChildScheduleSchedule,
     ParentInformtionSidebar,
+    ParentLessonDetail,
     ParentProfile,
     ParentRequestFindTutor,
     ParentWallet,
@@ -25,6 +26,10 @@ const ParentInformationPage: FC = () => {
     }, [dispatch]);
 
     const renderContent = () => {
+        if (tab.startsWith("schedule/lesson_detail/")) {
+            return <ParentLessonDetail />;
+        }
+
         switch (tab) {
             case "change-password":
                 return <ParentChangePassword />;

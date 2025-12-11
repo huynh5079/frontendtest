@@ -10,13 +10,13 @@ export const getAllApplyRequestFindTutorForStudentApi = async (
 export const acceptApplyRequestFindTutorForStudentApi = async (
     applyId: string,
 ) => {
-    const data = await request.put(`/tutor-application/${applyId}/accept`);
+    const data = await request.patch(`/tutor-application/${applyId}/accept`);
     return data.data;
 };
 
 export const rejectApplyRequestFindTutorForStudentApi = async (
     applyId: string,
 ) => {
-    const data = await request.put(`/tutor-application/${applyId}/reject`);
+    const data = await request.patch(`/tutor-application/${applyId}/reject`);
     return data.data;
 };

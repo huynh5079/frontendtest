@@ -7,6 +7,7 @@ import ParentChildReportLearning from "./childReportLearning";
 import ParentChildAccount from "./childAccount";
 import ParentRequestFindTutor from "./requestFindTutor";
 import ParentBookingTutor from "./bookingTutor";
+import ParentLessonDetail from "./lessonDetail";
 
 export {
     ParentProfile,
@@ -18,4 +19,5 @@ export {
     ParentChildAccount,
     ParentRequestFindTutor,
     ParentBookingTutor,
+    ParentLessonDetail
 };

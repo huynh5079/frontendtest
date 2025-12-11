@@ -10,6 +10,7 @@ import {
 import { tutorForAdminSlice } from "../services/admin/tutor/adminTutorSlice";
 import { studentForAdminSlice } from "../services/admin/student/adminStudentSlice";
 import { parentForAdminSlice } from "../services/admin/parent/adminParentSlice";
+import { adminClassSlice } from "../services/admin/class/adminClassSlice";
 import { availabilityBlockForTutorSlice } from "../services/tutor/availabilityBlock/tutorAvailabilityBlockSlice";
 import { publicTutorSlice } from "../services/public/tutor/tutorSlice";
 import { tutorScheduleSlice } from "../services/booking/bookingSlice";
@@ -28,6 +29,9 @@ import { notificationSlice } from "../services/notification/notificationSlice";
 import { walletSlice } from "../services/wallet/walletSlice";
 import { feedbackSlice } from "../services/feedback/feedbackSlice";
 import { favoriteTutorSlice } from "../services/favoriteTutor/favoriteTutorSlice";
+import chatSlice from "../services/chat/chatSlice";
+import lessonMaterialsSlice from "../services/lessonMaterials/lessonMaterialsSlice";
+import videoAnalysisSlice from "../services/videoAnalysis/videoAnalysisSlice";
 import { AuthState } from "../types/auth";
 import {
     ParentForAdminState,
@@ -38,17 +42,19 @@ import { AvailabilityBlockForTutorState } from "../types/tutorAvailabilityBlock"
 import {
     BookingForTutorState,
     PublicTutorState,
+    QuizForTutorState,
     RequestFindTutorForTutorState,
     ScheduleForTutorState,
     TutorClassState,
 } from "../types/tutor";
 import { TutorScheduleState } from "../types/booking";
 import { UserState } from "../types/user";
-import { ChildAccountState } from "../types/parent";
+import { ChildAccountState, ChildScheduleState } from "../types/parent";
 import {
     ApplyRequestFindTutorForStudentState,
     BookingTutorStudentState,
     learningScheduleForStudentState,
+    QuizForStudentState,
     StudentClassState,
 } from "../types/student";
 import { PublicClassState } from "../types/public";
@@ -56,6 +62,10 @@ import { NotificationState } from "../types/notification";
 import { WalletState } from "../types/wallet";
 import { FeedbackState } from "../types/feedback";
 import { FavoriteTutorState } from "../types/favorite-tutor";
+import { ChatState } from "../types/chat";
+import { childScheduleSlice } from "../services/parent/childSchedule/childScheduleSlice";
+import { tutorQuizSlice } from "../services/tutor/quiz/tutorQuizSlice";
+import { studentQuizSlice } from "../services/student/quiz/studentQuizSlice";
 
 // === Combine reducers ===
 const reducer = combineReducers({
@@ -65,6 +75,7 @@ const reducer = combineReducers({
     tutorForAdmin: tutorForAdminSlice.reducer,
     studentForAdmin: studentForAdminSlice.reducer,
     parentForAdmin: parentForAdminSlice.reducer,
+    adminClass: adminClassSlice.reducer,
     availabilityBlockForTutor: availabilityBlockForTutorSlice.reducer,
     publicTutor: publicTutorSlice.reducer,
     tutorSchedule: tutorScheduleSlice.reducer,
@@ -83,6 +94,12 @@ const reducer = combineReducers({
     wallet: walletSlice.reducer,
     feedback: feedbackSlice.reducer,
     favoriteTutor: favoriteTutorSlice.reducer,
+    chat: chatSlice,
+    childSchedule: childScheduleSlice.reducer,
+    tutorQuiz: tutorQuizSlice.reducer,
+    studentQuiz: studentQuizSlice.reducer,
+    lessonMaterials: lessonMaterialsSlice,
+    videoAnalysis: videoAnalysisSlice,
 });
 
 // === Explicit RootState ===
@@ -93,6 +110,7 @@ export type RootState = {
     tutorForAdmin: TutorForAdminState;
     studentForAdmin: StudentForAdminState;
     parentForAdmin: ParentForAdminState;
+    adminClass: { listClasses: any[] };
     availabilityBlockForTutor: AvailabilityBlockForTutorState;
     publicTutor: PublicTutorState;
     tutorSchedule: TutorScheduleState;
@@ -111,6 +129,22 @@ export type RootState = {
     wallet: WalletState;
     feedback: FeedbackState;
     favoriteTutor: FavoriteTutorState;
+    chat: ChatState;
+    childSchedule: ChildScheduleState;
+    tutorQuiz: QuizForTutorState;
+    studentQuiz: QuizForStudentState;
+    lessonMaterials: {
+        materials: any[];
+        isLoading: boolean;
+        error: string | null;
+    };
+    videoAnalysis: {
+        currentAnalysis: any | null;
+        isLoading: boolean;
+        error: string | null;
+        questionAnswers: any[];
+        isAsking: boolean;
+    };
 };
 
 export default reducer;

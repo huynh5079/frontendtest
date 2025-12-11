@@ -8,27 +8,49 @@ import {
     getAllClassRequestForStudentApiThunk,
     getDetailClassRequestForStudentApiThunk,
 } from "../../../services/student/bookingTutor/bookingTutorThunk";
-import { formatDate, useDocumentTitle } from "../../../utils/helper";
+import {
+    formatDate,
+    getStatusText,
+    useDocumentTitle,
+} from "../../../utils/helper";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
     CancelBookingTutorForStudent,
     UpdateBookingTutorForStudentModal,
 } from "../../modal";
+import { navigateHook } from "../../../routes/routeApp";
+import { routes } from "../../../routes/routeName";
+
+const daysOfWeek = [
+    "Chủ Nhật",
+    "Thứ Hai",
+    "Thứ Ba",
+    "Thứ Tư",
+    "Thứ Năm",
+    "Thứ Sáu",
+    "Thứ Bảy",
+];
+
+const sortOrder = [1, 2, 3, 4, 5, 6, 0]; // Thứ 2 → Thứ 7 → Chủ Nhật
+
+const ITEMS_PER_PAGE = 6;
 
 const ParentBookingTutor: FC = () => {
     const dispatch = useAppDispatch();
     const bookingTutors = useAppSelector(
-        selectListClassRequestForStudent,
+        selectListClassRequestForStudent
     )?.filter((bookingTutor) => bookingTutor.tutorName !== null);
     const bookingTutor = useAppSelector(selectDetailClassRequestForStudent);
 
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const id = searchParams.get("id");
+
     const [isUpdateBookingTutorModalOpen, setIsUpdateBookingTutorModalOpen] =
         useState(false);
     const [isCancelBookingTutorModalOpen, setIsCancelBookingTutorModalOpen] =
         useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
 
     // Load danh sách
     useEffect(() => {
@@ -43,182 +65,290 @@ const ParentBookingTutor: FC = () => {
     }, [dispatch, id]);
 
     const handleViewDetail = (id: string) => {
-        navigate(`/student/information?tab=booking_tutor&id=${id}`);
+        navigate(`/parent/information?tab=booking_tutor&id=${id}`);
     };
 
     const handleBack = () => {
-        navigate(`/student/information?tab=booking_tutor`);
+        navigate(`/parent/information?tab=booking_tutor`);
     };
 
-    // Bảng ngày trong tuần (0-6)
-    const daysOfWeek = [
-        "Chủ Nhật",
-        "Thứ Hai",
-        "Thứ Ba",
-        "Thứ Tư",
-        "Thứ Năm",
-        "Thứ Sáu",
-        "Thứ Bảy",
-    ];
+    useDocumentTitle("Danh sách lịch đặt gia sư");
 
-    const getStatusText = (status: string | null | undefined): string => {
-        switch (status) {
-            case "Pending":
-                return "Chờ xử lý";
-            case "Approved":
-                return "Đã chấp thuận";
-            case "Rejected":
-                return "Đã từ chối";
-            default:
-                return "Không có";
-        }
+    const totalPages = Math.ceil((bookingTutors?.length || 0) / ITEMS_PER_PAGE);
+    const paginatedItems = bookingTutors?.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
+
+    const handlePrevPage = () => {
+        if (currentPage > 1) setCurrentPage(currentPage - 1);
     };
 
-    useDocumentTitle("Danh sách lịch đặt gia sư")
+    const handleNextPage = () => {
+        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+    };
+
+    const handleViewDetailTutor = (id: string) => {
+        const url = routes.parent.tutor.detail.replace(":id", id);
+        navigate(url);
+    };
 
     return (
         <div className="student-booking-tutor">
             {!id ? (
                 <>
-                    <h3>Danh sách lịch đặt gia sư</h3>
+                    <div className="sbtr1">
+                        <h3>Lớp học đăng ký</h3>
+                        <button
+                            className="pr-btn"
+                            onClick={() =>
+                                navigateHook(routes.parent.tutor.list)
+                            }
+                        >
+                            Đi tìm lớp học
+                        </button>
+                    </div>
                     <table className="table">
                         <thead className="table-head">
                             <tr className="table-head-row">
                                 <th className="table-head-cell">Tên gia sư</th>
                                 <th className="table-head-cell">Môn học</th>
-                                <th className="table-head-cell">Cấp bậc học</th>
+                                <th className="table-head-cell">Trạng thái</th>
                                 <th className="table-head-cell">
                                     Thời gian đặt lịch
                                 </th>
                                 <th className="table-head-cell">Thao tác</th>
                             </tr>
                         </thead>
+
                         <tbody className="table-body">
-                            {bookingTutors?.map((bookingTutor) => (
-                                <tr key={bookingTutor.id}>
+                            {paginatedItems?.map((b) => (
+                                <tr key={b.id}>
                                     <td className="table-body-cell">
-                                        {bookingTutor.tutorName}
+                                        {b.tutorName}
                                     </td>
                                     <td className="table-body-cell">
-                                        {bookingTutor.subject}
+                                        {b.subject}
                                     </td>
                                     <td className="table-body-cell">
-                                        {bookingTutor.educationLevel}
+                                        {getStatusText(b.status)}
                                     </td>
                                     <td className="table-body-cell">
-                                        {formatDate(bookingTutor.createdAt)}
+                                        {formatDate(b.createdAt)}
                                     </td>
                                     <td className="table-body-cell">
                                         <button
                                             className="pr-btn"
                                             onClick={() =>
-                                                handleViewDetail(
-                                                    bookingTutor.id,
-                                                )
+                                                handleViewDetail(b.id)
                                             }
                                         >
                                             Chi tiết
-                                        </button>
-                                        <button
-                                            className="delete-btn"
-                                            onClick={() =>
-                                                setIsCancelBookingTutorModalOpen(
-                                                    true,
-                                                )
-                                            }
-                                        >
-                                            Huỷ lịch
                                         </button>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
+
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                        <div className="pagination">
+                            <button
+                                className="sc-btn"
+                                onClick={handlePrevPage}
+                                disabled={currentPage === 1}
+                            >
+                                Trước
+                            </button>
+                            <span>
+                                {currentPage} / {totalPages}
+                            </span>
+                            <button
+                                className="sc-btn"
+                                onClick={handleNextPage}
+                                disabled={currentPage === totalPages}
+                            >
+                                Sau
+                            </button>
+                        </div>
+                    )}
                 </>
             ) : (
                 <>
-                    <h3>Chi tiết lịch đặt gia sư</h3>
+                    <h3 className="detail-title">Chi tiết lịch đặt gia sư</h3>
+
                     <div className="detail-booking-tutor">
-                        <div className="dbtc1">
-                            <h4>Học sinh</h4>
-                            <p>{bookingTutor?.studentName}</p>
+                        {/* NHÓM 1: Thông tin học sinh */}
+                        <div className="detail-group">
+                            <h3 className="group-title">Thông tin học sinh</h3>
+                            <div className="group-content">
+                                <div className="detail-item">
+                                    <h4>Học sinh</h4>
+                                    <p>{bookingTutor?.studentName}</p>
+                                </div>
 
-                            <h4>Gia sư</h4>
-                            <p>{bookingTutor?.tutorName}</p>
+                                <div className="detail-item">
+                                    <h4>Mô tả</h4>
+                                    <p>{bookingTutor?.description}</p>
+                                </div>
 
-                            <h4>Mô tả</h4>
-                            <p>{bookingTutor?.description}</p>
-
-                            <h4>Địa điểm</h4>
-                            <p>{bookingTutor?.location}</p>
-
-                            <h4>Yêu cầu đặc biệt</h4>
-                            <p>{bookingTutor?.specialRequirements}</p>
-
-                            <h4>Ngày bắt đầu</h4>
-                            <p>
-                                {formatDate(
-                                    String(bookingTutor?.classStartDate),
-                                )}
-                            </p>
-
-                            <h4>Ngày hết hạn</h4>
-                            <p>
-                                {formatDate(String(bookingTutor?.expiryDate))}
-                            </p>
-
-                            <h4>Ngày tạo</h4>
-                            <p>{formatDate(String(bookingTutor?.createdAt))}</p>
+                                <div className="detail-item">
+                                    <h4>Yêu cầu đặc biệt</h4>
+                                    <p>{bookingTutor?.specialRequirements}</p>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="dbtc2">
-                            <h4>Môn học</h4>
-                            <p>{bookingTutor?.subject}</p>
+                        {/* NHÓM 2: Thông tin gia sư */}
+                        <div className="detail-group">
+                            <h3 className="group-title">Thông tin gia sư</h3>
+                            <div className="group-content">
+                                <div className="detail-item">
+                                    <h4>Gia sư</h4>
+                                    <p>{bookingTutor?.tutorName}</p>
+                                </div>
 
-                            <h4>Cấp bậc học</h4>
-                            <p>{bookingTutor?.educationLevel}</p>
+                                <div className="detail-item">
+                                    <h4>Môn học</h4>
+                                    <p>{bookingTutor?.subject}</p>
+                                </div>
 
-                            <h4>Hình thức học</h4>
-                            <p>{bookingTutor?.mode}</p>
+                                <div className="detail-item">
+                                    <h4>Cấp bậc học</h4>
+                                    <p>{bookingTutor?.educationLevel}</p>
+                                </div>
+                            </div>
+                            <button
+                                className="pr-btn"
+                                onClick={() =>
+                                    handleViewDetailTutor(
+                                        bookingTutor?.tutorId!
+                                    )
+                                }
+                            >
+                                Xem chi tiết
+                            </button>
+                        </div>
 
-                            <h4>Học phí</h4>
-                            <p>{bookingTutor?.budget?.toLocaleString()} VNĐ</p>
+                        {/* NHÓM 3: Hình thức & Học phí */}
+                        <div className="detail-group">
+                            <h3 className="group-title">
+                                Hình thức học & học phí
+                            </h3>
+                            <div className="group-content">
+                                <div className="detail-item">
+                                    <h4>Hình thức học</h4>
+                                    <p>{bookingTutor?.mode}</p>
+                                </div>
 
-                            <h4>Trạng thái</h4>
-                            <p>{getStatusText(bookingTutor?.status)}</p>
+                                {bookingTutor?.mode === "Offline" && (
+                                    <div className="detail-item">
+                                        <h4>Địa điểm</h4>
+                                        <p>{bookingTutor?.location}</p>
+                                    </div>
+                                )}
 
-                            <h4>Lịch học</h4>
-                            {bookingTutor?.schedules?.map((s, index) => (
-                                <div key={index}>
-                                    <h4>{daysOfWeek[s.dayOfWeek]}</h4>
+                                <div className="detail-item">
+                                    <h4>Học phí</h4>
                                     <p>
-                                        {s.startTime} → {s.endTime}
+                                        {bookingTutor?.budget?.toLocaleString()}{" "}
+                                        VNĐ
                                     </p>
                                 </div>
-                            ))}
+
+                                <div className="detail-item">
+                                    <h4>Trạng thái</h4>
+                                    <p>{getStatusText(bookingTutor?.status)}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* NHÓM 4: Thời gian & Lịch trình */}
+                        <div className="detail-group">
+                            <h3 className="group-title">Lịch học</h3>
+                            <div className="group-content">
+                                <div className="detail-item">
+                                    <h4>Ngày bắt đầu</h4>
+                                    <p>
+                                        {formatDate(
+                                            String(bookingTutor?.classStartDate)
+                                        )}
+                                    </p>
+                                </div>
+
+                                <div className="detail-item">
+                                    <h4>Ngày hết hạn</h4>
+                                    <p>
+                                        {formatDate(
+                                            String(bookingTutor?.expiryDate)
+                                        )}
+                                    </p>
+                                </div>
+
+                                <div className="detail-item">
+                                    <h4>Ngày tạo</h4>
+                                    <p>
+                                        {formatDate(
+                                            String(bookingTutor?.createdAt)
+                                        )}
+                                    </p>
+                                </div>
+
+                                <div className="detail-item detail-item-schedule">
+                                    <h4>Lịch học chi tiết</h4>
+
+                                    {[...(bookingTutor?.schedules || [])]
+                                        .sort(
+                                            (a, b) =>
+                                                sortOrder.indexOf(a.dayOfWeek) -
+                                                sortOrder.indexOf(b.dayOfWeek)
+                                        )
+                                        .map((s, index) => (
+                                            <div
+                                                key={index}
+                                                className="schedule-item"
+                                            >
+                                                <p className="schedule-day">
+                                                    {daysOfWeek[s.dayOfWeek]}
+                                                </p>
+                                                <p className="schedule-time">
+                                                    {s.startTime} → {s.endTime}
+                                                </p>
+                                            </div>
+                                        ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
 
+                    {/* Nút */}
                     <div className="group-btn mt-4">
-                        <button
-                            className="pr-btn"
-                            onClick={() =>
-                                setIsUpdateBookingTutorModalOpen(true)
-                            }
-                        >
-                            Cập nhật
-                        </button>
+                        {bookingTutor?.status === "Pending" && (
+                            <button
+                                className="pr-btn"
+                                onClick={() =>
+                                    setIsUpdateBookingTutorModalOpen(true)
+                                }
+                            >
+                                Cập nhật
+                            </button>
+                        )}
+
                         <button className="sc-btn" onClick={handleBack}>
                             Quay lại
                         </button>
-                        <button
-                            className="delete-btn"
-                            onClick={() =>
-                                setIsCancelBookingTutorModalOpen(true)
-                            }
-                        >
-                            Huỷ lịch
-                        </button>
+
+                        {bookingTutor?.status === "Pending" && (
+                            <button
+                                className="delete-btn"
+                                onClick={() =>
+                                    setIsCancelBookingTutorModalOpen(true)
+                                }
+                            >
+                                Huỷ lịch
+                            </button>
+                        )}
                     </div>
 
                     <UpdateBookingTutorForStudentModal
@@ -231,7 +361,7 @@ const ParentBookingTutor: FC = () => {
             <CancelBookingTutorForStudent
                 isOpen={isCancelBookingTutorModalOpen}
                 setIsOpen={setIsCancelBookingTutorModalOpen}
-                requestId={String(bookingTutor?.id)}
+                requestId={bookingTutor?.id!}
             />
         </div>
     );

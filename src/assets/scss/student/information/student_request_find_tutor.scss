@@ -19,44 +19,105 @@
             margin-bottom: 2rem;
 
             h3 {
-                font-size: 1.75rem;
+                font-size: 2rem;
                 font-weight: 800;
+                text-align: center;
                 color: var(--main-color);
                 margin: 0;
             }
 
             .pr-btn {
+                width: fit-content;
                 padding: 0.75rem 1.25rem;
                 font-size: 1.25rem;
             }
         }
 
+        .detail-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
         .detail-request-find-tutor {
             display: flex;
-            align-items: start;
+            flex-direction: column;
             gap: 2rem;
-            margin-bottom: 1rem;
+        }
 
-            .drftc1,
-            .drftc2 {
-                flex: 1;
-            }
+        .detail-group {
+            background: #fff;
+            border-radius: 1rem;
+            padding: 1.5rem 2rem;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 3px 10px var(--main-color-20);
 
-            h4 {
-                font-size: 1.5rem;
-                font-weight: 700;
-                color: var(--main-color);
-                margin: 0;
-                margin-bottom: 0.5rem;
-            }
-
-            p {
+            .pr-btn,
+            .delete-btn,
+            .disable-btn {
+                padding: 0.75rem 1.25rem;
                 font-size: 1.25rem;
-                font-weight: 500;
-                color: var(--main-black);
-                margin: 0;
-                margin-bottom: 1rem;
+                margin-top: 1rem;
             }
+        }
+
+        .group-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--main-black);
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--main-color);
+        }
+
+        .group-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .detail-item {
+            background: #fff;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--main-color);
+        }
+
+        .detail-item h4 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--main-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .detail-item p {
+            font-size: 1.25rem;
+            color: var(--main-black);
+        }
+
+        /* Lịch học */
+        .schedule-item {
+            margin-top: 8px;
+            padding: 0.75rem;
+            border-radius: 8px;
+            background: #fff;
+            border: 4px solid var(--main-color);
+        }
+
+        .schedule-day {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--main-black);
+            margin-bottom: 0.5rem;
+        }
+
+        .schedule-time {
+            font-size: 1rem;
+            color: var(--main-black);
+        }
+
+        .detail-item-schedule {
+            grid-column: span 2; // Chiếm 2 cột
         }
 
         .table {
@@ -70,14 +131,15 @@
         }
 
         .srfts1r2 {
-            margin-bottom: 2rem;
+            margin: 2rem 0;
 
             h3 {
-                font-size: 1.75rem;
+                font-size: 2rem;
                 font-weight: 800;
+                text-align: center;
                 color: var(--main-color);
                 margin: 0;
-                margin-bottom: 1rem;
+                margin-bottom: 2rem;
             }
         }
 
@@ -85,6 +147,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            margin-top: 2rem;
 
             .pr-btn,
             .sc-btn,
@@ -99,6 +162,27 @@
     }
 
     .srft-step-2 {
+        .srfts2r1 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+
+            h3 {
+                font-size: 2rem;
+                font-weight: 800;
+                text-align: center;
+                color: var(--main-color);
+                margin: 0;
+            }
+
+            .sc-btn {
+                width: fit-content;
+                padding: 0.75rem 1.25rem;
+                font-size: 1.25rem;
+            }
+        }
+
         .form {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -106,16 +190,51 @@
             margin-bottom: 2rem;
 
             .calendar-container,
+            .note-container,
+            .price-container,
             .form-submit {
                 grid-column: span 2;
             }
-        }
 
-        .sc-btn {
-            width: fit-content;
-            padding: 0.75rem 1.25rem;
-            font-size: 1.25rem;
-            margin-bottom: 2rem;
+            .note-container {
+                p {
+                    text-align: start;
+                    font-size: 1.25rem;
+                    line-height: 2rem;
+                    font-weight: 700;
+                    color: var(--main-color);
+                    margin: 0;
+                    margin-bottom: 1rem;
+
+                    span {
+                        font-weight: 500;
+                        color: var(--main-black);
+                    }
+                }
+            }
+
+            .price-container {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+
+                .price-container-col {
+                    p {
+                        font-size: 1.25rem;
+                        font-weight: 700;
+                        color: var(--main-black);
+                        margin: 0;
+                        margin-bottom: 0.5rem;
+                    }
+
+                    h4 {
+                        font-size: 1.5rem;
+                        font-weight: 800;
+                        color: var(--main-color);
+                        margin: 0;
+                    }
+                }
+            }
         }
 
         .pr-btn,

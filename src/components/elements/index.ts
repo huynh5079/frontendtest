@@ -13,6 +13,7 @@ import WeekCalendarFindTutor from "./WeekCalendarFindtutor";
 import WeekCalendarCreateClass from "./WeekCalendarCreateClass";
 import WeekCalendarUpdate from "./WeekCalendarUpdate";
 import WeekCalendarUpdateRequestFindTutor from "./WeekCalendarUpdateRequestFindTutor";
+import TimePickerElement from "./TimePicker";
 
 export {
     DatePickerElement,
@@ -29,5 +30,6 @@ export {
     WeekCalendarFindTutor,
     WeekCalendarCreateClass,
     WeekCalendarUpdate,
-    WeekCalendarUpdateRequestFindTutor
+    WeekCalendarUpdateRequestFindTutor,
+    TimePickerElement
 };

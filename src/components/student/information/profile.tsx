@@ -1,25 +1,38 @@
 import { useEffect, type FC } from "react";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
+import { get } from "lodash";
+import { toast } from "react-toastify";
+
+// UI Icons
 import { CiCalendarDate, CiMail } from "react-icons/ci";
 import { FaMapMarkerAlt, FaPhone } from "react-icons/fa";
 import { MdOutlineDriveFileRenameOutline } from "react-icons/md";
+import { GiMale } from "react-icons/gi";
+
+// Components
 import { DatePickerElement, LoadingSpinner, MultiSelect } from "../../elements";
+
+// Helpers
 import { formatDateReverse, useDocumentTitle } from "../../../utils/helper";
+
+// Store
 import { useAppDispatch, useAppSelector } from "../../../app/store";
 import { selectProfileStudent } from "../../../app/selector";
+
+// API Thunks
 import {
     getProfileStudentApiThunk,
     updateProfileStudentApiThunk,
 } from "../../../services/user/userThunk";
+
+// Types
 import type {
     ProfileStudent,
     UpdateStudentProfileParams,
 } from "../../../types/user";
-import { Formik, Form, Field, ErrorMessage } from "formik";
-import * as Yup from "yup";
-import { GiMale } from "react-icons/gi";
-import { get } from "lodash";
-import { toast } from "react-toastify";
 
+// -------------------- Constants --------------------
 type LevelType = "Tiểu học" | "Trung học cơ sở" | "Trung học phổ thông";
 
 const subjectsByLevel: Record<LevelType, string[]> = {
@@ -42,6 +55,9 @@ const subjectsByLevel: Record<LevelType, string[]> = {
     ],
 };
 
+// =====================================================
+//                    COMPONENT
+// =====================================================
 const StudentProfile: FC = () => {
     const dispatch = useAppDispatch();
     const profile: ProfileStudent | null = useAppSelector(selectProfileStudent);
@@ -50,51 +66,45 @@ const StudentProfile: FC = () => {
         dispatch(getProfileStudentApiThunk());
     }, [dispatch]);
 
-    const today = new Date();
-    const maxDate = new Date(
-        today.getFullYear() - 16,
-        today.getMonth(),
-        today.getDate(),
-    );
-
     useDocumentTitle("Trang cá nhân");
 
-    // ★ Formik initial values
+    // ================= Formik Initial Values =================
     const initialValues = {
         username: profile?.username || "",
         address: profile?.address || "",
         phone: profile?.phone || "",
         gender: profile?.gender || "",
         dateOfBirth: profile?.dateOfBirth || "",
-        educationLevelId: profile?.educationLevel || "",
+        educationLevel: profile?.educationLevel || "",
         preferredSubjects: profile?.preferredSubjects
-            ? profile.preferredSubjects.split(",") // API → array
+            ? profile.preferredSubjects.split(",")
             : [],
     };
 
-    // ★ Yup validation
+    // ================= Yup Validation =================
     const validationSchema = Yup.object({
         username: Yup.string().required("Vui lòng nhập họ và tên"),
         address: Yup.string().required("Vui lòng nhập địa chỉ"),
         phone: Yup.string()
             .required("Vui lòng nhập số điện thoại")
             .matches(/^(0|\+84)[0-9]{9,10}$/, "Số điện thoại không hợp lệ"),
-        dateOfBirth: Yup.date()
-            .max(maxDate, "Học viên phải từ 16 tuổi trở lên")
-            .required("Vui lòng chọn ngày sinh"),
         gender: Yup.string().required("Vui lòng chọn giới tính"),
-        educationLevelId: Yup.string().required("Vui lòng chọn cấp bậc học"),
+        dateOfBirth: Yup.date().required("Vui lòng chọn ngày sinh"),
+        educationLevel: Yup.string().required("Vui lòng chọn cấp bậc học"),
         preferredSubjects: Yup.array()
             .min(1, "Vui lòng chọn ít nhất 1 môn học")
             .required(),
     });
 
+    // =====================================================
     return (
         <div className="student-profile">
+            {/* Avatar */}
             <div className="avatar-container">
                 <img src={profile?.avatarUrl} className="avatar" />
             </div>
 
+            {/* ================= Formik Form ================= */}
             <Formik
                 enableReinitialize
                 initialValues={initialValues}
@@ -103,7 +113,7 @@ const StudentProfile: FC = () => {
                     const payload: UpdateStudentProfileParams = {
                         ...values,
                         dateOfBirth: formatDateReverse(values.dateOfBirth),
-                        preferredSubjects: values.preferredSubjects.join(","), // array → string
+                        preferredSubjects: values.preferredSubjects.join(","),
                     };
 
                     setSubmitting(true);
@@ -125,14 +135,13 @@ const StudentProfile: FC = () => {
             >
                 {({ values, setFieldValue, isSubmitting }) => (
                     <Form className="form">
-                        {/* ================= Họ và tên ================= */}
+                        {/* ----------- Họ và tên ----------- */}
                         <div className="form-field">
                             <label className="form-label">Họ và tên</label>
                             <div className="form-input-container">
                                 <MdOutlineDriveFileRenameOutline className="form-input-icon" />
                                 <Field
                                     name="username"
-                                    type="text"
                                     className="form-input"
                                     placeholder="Nhập họ và tên"
                                 />
@@ -144,28 +153,26 @@ const StudentProfile: FC = () => {
                             />
                         </div>
 
-                        {/* ================= Email ================= */}
+                        {/* ----------- Email ----------- */}
                         <div className="form-field">
                             <label className="form-label">Email</label>
                             <div className="form-input-container">
                                 <CiMail className="form-input-icon" />
                                 <input
-                                    type="email"
-                                    className="form-input"
                                     value={profile?.email || ""}
+                                    className="form-input"
                                     disabled
                                 />
                             </div>
                         </div>
 
-                        {/* ================= Địa chỉ ================= */}
+                        {/* ----------- Địa chỉ ----------- */}
                         <div className="form-field">
                             <label className="form-label">Địa chỉ</label>
                             <div className="form-input-container">
                                 <FaMapMarkerAlt className="form-input-icon" />
                                 <Field
                                     name="address"
-                                    type="text"
                                     className="form-input"
                                     placeholder="Nhập địa chỉ"
                                 />
@@ -177,14 +184,13 @@ const StudentProfile: FC = () => {
                             />
                         </div>
 
-                        {/* ================= Số điện thoại ================= */}
+                        {/* ----------- Phone ----------- */}
                         <div className="form-field">
                             <label className="form-label">Số điện thoại</label>
                             <div className="form-input-container">
                                 <FaPhone className="form-input-icon" />
                                 <Field
                                     name="phone"
-                                    type="text"
                                     className="form-input"
                                     placeholder="Nhập số điện thoại"
                                 />
@@ -196,7 +202,7 @@ const StudentProfile: FC = () => {
                             />
                         </div>
 
-                        {/* ================= Ngày sinh ================= */}
+                        {/* ----------- Ngày sinh ----------- */}
                         <div className="form-field">
                             <label className="form-label">Ngày sinh</label>
                             <div className="form-input-container">
@@ -210,7 +216,6 @@ const StudentProfile: FC = () => {
                                     onChange={(date) =>
                                         setFieldValue("dateOfBirth", date)
                                     }
-                                    maxDate={maxDate}
                                 />
                             </div>
                             <ErrorMessage
@@ -220,7 +225,7 @@ const StudentProfile: FC = () => {
                             />
                         </div>
 
-                        {/* ================= Giới tính ================= */}
+                        {/* ----------- Giới tính ----------- */}
                         <div className="form-field">
                             <label className="form-label">Giới tính</label>
                             <div className="form-input-container">
@@ -244,7 +249,7 @@ const StudentProfile: FC = () => {
                             />
                         </div>
 
-                        {/* ================= Cấp bậc học ================= */}
+                        {/* ----------- Cấp bậc ----------- */}
                         <div className="form-field">
                             <label className="form-label">Cấp bậc học</label>
                             <div className="form-input-container">
@@ -252,14 +257,13 @@ const StudentProfile: FC = () => {
 
                                 <Field
                                     as="select"
-                                    name="educationLevelId"
+                                    name="educationLevel"
                                     className="form-input"
                                     onChange={(e: any) => {
                                         setFieldValue(
-                                            "educationLevelId",
+                                            "educationLevel",
                                             e.target.value,
                                         );
-                                        // Reset môn khi đổi cấp
                                         setFieldValue("preferredSubjects", []);
                                     }}
                                 >
@@ -274,38 +278,36 @@ const StudentProfile: FC = () => {
                                 </Field>
                             </div>
                             <ErrorMessage
-                                name="educationLevelId"
+                                name="educationLevel"
                                 component="p"
                                 className="text-error"
                             />
                         </div>
 
-                        {/* ================= Môn học ================= */}
+                        {/* ----------- Môn học ----------- */}
                         <MultiSelect
                             label="Môn học yêu thích"
                             placeholder="Chọn môn học"
                             options={
-                                values.educationLevelId
+                                values.educationLevel
                                     ? subjectsByLevel[
-                                          values.educationLevelId as LevelType
+                                          values.educationLevel as LevelType
                                       ].map((s) => ({
                                           label: s,
                                           value: s,
                                       }))
                                     : []
                             }
-                            value={values.preferredSubjects.map(
-                                (s: string) => ({
-                                    label: s,
-                                    value: s,
-                                }),
-                            )}
-                            onChange={(selected: any) => {
+                            value={values.preferredSubjects.map((s) => ({
+                                label: s,
+                                value: s,
+                            }))}
+                            onChange={(selected: any) =>
                                 setFieldValue(
                                     "preferredSubjects",
-                                    selected.map((item: any) => item.value),
-                                );
-                            }}
+                                    selected.map((i: any) => i.value),
+                                )
+                            }
                         />
                         <ErrorMessage
                             name="preferredSubjects"
@@ -313,6 +315,7 @@ const StudentProfile: FC = () => {
                             className="form-error"
                         />
 
+                        {/* ----------- Submit ----------- */}
                         <button
                             type="submit"
                             className={isSubmitting ? "disable-btn" : "pr-btn"}

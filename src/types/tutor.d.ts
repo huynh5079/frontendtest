@@ -85,6 +85,7 @@ export type TutorProfile = {
     bio: string | null;
     educationLevel: string | null;
     university: string | null;
+    reviewStatus: string | null;
     major: string | null;
     teachingExperienceYears: number | null;
     teachingSubjects: string | null;
@@ -117,12 +118,18 @@ export type TutorProfileUpdateParams = {
     specialSkills: string | null;
     avatarFile: File | null;
     newCertificates: Certificate[];
+    certificatesFiles?: File[];
 };
 
 //booking
 export type BookingForTutorState = {
     list: BookingForTutor[] | null;
     detail: BookingForTutor | null;
+};
+
+export type AcceptBookingForTutorParams = {
+    status: string;
+    meetingLink: string;
 };
 
 export type BookingForTutor = {
@@ -153,6 +160,8 @@ export type GetScheduleForTutorParams = {
 
 export type ScheduleForTutorState = {
     list: ScheduleForTutor[] | null;
+    detail: DetailScheduleLessonForTutor | null;
+    listOneOnOne: OneOnOneStudentForTutor[] | null;
 };
 
 export type ScheduleForTutor = {
@@ -161,6 +170,47 @@ export type ScheduleForTutor = {
     startTime: string;
     endTime: string;
     entryType: string;
+    lessonId: string;
+    classId: string;
+    title: string | null;
+    attendanceStatus: string | null;
+};
+
+export type OneOnOneStudentForTutor = {
+    profileId: string;
+    userId: string;
+    fullName: string;
+    avatarUrl: string;
+    email: string;
+    phone: string;
+};
+
+export type StudentInClass = {
+    studentId: string;
+    studentUserId: string;
+    fullName: string;
+    avatarUrl: string;
+    isPresent: boolean;
+    attendanceStatus: string | null;
+    note: string | null;
+};
+
+export type DetailScheduleLessonForTutor = {
+    id: string;
+    title: string | null;
+    lessonTitle: string;
+    status: string;
+    startTime: string;
+    endTime: string;
+    classId: string;
+    classTitle: string;
+    mode: string;
+    subject: string;
+    educationLevel: string;
+    location: string | null;
+    onlineStudyLink: string | null;
+    tutorUserId: string;
+    students: StudentInClass[];
 };
 
 //request
@@ -245,6 +295,7 @@ export type TutorClassState = {
 export type TutorClass = {
     id: string;
     tutorProfileId: string;
+    tutorName: string;
     subject: string;
     educationLevel: string;
     description: string;
@@ -287,4 +338,74 @@ export type UpdateInfoClassForTutorParams = {
 
 export type UpdateScheduleClassForTutorParmas = {
     scheduleRules: Schedule[];
+};
+
+//attendance
+export type MarkAttendance11Params = {
+    lessonId: string;
+    studentId: string;
+    status: "Present" | "Absent";
+    notes: string;
+};
+
+export type MarkAttendanceManyStudentsParams = {
+    notes: string;
+    studentStatusMap: {
+        [studentId: string]: "Present" | "Late" | "Absent";
+    };
+};
+
+//quiz
+export type CreateQuizForTutorParams = {
+    lessonId: string;
+    quizFile: File;
+    quizType: string;
+    maxAttempts: number;
+};
+
+export type QuizForTutorState = {
+    list: GetAllQuizForTutor[] | null;
+    detail: GetDetailQuizForTutor | null;
+};
+
+export type GetAllQuizForTutor = {
+    id: string;
+    title: string;
+    description: string;
+    totalQuestions: number;
+    timeLimit: number;
+    passingScore: number;
+    quizType: string;
+    maxAttempts: number;
+    isActive: boolean;
+    createdAt: string;
+};
+
+export type QuizQuestion = {
+    id: string;
+    questionText: string;
+    imageUrl: string | null;
+    orderIndex: number;
+    points: number;
+    optionA: string;
+    optionB: string;
+    optionC: string;
+    optionD: string;
+    correctAnswer: "A" | "B" | "C" | "D";
+    explanation: string;
+};
+
+export type GetDetailQuizForTutor = {
+    id: string;
+    lessonId: string;
+    title: string;
+    description: string;
+    timeLimit: number;
+    passingScore: number;
+    isActive: boolean;
+    quizType: "Practice" | "Exam" | "Test" | string;
+    maxAttempts: number;
+    totalQuestions: number;
+    questions: QuizQuestion[];
+    createdAt: string;
 };

@@ -17,19 +17,30 @@ interface Ward {
 }
 
 const TutorLocationSelector: FC = () => {
-    const [provinces, setProvinces] = useState<Province[]>([]);
+    const [_, setProvinces] = useState<Province[]>([]);
     const [districts, setDistricts] = useState<District[]>([]);
     const [wards, setWards] = useState<Ward[]>([]);
 
-    const [selectedProvince, setSelectedProvince] = useState<number | null>(null);
-    const [selectedDistrict, setSelectedDistrict] = useState<number | null>(null);
+    const [selectedProvince, setSelectedProvince] = useState<number | null>(
+        null,
+    );
+    const [selectedDistrict, setSelectedDistrict] = useState<number | null>(
+        null,
+    );
     const [selectedWard, setSelectedWard] = useState<number | null>(null);
 
-    // Lấy danh sách tỉnh/thành phố
     useEffect(() => {
         axios
             .get("https://provinces.open-api.vn/api/p/")
-            .then((res) => setProvinces(res.data))
+            .then((res) => {
+                setProvinces(res.data);
+
+                // === AUTO SELECT ĐÀ NẴNG ===
+                const daNang = res.data.find((p: Province) => p.code === 48);
+                if (daNang) {
+                    setSelectedProvince(daNang.code);
+                }
+            })
             .catch((err) => console.error(err));
     }, []);
 
@@ -37,7 +48,9 @@ const TutorLocationSelector: FC = () => {
     useEffect(() => {
         if (selectedProvince) {
             axios
-                .get(`https://provinces.open-api.vn/api/p/${selectedProvince}?depth=2`)
+                .get(
+                    `https://provinces.open-api.vn/api/p/${selectedProvince}?depth=2`,
+                )
                 .then((res) => setDistricts(res.data.districts))
                 .catch((err) => console.error(err));
             setWards([]);
@@ -50,7 +63,9 @@ const TutorLocationSelector: FC = () => {
     useEffect(() => {
         if (selectedDistrict) {
             axios
-                .get(`https://provinces.open-api.vn/api/d/${selectedDistrict}?depth=2`)
+                .get(
+                    `https://provinces.open-api.vn/api/d/${selectedDistrict}?depth=2`,
+                )
                 .then((res) => setWards(res.data.wards))
                 .catch((err) => console.error(err));
             setSelectedWard(null);
@@ -59,40 +74,23 @@ const TutorLocationSelector: FC = () => {
 
     return (
         <div className="location-selector">
-
-            {/* Chọn tỉnh */}
+            {/* Chọn quận - chỉ hiển thị khi đã chọn tỉnh */}
             <div className="form-group">
-                <p>Tỉnh / Thành phố</p>
+                <p>Quận / Huyện</p>
                 <select
-                    value={selectedProvince ?? ""}
-                    onChange={(e) => setSelectedProvince(Number(e.target.value))}
+                    value={selectedDistrict ?? ""}
+                    onChange={(e) =>
+                        setSelectedDistrict(Number(e.target.value))
+                    }
                 >
-                    <option value="">-- Chọn Tỉnh / Thành phố --</option>
-                    {provinces.map((p) => (
-                        <option key={p.code} value={p.code}>
-                            {p.name}
+                    <option value="">-- Chọn Quận / Huyện --</option>
+                    {districts.map((d) => (
+                        <option key={d.code} value={d.code}>
+                            {d.name}
                         </option>
                     ))}
                 </select>
             </div>
-
-            {/* Chọn quận - chỉ hiển thị khi đã chọn tỉnh */}
-            {selectedProvince && (
-                <div className="form-group">
-                    <p>Quận / Huyện</p>
-                    <select
-                        value={selectedDistrict ?? ""}
-                        onChange={(e) => setSelectedDistrict(Number(e.target.value))}
-                    >
-                        <option value="">-- Chọn Quận / Huyện --</option>
-                        {districts.map((d) => (
-                            <option key={d.code} value={d.code}>
-                                {d.name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-            )}
 
             {/* Chọn phường - chỉ hiển thị khi đã chọn quận */}
             {selectedDistrict && (
@@ -100,7 +98,9 @@ const TutorLocationSelector: FC = () => {
                     <p>Phường / Xã</p>
                     <select
                         value={selectedWard ?? ""}
-                        onChange={(e) => setSelectedWard(Number(e.target.value))}
+                        onChange={(e) =>
+                            setSelectedWard(Number(e.target.value))
+                        }
                     >
                         <option value="">-- Chọn Phường / Xã --</option>
                         {wards.map((w) => (

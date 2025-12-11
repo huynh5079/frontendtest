@@ -19,8 +19,12 @@ import { navigateHook } from "../../../routes/routeApp";
 import { routes } from "../../../routes/routeName";
 import { useAppDispatch, useAppSelector } from "../../../app/store";
 import { selectProfileTutor } from "../../../app/selector";
-import { getProfileTutorApiThunk } from "../../../services/user/userThunk";
+import {
+    getProfileTutorApiThunk,
+    updateProfileTutorApiThunk,
+} from "../../../services/user/userThunk";
 import type {
+    Certificate,
     TutorProfileUpdateParams,
 } from "../../../types/tutor";
 import type { OptionMultiSelectData } from "../../../types/app";
@@ -28,6 +32,7 @@ import { TbBriefcase2 } from "react-icons/tb";
 import { HiOutlineIdentification } from "react-icons/hi";
 import { PiGenderIntersex } from "react-icons/pi";
 import { csvToArray, useDocumentTitle } from "../../../utils/helper";
+import { toast } from "react-toastify";
 
 // --- Subject options ---
 export const subjectsOptions: OptionMultiSelectData[] = [
@@ -66,10 +71,6 @@ const TutorInformationPage: FC = () => {
     const teachingLevels = csvToArray(String(tutorProfile?.teachingLevel));
     const teachingSubjects = csvToArray(String(tutorProfile?.teachingSubjects));
 
-    useEffect(() => {
-        dispatch(getProfileTutorApiThunk());
-    }, [dispatch]);
-
     const [filteredSubjects, setFilteredSubjects] = useState<
         OptionMultiSelectData[]
     >([]);
@@ -87,15 +88,13 @@ const TutorInformationPage: FC = () => {
         teachingSubjects: tutorProfile?.teachingSubjects || "",
         teachingLevel: tutorProfile?.teachingLevel || "",
         specialSkills: tutorProfile?.specialSkills || "",
-        newCertificates: tutorProfile?.certificates || [],
+        newCertificates: tutorProfile?.certificates || [], // metadata (không upload)
+        certificatesFiles: [], // file thực để upload
         avatarFile: null,
     };
 
     const validationSchema = Yup.object({
         username: Yup.string().required("Vui lòng nhập họ tên"),
-        email: Yup.string()
-            .email("Email không hợp lệ")
-            .required("Vui lòng nhập email"),
         gender: Yup.string().required("Vui lòng chọn giới tính"),
         dateOfBirth: Yup.date().nullable().required("Vui lòng chọn ngày sinh"),
         phone: Yup.string()
@@ -118,11 +117,65 @@ const TutorInformationPage: FC = () => {
             .required("Vui lòng nhập kỹ năng đặc biệt"),
     });
 
-    const handleSubmit = async (values: TutorProfileUpdateParams) => {
-        console.log(values);
-    };
-
     useDocumentTitle("Trang cá nhân");
+
+    const buildFormData = (values: TutorProfileUpdateParams) => {
+        const formData = new FormData();
+
+        Object.entries(values ?? {}).forEach(([key, value]) => {
+            if (value === null || value === undefined) return;
+
+            switch (key) {
+                case "gender":
+                    formData.append(
+                        "Gender",
+                        value === "male"
+                            ? "male"
+                            : value === "female"
+                            ? "female"
+                            : "other"
+                    );
+                    break;
+
+                case "dateOfBirth":
+                    formData.append(
+                        "DateOfBirth",
+                        new Date(value as string).toISOString().split("T")[0]
+                    );
+                    break;
+
+                case "certificatesFiles":
+                    (value as File[]).forEach((file) => {
+                        formData.append("Certificates", file);
+                    });
+                    break;
+
+                case "avatarFile":
+                    if (value instanceof File) {
+                        formData.append("AvatarFile", value);
+                    }
+                    break;
+
+                default:
+                    const apiKeyMap: Record<string, string> = {
+                        username: "Username",
+                        phone: "PhoneNumber",
+                        address: "Address",
+                        bio: "Bio",
+                        educationLevel: "EducationLevel",
+                        university: "University",
+                        major: "Major",
+                        teachingExperienceYears: "TeachingExperienceYears",
+                        teachingLevel: "TeachingLevel",
+                        specialSkills: "SpecialSkills",
+                    };
+                    formData.append(apiKeyMap[key] ?? key, value as any);
+                    break;
+            }
+        });
+
+        return formData;
+    };
 
     return (
         <section id="tutor-information-section">
@@ -149,22 +202,518 @@ const TutorInformationPage: FC = () => {
                     initialValues={initialValues}
                     validationSchema={validationSchema}
                     enableReinitialize
-                    onSubmit={handleSubmit}
+                    onSubmit={(values, { setSubmitting }) => {
+                        const formData = buildFormData(values);
+
+                        setSubmitting(true);
+
+                        dispatch(updateProfileTutorApiThunk(formData))
+                            .unwrap()
+                            .then((res) => {
+                                const message =
+                                    res?.message ?? "Cập nhật thành công";
+                                toast.success(message);
+                            })
+                            .catch((error: any) => {
+                                const message =
+                                    error?.data?.message ??
+                                    error?.message ??
+                                    "Có lỗi xảy ra";
+                                toast.error(message);
+                            })
+                            .finally(() => {
+                                setSubmitting(false);
+                            });
+                    }}
                 >
-                    {({ isSubmitting, setFieldValue, resetForm }) => (
-                        <Form className="tiscr3">
-                            {/* ẢNH ĐẠI DIỆN */}
-                            <div className="tiscr3r1">
-                                <div className="tiscr3r1c1">
-                                    <h5>Ảnh đại diện</h5>
-                                    <img
-                                        className="avatar"
-                                        src={tutorProfile?.avatarUrl || ""}
-                                    />
-                                    <div className="group-btn">
-                                        <div className="pr-btn">
-                                            Tải ảnh lên
+                    {({ isSubmitting, setFieldValue, resetForm, values }) => {
+                        return (
+                            <Form className="tiscr3">
+                                {/* ẢNH ĐẠI DIỆN */}
+                                <div className="tiscr3r1">
+                                    <div className="tiscr3r1c1">
+                                        <h5>Ảnh đại diện</h5>
+                                        <img
+                                            className="avatar"
+                                            src={tutorProfile?.avatarUrl || ""}
+                                        />
+                                        <div className="group-btn">
+                                            <div className="pr-btn">
+                                                Tải ảnh lên
+                                            </div>
+                                            <div
+                                                className="sc-btn"
+                                                onClick={() => resetForm()}
+                                            >
+                                                Làm mới
+                                            </div>
                                         </div>
+                                        <p>Cho phép JPG hoặc PNG</p>
+                                    </div>
+                                </div>
+
+                                {/* THÔNG TIN CÁ NHÂN */}
+                                <div className="tiscr3r2">
+                                    <h5>Thông tin cá nhân</h5>
+
+                                    <div className="form">
+                                        <div className="form-field">
+                                            <label>Họ và tên</label>
+                                            <div className="form-input-container">
+                                                <MdOutlineDriveFileRenameOutline className="form-input-icon" />
+                                                <Field
+                                                    name="username"
+                                                    type="text"
+                                                    className="form-input"
+                                                    placeholder="Nhập họ tên"
+                                                />
+                                            </div>
+                                            <ErrorMessage
+                                                name="username"
+                                                component="p"
+                                                className="text-error"
+                                            />
+                                        </div>
+
+                                        <div className="form-field">
+                                            <label>Email</label>
+                                            <div className="form-input-container">
+                                                <CiMail className="form-input-icon" />
+                                                <input
+                                                    name="email"
+                                                    value={tutorProfile?.email}
+                                                    disabled
+                                                    className="form-input"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="form-field">
+                                            <label>Địa chỉ</label>
+                                            <div className="form-input-container">
+                                                <FaMapMarkerAlt className="form-input-icon" />
+                                                <Field
+                                                    name="address"
+                                                    className="form-input"
+                                                    placeholder="Nhập địa chỉ"
+                                                />
+                                            </div>
+                                            <ErrorMessage
+                                                name="address"
+                                                component="p"
+                                                className="text-error"
+                                            />
+                                        </div>
+
+                                        <div className="form-field">
+                                            <label>Số điện thoại</label>
+                                            <div className="form-input-container">
+                                                <FaPhone className="form-input-icon" />
+                                                <Field
+                                                    name="phone"
+                                                    className="form-input"
+                                                    placeholder="Nhập số điện thoại"
+                                                />
+                                            </div>
+                                            <ErrorMessage
+                                                name="phone"
+                                                component="p"
+                                                className="text-error"
+                                            />
+                                        </div>
+
+                                        <div className="form-field">
+                                            <label>Ngày sinh</label>
+                                            <div className="form-input-container">
+                                                <CiCalendarDate className="form-input-icon" />
+                                                <DatePickerElement
+                                                    value={
+                                                        tutorProfile?.dateOfBirth
+                                                            ? new Date(
+                                                                  tutorProfile?.dateOfBirth
+                                                              )
+                                                            : null
+                                                    }
+                                                    onChange={(date) =>
+                                                        setFieldValue(
+                                                            "dateOfBirth",
+                                                            date
+                                                        )
+                                                    }
+                                                />
+                                            </div>
+                                            <ErrorMessage
+                                                name="dateOfBirth"
+                                                component="p"
+                                                className="text-error"
+                                            />
+                                        </div>
+
+                                        <div className="form-field">
+                                            <label>Giới tính</label>
+                                            <div className="form-input-container">
+                                                <PiGenderIntersex className="form-input-icon" />
+                                                <Field
+                                                    as="select"
+                                                    name="gender"
+                                                    className="form-input"
+                                                >
+                                                    <option value="">
+                                                        -- Chọn giới tính --
+                                                    </option>
+                                                    <option value="male">
+                                                        Nam
+                                                    </option>
+                                                    <option value="female">
+                                                        Nữ
+                                                    </option>
+                                                    <option value="other">
+                                                        Khác
+                                                    </option>
+                                                </Field>
+                                            </div>
+                                            <ErrorMessage
+                                                name="gender"
+                                                component="p"
+                                                className="text-error"
+                                            />
+                                        </div>
+
+                                        <div className="form-field form-field-textarea">
+                                            <label>Mô tả bản thân</label>
+                                            <div className="form-input-container">
+                                                <MdOutlineDescription className="form-input-icon" />
+                                                <Field
+                                                    as="textarea"
+                                                    name="bio"
+                                                    rows={4}
+                                                    placeholder="Mô tả bản thân"
+                                                    className="form-input"
+                                                />
+                                            </div>
+                                            <ErrorMessage
+                                                name="bio"
+                                                component="p"
+                                                className="text-error"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <h5>Hồ sơ cá nhân</h5>
+
+                                    <div className="form">
+                                        <div className="form-field">
+                                            <label className="form-label">
+                                                Trình độ học vấn
+                                            </label>
+                                            <div className="form-input-container">
+                                                <FaGraduationCap className="form-input-icon" />
+                                                <Field
+                                                    as="select"
+                                                    name="educationLevel"
+                                                    className="form-input"
+                                                >
+                                                    <option value="">
+                                                        -- Chọn trình độ --
+                                                    </option>
+                                                    <option value="Đại học">
+                                                        Đại học
+                                                    </option>
+                                                    <option value="Cao đẳng">
+                                                        Cao đẳng
+                                                    </option>
+                                                    <option value="Đã tốt nghiệp">
+                                                        Đã tốt nghiệp
+                                                    </option>
+                                                </Field>
+                                            </div>
+                                            <ErrorMessage
+                                                name="educationLevel"
+                                                component="p"
+                                                className="text-error"
+                                            />
+                                        </div>
+
+                                        <div className="form-field">
+                                            <label className="form-label">
+                                                Ngành học
+                                            </label>
+                                            <div className="form-input-container">
+                                                <FaBookOpen className="form-input-icon" />
+                                                <Field
+                                                    name="major"
+                                                    placeholder="Nhập ngành học"
+                                                    className="form-input"
+                                                />
+                                            </div>
+                                            <ErrorMessage
+                                                name="major"
+                                                component="p"
+                                                className="text-error"
+                                            />
+                                        </div>
+
+                                        <div className="form-field">
+                                            <label className="form-label">
+                                                Trường / Đơn vị đào tạo
+                                            </label>
+                                            <div className="form-input-container">
+                                                <FaUniversity className="form-input-icon" />
+                                                <Field
+                                                    name="university"
+                                                    placeholder="Nhập tên trường"
+                                                    className="form-input"
+                                                />
+                                            </div>
+                                            <ErrorMessage
+                                                name="university"
+                                                component="p"
+                                                className="text-error"
+                                            />
+                                        </div>
+
+                                        <div className="form-field">
+                                            <label className="form-label">
+                                                Số năm kinh nghiệm
+                                            </label>
+                                            <div className="form-input-container">
+                                                <TbBriefcase2 className="form-input-icon" />
+                                                <Field
+                                                    name="teachingExperienceYears"
+                                                    placeholder="Nhập số năm kinh nghiệm"
+                                                    className="form-input"
+                                                />
+                                            </div>
+                                            <ErrorMessage
+                                                name="teachingExperienceYears"
+                                                component="p"
+                                                className="text-error"
+                                            />
+                                        </div>
+
+                                        <div className="form-field">
+                                            <MultiSelect
+                                                label="Cấp độ giảng dạy"
+                                                placeholder="Chọn cấp độ giảng dạy"
+                                                options={[
+                                                    {
+                                                        value: "Tiểu học",
+                                                        label: "Tiểu học",
+                                                    },
+                                                    {
+                                                        value: "Trung học cơ sở",
+                                                        label: "Trung học cơ sở",
+                                                    },
+                                                    {
+                                                        value: "Trung học phổ thông",
+                                                        label: "Trung học phổ thông",
+                                                    },
+                                                ]}
+                                                value={teachingLevels.map(
+                                                    (level) => ({
+                                                        value: level,
+                                                        label: level,
+                                                    })
+                                                )}
+                                                onChange={(selected) => {
+                                                    // Lưu vào Formik
+                                                    const selectedLevels =
+                                                        selected.map(
+                                                            (s) => s.value
+                                                        );
+                                                    setFieldValue(
+                                                        "teachingLevel",
+                                                        selectedLevels
+                                                    );
+
+                                                    // Lọc lại môn học tương ứng
+                                                    const allowedSubjects =
+                                                        selectedLevels.flatMap(
+                                                            (level) =>
+                                                                levelSubjectsMap[
+                                                                    level
+                                                                ] || []
+                                                        );
+                                                    const newFiltered =
+                                                        subjectsOptions.filter(
+                                                            (s) =>
+                                                                allowedSubjects.includes(
+                                                                    s.value
+                                                                )
+                                                        );
+                                                    setFilteredSubjects(
+                                                        newFiltered
+                                                    );
+
+                                                    // Reset môn học nếu không còn hợp lệ
+                                                    const validSelectedSubjects =
+                                                        teachingSubjects.filter(
+                                                            (subj) =>
+                                                                allowedSubjects.includes(
+                                                                    subj
+                                                                )
+                                                        );
+                                                    setFieldValue(
+                                                        "teachingSubjects",
+                                                        validSelectedSubjects
+                                                    );
+                                                }}
+                                            />
+                                            <ErrorMessage
+                                                name="teachingLevel"
+                                                component="p"
+                                                className="text-error"
+                                            />
+                                        </div>
+
+                                        <div className="form-field">
+                                            <MultiSelect
+                                                label="Môn dạy"
+                                                placeholder="Chọn môn dạy"
+                                                options={filteredSubjects}
+                                                value={teachingSubjects.map(
+                                                    (level) => ({
+                                                        value: level,
+                                                        label: level,
+                                                    })
+                                                )}
+                                                onChange={(selected) =>
+                                                    setFieldValue(
+                                                        "teachingSubjects",
+                                                        selected.map(
+                                                            (s) => s.value
+                                                        )
+                                                    )
+                                                }
+                                            />
+                                            <ErrorMessage
+                                                name="teachingSubjects"
+                                                component="p"
+                                                className="text-error"
+                                            />
+                                        </div>
+
+                                        <div className="form-field">
+                                            <label className="form-label">
+                                                Căn cước công dân
+                                            </label>
+                                            <div className="form-input-container">
+                                                <HiOutlineIdentification className="form-input-icon" />
+                                                <input
+                                                    type="file"
+                                                    multiple
+                                                    onChange={(e) =>
+                                                        setFieldValue(
+                                                            "identityDocuments",
+                                                            Array.from(
+                                                                e.target
+                                                                    .files || []
+                                                            )
+                                                        )
+                                                    }
+                                                    className="form-input"
+                                                />
+                                            </div>
+                                            <ErrorMessage
+                                                name="identityDocuments"
+                                                component="p"
+                                                className="text-error"
+                                            />
+                                        </div>
+
+                                        <div className="form-field">
+                                            <label className="form-label">
+                                                Chứng chỉ / Bằng cấp
+                                            </label>
+                                            <div className="form-input-container">
+                                                <FaCertificate className="form-input-icon" />
+                                                <input
+                                                    type="file"
+                                                    multiple
+                                                    onChange={(e) =>
+                                                        setFieldValue(
+                                                            "certificatesFiles",
+                                                            Array.from(
+                                                                e.target
+                                                                    .files || []
+                                                            )
+                                                        )
+                                                    }
+                                                    className="form-input"
+                                                />
+                                            </div>
+                                            <ErrorMessage
+                                                name="certificatesFiles"
+                                                component="p"
+                                                className="text-error"
+                                            />
+                                        </div>
+
+                                        <div className="form-field">
+                                            <label className="form-label">
+                                                Hình ảnh CCCD
+                                            </label>
+                                            {tutorProfile?.identityDocuments.map(
+                                                (identityDocument) => (
+                                                    <img
+                                                        key={
+                                                            identityDocument.id
+                                                        }
+                                                        src={
+                                                            identityDocument.url
+                                                        }
+                                                        alt=""
+                                                        style={{
+                                                            width: "250px",
+                                                        }}
+                                                    />
+                                                )
+                                            )}
+                                        </div>
+
+                                        <div className="form-field">
+                                            <label className="form-label">
+                                                Chứng chỉ / Bằng cấp
+                                            </label>
+                                            {tutorProfile?.certificates.map(
+                                                (certificate, index) => {
+                                                    return (
+                                                        <div key={index}>
+                                                            <h2
+                                                                key={
+                                                                    certificate.id
+                                                                }
+                                                            >
+                                                                {
+                                                                    certificate.fileName
+                                                                }{" "}
+                                                            </h2>
+                                                            <a
+                                                                href={
+                                                                    certificate.url
+                                                                }
+                                                                download
+                                                            >
+                                                                Xem
+                                                            </a>
+                                                        </div>
+                                                    );
+                                                }
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* NÚT SUBMIT */}
+                                    <div className="group-btn">
+                                        <button
+                                            type="submit"
+                                            className="pr-btn"
+                                            disabled={isSubmitting}
+                                        >
+                                            {isSubmitting
+                                                ? "Đang cập nhật..."
+                                                : "Cập nhật"}
+                                        </button>
                                         <div
                                             className="sc-btn"
                                             onClick={() => resetForm()}
@@ -172,474 +721,10 @@ const TutorInformationPage: FC = () => {
                                             Làm mới
                                         </div>
                                     </div>
-                                    <p>Cho phép JPG hoặc PNG</p>
                                 </div>
-                            </div>
-
-                            {/* THÔNG TIN CÁ NHÂN */}
-                            <div className="tiscr3r2">
-                                <h5>Thông tin cá nhân</h5>
-
-                                <div className="form">
-                                    <div className="form-field">
-                                        <label>Họ và tên</label>
-                                        <div className="form-input-container">
-                                            <MdOutlineDriveFileRenameOutline className="form-input-icon" />
-                                            <Field
-                                                name="username"
-                                                type="text"
-                                                className="form-input"
-                                                placeholder="Nhập họ tên"
-                                            />
-                                        </div>
-                                        <ErrorMessage
-                                            name="username"
-                                            component="p"
-                                            className="text-error"
-                                        />
-                                    </div>
-
-                                    <div className="form-field">
-                                        <label>Email</label>
-                                        <div className="form-input-container">
-                                            <CiMail className="form-input-icon" />
-                                            <Field
-                                                name="email"
-                                                type="email"
-                                                disabled
-                                                className="form-input"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="form-field">
-                                        <label>Địa chỉ</label>
-                                        <div className="form-input-container">
-                                            <FaMapMarkerAlt className="form-input-icon" />
-                                            <Field
-                                                name="address"
-                                                className="form-input"
-                                                placeholder="Nhập địa chỉ"
-                                            />
-                                        </div>
-                                        <ErrorMessage
-                                            name="address"
-                                            component="p"
-                                            className="text-error"
-                                        />
-                                    </div>
-
-                                    <div className="form-field">
-                                        <label>Số điện thoại</label>
-                                        <div className="form-input-container">
-                                            <FaPhone className="form-input-icon" />
-                                            <Field
-                                                name="phone"
-                                                className="form-input"
-                                                placeholder="Nhập số điện thoại"
-                                            />
-                                        </div>
-                                        <ErrorMessage
-                                            name="phone"
-                                            component="p"
-                                            className="text-error"
-                                        />
-                                    </div>
-
-                                    <div className="form-field">
-                                        <label>Ngày sinh</label>
-                                        <div className="form-input-container">
-                                            <CiCalendarDate className="form-input-icon" />
-                                            <DatePickerElement
-                                                value={
-                                                    tutorProfile?.dateOfBirth
-                                                        ? new Date(
-                                                              tutorProfile?.dateOfBirth,
-                                                          )
-                                                        : null
-                                                }
-                                                onChange={(date) =>
-                                                    setFieldValue(
-                                                        "dateOfBirth",
-                                                        date,
-                                                    )
-                                                }
-                                            />
-                                        </div>
-                                        <ErrorMessage
-                                            name="dateOfBirth"
-                                            component="p"
-                                            className="text-error"
-                                        />
-                                    </div>
-
-                                    <div className="form-field">
-                                        <label>Giới tính</label>
-                                        <div className="form-input-container">
-                                            <PiGenderIntersex className="form-input-icon" />
-                                            <Field
-                                                as="select"
-                                                name="gender"
-                                                className="form-input"
-                                            >
-                                                <option value="">
-                                                    -- Chọn giới tính --
-                                                </option>
-                                                <option value="male">
-                                                    Nam
-                                                </option>
-                                                <option value="female">
-                                                    Nữ
-                                                </option>
-                                                <option value="other">
-                                                    Khác
-                                                </option>
-                                            </Field>
-                                        </div>
-                                        <ErrorMessage
-                                            name="gender"
-                                            component="p"
-                                            className="text-error"
-                                        />
-                                    </div>
-
-                                    <div className="form-field form-field-textarea">
-                                        <label>Mô tả bản thân</label>
-                                        <div className="form-input-container">
-                                            <MdOutlineDescription className="form-input-icon" />
-                                            <Field
-                                                as="textarea"
-                                                name="bio"
-                                                rows={4}
-                                                placeholder="Mô tả bản thân"
-                                                className="form-input"
-                                            />
-                                        </div>
-                                        <ErrorMessage
-                                            name="bio"
-                                            component="p"
-                                            className="text-error"
-                                        />
-                                    </div>
-                                </div>
-
-                                <h5>Hồ sơ cá nhân</h5>
-
-                                <div className="form">
-                                    <div className="form-field">
-                                        <label className="form-label">
-                                            Trình độ học vấn
-                                        </label>
-                                        <div className="form-input-container">
-                                            <FaGraduationCap className="form-input-icon" />
-                                            <Field
-                                                as="select"
-                                                name="educationLevel"
-                                                className="form-input"
-                                            >
-                                                <option value="">
-                                                    -- Chọn trình độ --
-                                                </option>
-                                                <option value="Đại học">
-                                                    Đại học
-                                                </option>
-                                                <option value="Cao đẳng">
-                                                    Cao đẳng
-                                                </option>
-                                                <option value="Đã tốt nghiệp">
-                                                    Đã tốt nghiệp
-                                                </option>
-                                            </Field>
-                                        </div>
-                                        <ErrorMessage
-                                            name="educationLevel"
-                                            component="p"
-                                            className="text-error"
-                                        />
-                                    </div>
-
-                                    <div className="form-field">
-                                        <label className="form-label">
-                                            Ngành học
-                                        </label>
-                                        <div className="form-input-container">
-                                            <FaBookOpen className="form-input-icon" />
-                                            <Field
-                                                name="major"
-                                                placeholder="Nhập ngành học"
-                                                className="form-input"
-                                            />
-                                        </div>
-                                        <ErrorMessage
-                                            name="major"
-                                            component="p"
-                                            className="text-error"
-                                        />
-                                    </div>
-
-                                    <div className="form-field">
-                                        <label className="form-label">
-                                            Trường / Đơn vị đào tạo
-                                        </label>
-                                        <div className="form-input-container">
-                                            <FaUniversity className="form-input-icon" />
-                                            <Field
-                                                name="university"
-                                                placeholder="Nhập tên trường"
-                                                className="form-input"
-                                            />
-                                        </div>
-                                        <ErrorMessage
-                                            name="university"
-                                            component="p"
-                                            className="text-error"
-                                        />
-                                    </div>
-
-                                    <div className="form-field">
-                                        <label className="form-label">
-                                            Số năm kinh nghiệm
-                                        </label>
-                                        <div className="form-input-container">
-                                            <TbBriefcase2 className="form-input-icon" />
-                                            <Field
-                                                name="teachingExperienceYears"
-                                                placeholder="Nhập số năm kinh nghiệm"
-                                                className="form-input"
-                                            />
-                                        </div>
-                                        <ErrorMessage
-                                            name="teachingExperienceYears"
-                                            component="p"
-                                            className="text-error"
-                                        />
-                                    </div>
-
-                                    <div className="form-field">
-                                        <MultiSelect
-                                            label="Cấp độ giảng dạy"
-                                            placeholder="Chọn cấp độ giảng dạy"
-                                            options={[
-                                                {
-                                                    value: "Tiểu học",
-                                                    label: "Tiểu học",
-                                                },
-                                                {
-                                                    value: "Trung học cơ sở",
-                                                    label: "Trung học cơ sở",
-                                                },
-                                                {
-                                                    value: "Trung học phổ thông",
-                                                    label: "Trung học phổ thông",
-                                                },
-                                            ]}
-                                            value={teachingLevels.map(
-                                                (level) => ({
-                                                    value: level,
-                                                    label: level,
-                                                }),
-                                            )}
-                                            onChange={(selected) => {
-                                                // Lưu vào Formik
-                                                const selectedLevels =
-                                                    selected.map(
-                                                        (s) => s.value,
-                                                    );
-                                                setFieldValue(
-                                                    "teachingLevel",
-                                                    selectedLevels,
-                                                );
-
-                                                // Lọc lại môn học tương ứng
-                                                const allowedSubjects =
-                                                    selectedLevels.flatMap(
-                                                        (level) =>
-                                                            levelSubjectsMap[
-                                                                level
-                                                            ] || [],
-                                                    );
-                                                const newFiltered =
-                                                    subjectsOptions.filter(
-                                                        (s) =>
-                                                            allowedSubjects.includes(
-                                                                s.value,
-                                                            ),
-                                                    );
-                                                setFilteredSubjects(
-                                                    newFiltered,
-                                                );
-
-                                                // Reset môn học nếu không còn hợp lệ
-                                                const validSelectedSubjects =
-                                                    teachingSubjects.filter(
-                                                        (subj) =>
-                                                            allowedSubjects.includes(
-                                                                subj,
-                                                            ),
-                                                    );
-                                                setFieldValue(
-                                                    "teachingSubjects",
-                                                    validSelectedSubjects,
-                                                );
-                                            }}
-                                        />
-                                        <ErrorMessage
-                                            name="teachingLevel"
-                                            component="p"
-                                            className="text-error"
-                                        />
-                                    </div>
-
-                                    <div className="form-field">
-                                        <MultiSelect
-                                            label="Môn dạy"
-                                            placeholder="Chọn môn dạy"
-                                            options={filteredSubjects}
-                                            value={teachingSubjects.map(
-                                                (level) => ({
-                                                    value: level,
-                                                    label: level,
-                                                }),
-                                            )}
-                                            onChange={(selected) =>
-                                                setFieldValue(
-                                                    "teachingSubjects",
-                                                    selected.map(
-                                                        (s) => s.value,
-                                                    ),
-                                                )
-                                            }
-                                        />
-                                        <ErrorMessage
-                                            name="teachingSubjects"
-                                            component="p"
-                                            className="text-error"
-                                        />
-                                    </div>
-
-                                    <div className="form-field">
-                                        <label className="form-label">
-                                            Căn cước công dân
-                                        </label>
-                                        <div className="form-input-container">
-                                            <HiOutlineIdentification className="form-input-icon" />
-                                            <input
-                                                type="file"
-                                                multiple
-                                                onChange={(e) =>
-                                                    setFieldValue(
-                                                        "identityDocuments",
-                                                        Array.from(
-                                                            e.target.files ||
-                                                                [],
-                                                        ),
-                                                    )
-                                                }
-                                                className="form-input"
-                                            />
-                                        </div>
-                                        <ErrorMessage
-                                            name="identityDocuments"
-                                            component="p"
-                                            className="text-error"
-                                        />
-                                    </div>
-
-                                    <div className="form-field">
-                                        <label className="form-label">
-                                            Chứng chỉ / Bằng cấp
-                                        </label>
-                                        <div className="form-input-container">
-                                            <FaCertificate className="form-input-icon" />
-                                            <input
-                                                type="file"
-                                                multiple
-                                                onChange={(e) =>
-                                                    setFieldValue(
-                                                        "certificatesFiles",
-                                                        Array.from(
-                                                            e.target.files ||
-                                                                [],
-                                                        ),
-                                                    )
-                                                }
-                                                className="form-input"
-                                            />
-                                        </div>
-                                        <ErrorMessage
-                                            name="certificatesFiles"
-                                            component="p"
-                                            className="text-error"
-                                        />
-                                    </div>
-
-                                    <div className="form-field">
-                                        <label className="form-label">
-                                            Hình ảnh CCCD
-                                        </label>
-                                        {tutorProfile?.identityDocuments.map(
-                                            (identityDocument) => (
-                                                <img
-                                                    key={identityDocument.id}
-                                                    src={identityDocument.url}
-                                                    alt=""
-                                                    style={{ width: "250px" }}
-                                                />
-                                            ),
-                                        )}
-                                    </div>
-
-                                    <div className="form-field">
-                                        <label className="form-label">
-                                            Chứng chỉ / Bằng cấp
-                                        </label>
-                                        {tutorProfile?.certificates.map(
-                                            (certificate, index) => {
-                                                return (
-                                                    <div key={index}>
-                                                        <h2
-                                                            key={certificate.id}
-                                                        >
-                                                            {
-                                                                certificate.fileName
-                                                            }{" "}
-                                                        </h2>
-                                                        <a
-                                                            href={
-                                                                certificate.url
-                                                            }
-                                                            download
-                                                        >
-                                                            Xem
-                                                        </a>
-                                                    </div>
-                                                );
-                                            },
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* NÚT SUBMIT */}
-                                <div className="group-btn">
-                                    <button
-                                        type="submit"
-                                        className="pr-btn"
-                                        disabled={isSubmitting}
-                                    >
-                                        {isSubmitting
-                                            ? "Đang cập nhật..."
-                                            : "Cập nhật"}
-                                    </button>
-                                    <div
-                                        className="sc-btn"
-                                        onClick={() => resetForm()}
-                                    >
-                                        Làm mới
-                                    </div>
-                                </div>
-                            </div>
-                        </Form>
-                    )}
+                            </Form>
+                        );
+                    }}
                 </Formik>
             </div>
         </section>

@@ -6,6 +6,9 @@ import ForgotPasswordBannerImage from "./forgot_password_banner.svg";
 import VerifyOtpBannerImage from "./verify_otp_banner.svg";
 import TutorDetailBannerImage from "./tutor_detail_banner.svg";
 import RemindLogin from "./remind-login.webp";
+import RemindWallet from "./remind-wallet.webp";
+import NoStar from "./no-star.png";
+import Homework from "./homework.webp";
 
 export {
     LandingBannerImage,
@@ -15,5 +18,8 @@ export {
     ForgotPasswordBannerImage,
     VerifyOtpBannerImage,
     TutorDetailBannerImage,
-    RemindLogin
+    RemindLogin,
+    RemindWallet,
+    NoStar,
+    Homework,
 };

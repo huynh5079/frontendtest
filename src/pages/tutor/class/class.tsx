@@ -1,4 +1,4 @@
-import { useEffect, type FC } from "react";
+import { useEffect, useState, type FC } from "react";
 import { FaListUl, FaUserMinus, FaUsers } from "react-icons/fa";
 import { navigateHook } from "../../../routes/routeApp";
 import { routes } from "../../../routes/routeName";
@@ -6,10 +6,27 @@ import { useAppDispatch, useAppSelector } from "../../../app/store";
 import { selectListTutorClass } from "../../../app/selector";
 import { getAllClassApiThunk } from "../../../services/tutor/class/classThunk";
 import { formatDate, useDocumentTitle } from "../../../utils/helper";
+import { MdListAlt } from "react-icons/md";
 
 const TutorClassPage: FC = () => {
     const classes = useAppSelector(selectListTutorClass);
+    const pendingClasses = classes?.filter((item) => item.status === "Pending");
+    const cancelledClasses = classes?.filter(
+        (item) => item.status === "Cancelled",
+    );
+    const ongoingClasses = classes?.filter((item) => item.status === "Ongoing");
     const dispatch = useAppDispatch();
+
+    // 🔥 Filter State
+    const [filterStatus, setFilterStatus] = useState<
+        "All" | "Pending" | "Cancelled" | "Ongoing"
+    >("All");
+
+    // 🔥 Data được lọc theo filterStatus
+    const filteredData =
+        filterStatus === "All"
+            ? classes
+            : classes?.filter((b) => b.status === filterStatus);
 
     useEffect(() => {
         dispatch(getAllClassApiThunk());
@@ -22,6 +39,25 @@ const TutorClassPage: FC = () => {
 
     useDocumentTitle("Danh sách lớp học");
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6;
+
+    // Tổng số trang
+    const totalPages = filteredData
+        ? Math.ceil(filteredData.length / itemsPerPage)
+        : 1;
+
+    // Lấy dữ liệu cho trang hiện tại
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedData = filteredData?.slice(
+        startIndex,
+        startIndex + itemsPerPage,
+    );
+
+    useEffect(() => {
+        setCurrentPage(1); // reset khi đổi filter
+    }, [filterStatus]);
+
     return (
         <section id="tutor-class-section">
             <div className="tcs-container">
@@ -32,25 +68,59 @@ const TutorClassPage: FC = () => {
                     </p>
                 </div>
                 <div className="tcscr2">
-                    <div className="tcscr2-item active">
-                        <FaListUl className="tcscr2-item-icon" />
+                    {/* ALL */}
+                    <div
+                        className={`tcscr2-item ${
+                            filterStatus === "All" ? "active" : ""
+                        }`}
+                        onClick={() => setFilterStatus("All")}
+                    >
+                        <MdListAlt className="tcscr2-item-icon" />
                         <div className="amount">
                             <h5>Tất cả</h5>
-                            <p>3 lớp</p>
+                            <p>{classes?.length || 0} lớp</p>
                         </div>
                     </div>
-                    <div className="tcscr2-item">
-                        <FaUsers className="tcscr2-item-icon" />
+
+                    {/* Pending */}
+                    <div
+                        className={`tcscr2-item ${
+                            filterStatus === "Pending" ? "active" : ""
+                        }`}
+                        onClick={() => setFilterStatus("Pending")}
+                    >
+                        <MdListAlt className="tcscr2-item-icon" />
                         <div className="amount">
-                            <h5>Lớp đủ thành viên</h5>
-                            <p>2 lớp</p>
+                            <h5>Đợi xử lí</h5>
+                            <p>{pendingClasses?.length || 0} lớp</p>
                         </div>
                     </div>
-                    <div className="tcscr2-item">
-                        <FaUserMinus className="tcscr2-item-icon" />
+
+                    {/* Cancelled */}
+                    <div
+                        className={`tcscr2-item ${
+                            filterStatus === "Cancelled" ? "active" : ""
+                        }`}
+                        onClick={() => setFilterStatus("Cancelled")}
+                    >
+                        <MdListAlt className="tcscr2-item-icon" />
                         <div className="amount">
-                            <h5>Lớp thiếu thành viên</h5>
-                            <p>1 lớp</p>
+                            <h5>Đã huỷ</h5>
+                            <p>{cancelledClasses?.length || 0} lớp</p>
+                        </div>
+                    </div>
+
+                    {/* Ongoing */}
+                    <div
+                        className={`tcscr2-item ${
+                            filterStatus === "Ongoing" ? "active" : ""
+                        }`}
+                        onClick={() => setFilterStatus("Ongoing")}
+                    >
+                        <MdListAlt className="tcscr2-item-icon" />
+                        <div className="amount">
+                            <h5>Đang dạy</h5>
+                            <p>{ongoingClasses?.length || 0} lớp</p>
                         </div>
                     </div>
                 </div>
@@ -78,7 +148,7 @@ const TutorClassPage: FC = () => {
                             </tr>
                         </thead>
                         <tbody className="table-body">
-                            {classes?.map((item) => (
+                            {paginatedData?.map((item) => (
                                 <tr className="table-body-row" key={item.id}>
                                     <td className="table-body-cell">
                                         {item.subject}
@@ -106,6 +176,30 @@ const TutorClassPage: FC = () => {
                             ))}
                         </tbody>
                     </table>
+
+                    {totalPages > 1 && (
+                        <div className="pagination">
+                            <button
+                                className="sc-btn"
+                                disabled={currentPage === 1}
+                                onClick={() => setCurrentPage((p) => p - 1)}
+                            >
+                                Trang trước
+                            </button>
+
+                            <span>
+                                {currentPage} / {totalPages}
+                            </span>
+
+                            <button
+                                className="sc-btn"
+                                disabled={currentPage === totalPages}
+                                onClick={() => setCurrentPage((p) => p + 1)}
+                            >
+                                Trang sau
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </section>

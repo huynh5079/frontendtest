@@ -1,0 +1,104 @@
+.tutor-quiz {
+    .quiz-title {
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--main-black);
+        margin: 1rem 0;
+    }
+
+    .pr-btn {
+        padding: 0.75rem 1.25rem !important;
+        font-size: 1.25rem !important;
+        margin: 0 !important;
+        margin-bottom: 1rem !important;
+    }
+
+    .table {
+        .pr-btn, .sc-btn {
+            padding: 0.5rem 1rem !important;
+            font-size: 1rem !important;
+            margin: 0 0.5rem !important;
+        }
+    }
+
+    .no-quiz {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
+
+        img {
+            width: 300px;
+            height: 300px;
+            margin-bottom: 2rem;
+        }
+
+        p {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: var(--main-black);
+        }
+    }
+
+    .download-file {
+        text-align: center;
+
+        h4 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--main-color);
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: var(--main-black);
+            margin: 0;
+            cursor: pointer;
+
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+    }
+
+    .form {
+        max-width: 600px;
+        margin: 0 auto;
+        margin-top: 2rem;
+    }
+
+    .detail-quiz {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+
+        .pr-btn {
+            padding: 0.75rem 1.25rem !important;
+            font-size: 1.25rem !important;
+            margin: 0 !important;
+            margin-bottom: 1rem !important;
+        }
+    }
+
+    .detail-answer {
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 0.5rem 0;
+        background: #fff;
+        border: 4px solid var(--main-color);
+
+        .answer-index {
+            font-size: 1.5rem !important;
+            font-weight: 600;
+            color: var(--main-black);
+        }
+
+        .answer-content {
+            font-size: 1.25rem;
+            color: var(--main-black);
+        }
+    }
+}

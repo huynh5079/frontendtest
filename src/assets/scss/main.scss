@@ -96,6 +96,12 @@
 @use "./tutor/manage/request_find_tutor/list_request_find_tutor_for_tutor.scss";
 //manage_request_find_tutor_detail
 @use "./tutor/manage/request_find_tutor/detail_request_find_tutor_for_tutor.scss";
+//manage_notification
+@use "./tutor/manage/notification/tutor_list_notification.scss";
+//manage_lesson_detail
+@use "./tutor/manage/schedule/tutor_lesson_detail.scss";
+//tutor_quiz
+@use "./tutor/manage/schedule/tutor_quiz.scss";
 
 //card
 //tutor_card
@@ -104,6 +110,10 @@
 @use "./card/course_card.scss";
 //tutor_schedule_card
 @use "./card/tutor_schedule_card.scss";
+//student_schedule_card
+@use "./card/student_schedule_card.scss";
+//parent_child_schedule_card
+@use "./card/parent_child_schedule_card.scss";
 
 //course
 //course_list
@@ -155,6 +165,16 @@
 @use "./student/book/student_book_tutor.scss";
 //student_assigned_class
 @use "./student/information/student_assigned_class.scss";
+//student_notification
+@use "./student/information/student_notification.scss";
+//student_detail_lesson
+@use "./student/information/student_detail_lesson.scss";
+//student_do_quiz
+@use "./student/information/student_do_quiz.scss";
+//student_result_quiz
+@use "./student/information/student_result_quiz.scss";
+//student_history_submit_quiz
+@use "./student/information/student_history_submit_quiz.scss";
 
 //parent
 @use "./parent/parent.scss";
@@ -194,6 +214,8 @@
 @use "./parent/information/parent_child_account.scss";
 //request_find_tutor
 @use "./parent/information/parent_request_find_tutor.scss";
+//parent_leson_detail
+@use "./parent/information/parent_leson_detail.scss";
 
 //admin
 @use "./admin/admin.scss";
@@ -241,3 +263,11 @@
 @use "./modal/cancel_booking_tutor_for_student_modal.scss";
 //student_assign_class_modal
 @use "./modal/student_assign_class_modal.scss";
+//admin_cancel_student_enrollment_modal
+@use "./modal/admin_cancel_student_enrollment_modal.scss";
+//admin_cancel_class_modal
+@use "./modal/admin_cancel_class_modal.scss";
+//tutor_accept_booking
+@use "./modal/tutor_accept_booking.scss";
+//detail_notification_modal
+@use "./modal/detail_notification_modal.scss";

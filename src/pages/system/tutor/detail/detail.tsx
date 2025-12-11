@@ -6,8 +6,7 @@ import { navigateHook } from "../../../../routes/routeApp";
 import { routes } from "../../../../routes/routeName";
 import { fakeDataCourses } from "../../../../utils/fakeData";
 import { CourseDetaiTutorCard } from "../../../../components/card";
-import { FeedbackTutor, LoadingSpinner } from "../../../../components/elements";
-import { MdFeedback } from "react-icons/md";
+import { LoadingSpinner } from "../../../../components/elements";
 import { useAppDispatch, useAppSelector } from "../../../../app/store";
 import {
     selectCheckFavoriteTutor,
@@ -23,12 +22,6 @@ import {
     USER_STUDENT,
 } from "../../../../utils/helper";
 import { RemindLoginModal } from "../../../../components/modal";
-import {
-    createFeedbackInTutorProfileApiThunk,
-    getAllFeedbackInTutorProfileApiThunk,
-} from "../../../../services/feedback/feedbackThunk";
-import { Formik, Form, Field, ErrorMessage } from "formik";
-import * as Yup from "yup";
 import { toast } from "react-toastify";
 import { get } from "lodash";
 import {
@@ -36,6 +29,7 @@ import {
     deleteFavoriteTutorApiThunk,
     favoriteTutorApiThunk,
 } from "../../../../services/favoriteTutor/favoriteTutorThunk";
+import { TutorFeedback } from "../../../../components/tutor/detail";
 
 const DetailTutorPage: FC = () => {
     const { id } = useParams();
@@ -131,28 +125,6 @@ const DetailTutorPage: FC = () => {
     /** ============ PAGE TITLE ============== */
     useDocumentTitle(`Gia sư ${tutor?.username}`);
 
-    /** ============ STAR COMPONENT ============== */
-    const StarRating = ({ value, onChange }: any) => {
-        return (
-            <div className="rating-stars">
-                {[1, 2, 3, 4, 5].map((star) => (
-                    <span
-                        key={star}
-                        onClick={() => onChange(star)}
-                        style={{
-                            cursor: "pointer",
-                            color: star <= value ? "#FFD700" : "#ccc",
-                            fontSize: "40px",
-                            marginRight: "8px",
-                        }}
-                    >
-                        ★
-                    </span>
-                ))}
-            </div>
-        );
-    };
-
     /** ============ JSX ============== */
     return (
         <section id="detail-tutor-section">
@@ -243,12 +215,19 @@ const DetailTutorPage: FC = () => {
                                 <div className="tabs-content">
                                     <h4>Học vấn</h4>
                                     <p>
-                                        Trường: {tutor?.educationLevel}{" "}
+                                        <span>Trường:</span>
+                                        {"   "}
+                                        {tutor?.educationLevel}{" "}
                                         {tutor?.university}
                                     </p>
-                                    <p>Chuyên ngành: {tutor?.major}</p>
                                     <p>
-                                        Kinh nghiệm giảng dạy:{" "}
+                                        <span>Chuyên ngành:</span>
+                                        {"   "}
+                                        {tutor?.major}
+                                    </p>
+                                    <p>
+                                        <span>Kinh nghiệm giảng dạy:</span>
+                                        {"   "}
                                         {tutor?.teachingExperienceYears} năm
                                     </p>
                                 </div>
@@ -287,131 +266,9 @@ const DetailTutorPage: FC = () => {
                         {/* ===== TAB ĐÁNH GIÁ ===== */}
                         {activeTab === "danhgia" && (
                             <div className="tabs-content">
-                                <Formik
-                                    initialValues={{
-                                        comment: "",
-                                        rating: 0,
-                                    }}
-                                    validationSchema={Yup.object({
-                                        comment: Yup.string()
-                                            .required("Vui lòng nhập đánh giá")
-                                            .min(
-                                                10,
-                                                "Đánh giá phải ít nhất 10 ký tự",
-                                            ),
-                                        rating: Yup.number()
-                                            .min(1, "Vui lòng chọn số sao")
-                                            .required("Vui lòng chọn số sao"),
-                                    })}
-                                    onSubmit={(values, { resetForm }) => {
-                                        if (!isAuthenticated) {
-                                            setOpenRemindLogin(true);
-                                            return;
-                                        }
-
-                                        dispatch(
-                                            createFeedbackInTutorProfileApiThunk(
-                                                {
-                                                    tutorUserId: id!,
-                                                    params: values,
-                                                },
-                                            ),
-                                        )
-                                            .unwrap()
-                                            .then((res) => {
-                                                toast.success(
-                                                    get(
-                                                        res,
-                                                        "data.message",
-                                                        "Đánh giá thành công",
-                                                    ),
-                                                );
-
-                                                dispatch(
-                                                    getAllFeedbackInTutorProfileApiThunk(
-                                                        {
-                                                            tutorUserId: id!,
-                                                            page: 1,
-                                                            pageSize: 10,
-                                                        },
-                                                    ),
-                                                );
-
-                                                resetForm();
-                                            })
-                                            .catch((err) => {
-                                                toast.error(
-                                                    get(
-                                                        err,
-                                                        "data.message",
-                                                        "Có lỗi xảy ra",
-                                                    ),
-                                                );
-                                            });
-                                    }}
-                                >
-                                    {({
-                                        values,
-                                        setFieldValue,
-                                        isSubmitting,
-                                    }) => (
-                                        <Form className="form">
-                                            <div className="form-field">
-                                                <label className="form-label">
-                                                    Đánh giá
-                                                </label>
-                                                <div className="form-input-container">
-                                                    <MdFeedback className="form-input-icon" />
-                                                    <Field
-                                                        name="comment"
-                                                        type="text"
-                                                        className="form-input"
-                                                        placeholder="Hãy để lại đánh giá"
-                                                    />
-                                                </div>
-                                                <ErrorMessage
-                                                    name="comment"
-                                                    component="p"
-                                                    className="text-error"
-                                                />
-                                            </div>
-
-                                            <div className="form-field">
-                                                <StarRating
-                                                    value={values.rating}
-                                                    onChange={(star: number) =>
-                                                        setFieldValue(
-                                                            "rating",
-                                                            star,
-                                                        )
-                                                    }
-                                                />
-                                                <ErrorMessage
-                                                    name="rating"
-                                                    component="p"
-                                                    className="text-error"
-                                                />
-                                            </div>
-
-                                            <button
-                                                type="submit"
-                                                className={
-                                                    isSubmitting
-                                                        ? "disable-btn"
-                                                        : "pr-btn"
-                                                }
-                                            >
-                                                {isSubmitting ? (
-                                                    <LoadingSpinner />
-                                                ) : (
-                                                    "Đánh giá"
-                                                )}
-                                            </button>
-                                        </Form>
-                                    )}
-                                </Formik>
-
-                                <FeedbackTutor tutorId={id!} />
+                                <TutorFeedback
+                                    tutorId={String(tutor?.tutorId)}
+                                />
                             </div>
                         )}
                     </div>

@@ -13,6 +13,8 @@ interface ScheduleString {
 export type PublicClass = {
     id: string;
     tutorId: string;
+    tutorUserId: string;
+    tutorName?: string; // Thêm field này để lưu tên gia sư
     subject: string;
     educationLevel: string;
     description: string;

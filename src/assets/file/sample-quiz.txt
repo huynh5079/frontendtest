@@ -1,0 +1,39 @@
+Title: Introduction to C# Quiz
+Description: Test your basic C# knowledge
+Time Limit: 30
+Passing Score: 70
+Question 1: What is C#?
+A. A programming language
+B. A database system
+C. An operating system
+D. A web browser
+Correct Answer: A
+Explanation: C# is a modern, object-oriented programming language developed by Microsoft.
+Question 2: Which keyword is used for inheritance in C#?
+A. extends
+B. implements
+C. inherits
+D. :
+Correct Answer: D
+Explanation: In C#, you use the colon (:) operator to specify inheritance.
+Question 3: What does 'var' keyword do in C#?
+A. Declares a variable type
+B. Implicitly typed local variable
+C. Creates a constant
+D. Defines a method
+Correct Answer: B
+Explanation: The 'var' keyword allows the compiler to infer the type of the variable.
+Question 4: Which access modifier makes a member accessible only within the same class?
+A. public
+B. private
+C. protected
+D. internal
+Correct Answer: B
+Explanation: Private members can only be accessed within the class they are declared.
+Question 5: What is the default value of a bool in C#?
+A. true
+B. false
+C. null
+D. 0
+Correct Answer: B
+Explanation: The default value for bool type in C# is false.

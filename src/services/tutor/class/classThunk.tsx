@@ -7,6 +7,8 @@ import type {
     UpdateScheduleClassForTutorParmas,
 } from "../../../types/tutor";
 import {
+    cancelClassForTutorApi,
+    completeClassForTutorApi,
     createClassApi,
     deleteClassForTutorApi,
     getAllClassApi,
@@ -25,6 +27,8 @@ const GET_ALL_STUDENT_ENROLLED_CLASS_FOR_TUTOR =
 const UPDATE_INFO_CLASS_FOR_TUTOR = "UPDATE_INFO_CLASS_FOR_TUTOR";
 const UPDATE_SCHEDULE_CLASS_FOR_TUTOR = "UPDATE_SCHEDULE_CLASS_FOR_TUTOR";
 const DELETE_CLASS_FOR_TUTOR = "DELETE_CLASS_FOR_TUTOR";
+const CANCEL_CLASS_FOR_TUTOR = "CANCEL_CLASS_FOR_TUTOR";
+const COMPLETE_CLASS_FOR_TUTOR = "COMPLETE_CLASS_FOR_TUTOR";
 
 export const createClassApiThunk = createAsyncThunk<{}, CreateClassParams>(
     CREATE_CLASS,
@@ -38,7 +42,7 @@ export const createClassApiThunk = createAsyncThunk<{}, CreateClassParams>(
                 data: err.response.data,
             });
         }
-    }
+    },
 );
 
 export const getAllClassApiThunk = createAsyncThunk<
@@ -71,18 +75,24 @@ export const getDetailClassApiThunk = createAsyncThunk<
 });
 
 export const getAllStudentEnrolledClassForTutorApiThunk = createAsyncThunk<
-    ResponseFromServer<StudentEnrolledClassForTutor[]>
->(GET_ALL_STUDENT_ENROLLED_CLASS_FOR_TUTOR, async (_, { rejectWithValue }) => {
-    try {
-        const response = await getAllStudentEnrolledClassForTutorApi();
-        return response;
-    } catch (err: any) {
-        return rejectWithValue({
-            errorMessage: err.message,
-            data: err.response.data,
-        });
-    }
-});
+    ResponseFromServer<StudentEnrolledClassForTutor[]>,
+    string
+>(
+    GET_ALL_STUDENT_ENROLLED_CLASS_FOR_TUTOR,
+    async (payload, { rejectWithValue }) => {
+        try {
+            const response = await getAllStudentEnrolledClassForTutorApi(
+                payload,
+            );
+            return response;
+        } catch (err: any) {
+            return rejectWithValue({
+                errorMessage: err.message,
+                data: err.response.data,
+            });
+        }
+    },
+);
 
 export const updateInfoClassForTutorApiThunk = createAsyncThunk<
     ResponseFromServer<{}>,
@@ -91,7 +101,7 @@ export const updateInfoClassForTutorApiThunk = createAsyncThunk<
     try {
         const response = await updateInfoClassForTutorApi(
             payload.classId,
-            payload.params
+            payload.params,
         );
         return response;
     } catch (err: any) {
@@ -109,7 +119,7 @@ export const updateScheduleClassForTutorApiThunk = createAsyncThunk<
     try {
         const response = await UpdateScheduleClassForTutorApi(
             payload.classId,
-            payload.params
+            payload.params,
         );
         return response;
     } catch (err: any) {
@@ -131,6 +141,38 @@ export const deleteClassForTutorApiThunk = createAsyncThunk<
         return rejectWithValue({
             errorMessage: err.message,
             data: err.response.data,
+        });
+    }
+});
+
+export const cancelClassForTutorApiThunk = createAsyncThunk<
+    ResponseFromServer<any>,
+    { classId: string; reason?: string }
+>(CANCEL_CLASS_FOR_TUTOR, async (payload, { rejectWithValue }) => {
+    try {
+        const response = await cancelClassForTutorApi(payload.classId, {
+            reason: payload.reason,
+        });
+        return response;
+    } catch (err: any) {
+        return rejectWithValue({
+            errorMessage: err.message,
+            data: err.response?.data,
+        });
+    }
+});
+
+export const completeClassForTutorApiThunk = createAsyncThunk<
+    ResponseFromServer<{}>,
+    string
+>(COMPLETE_CLASS_FOR_TUTOR, async (payload, { rejectWithValue }) => {
+    try {
+        const response = await completeClassForTutorApi(payload);
+        return response;
+    } catch (err: any) {
+        return rejectWithValue({
+            errorMessage: err.message,
+            data: err.response?.data,
         });
     }
 });

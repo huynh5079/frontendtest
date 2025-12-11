@@ -6,6 +6,14 @@ import UpdateBookingTutorForStudentModal from "./updateBookingTutorForStudentMod
 import UpdateRequestFindTutorForStudentModal from "./updateRequestFindTutorForStudentModal";
 import CancelBookingTutorForStudent from "./cancelBookingTutorForStudent";
 import UpdateClassModal from "./updateClassModal";
+import RemindWalletModal from "./remindWalletModal";
+import CancelRequestFindTutorForStudent from "./cancelRequestFindTutorForStudent";
+import AdminCancelClassModal from "./adminCancelClassModal";
+import AdminCancelStudentEnrollmentModal from "./adminCancelStudentEnrollmentModal";
+import AdminSelectStudentToCancelModal from "./adminSelectStudentToCancelModal";
+import TutorCancelClassModal from "./tutorCancelClassModal";
+import TutorCompleteClassModal from "./tutorCompleteClassModal";
+import StudentWithdrawClassModal from "./studentWithdrawClassModal";
 
 export {
     Modal,
@@ -15,5 +23,13 @@ export {
     UpdateBookingTutorForStudentModal,
     CancelBookingTutorForStudent,
     UpdateRequestFindTutorForStudentModal,
-    UpdateClassModal
+    UpdateClassModal,
+    RemindWalletModal,
+    CancelRequestFindTutorForStudent,
+    AdminCancelClassModal,
+    AdminCancelStudentEnrollmentModal,
+    AdminSelectStudentToCancelModal,
+    TutorCancelClassModal,
+    TutorCompleteClassModal,
+    StudentWithdrawClassModal,
 };

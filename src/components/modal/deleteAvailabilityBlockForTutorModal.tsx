@@ -5,27 +5,24 @@ import { CiCalendar, CiText, CiStickyNote } from "react-icons/ci";
 import Modal from "./modal";
 import type { DeleteAvailabilityBlockForTutorModalProps } from "../../types/modal";
 import type { CreateTutorAvailabilityParams } from "../../types/tutorAvailabilityBlock";
-import { DateTimePickerElement } from "../elements";
-import { useAppDispatch } from "../../app/store";
-import {
-    deleteAvailabilityBlockForTutorApiThunk,
-    getAllAvailabilityBlockForTutorApiThunk,
-} from "../../services/tutor/availabilityBlock/tutorAvailabilityBlockThunk";
+import { DateTimePickerElement, LoadingSpinner } from "../elements";
+import { useAppDispatch, useAppSelector } from "../../app/store";
+import { deleteAvailabilityBlockForTutorApiThunk } from "../../services/tutor/availabilityBlock/tutorAvailabilityBlockThunk";
 import { get } from "lodash";
 import { toast } from "react-toastify";
 import { useEffect } from "react";
 import dayjs from "dayjs";
+import { getAllScheduleForTutorApiThunk } from "../../services/tutor/schedule/tutorScheduleThunk";
+import { selectProfileTutor } from "../../app/selector";
 
 const CreateAvailabilitySchema = Yup.object().shape({
-    title: Yup.string().required("Vui lòng nhập tiêu đề"),
     startTime: Yup.date().required("Vui lòng chọn thời gian bắt đầu"),
     endTime: Yup.date()
         .required("Vui lòng chọn thời gian kết thúc")
         .min(
             Yup.ref("startTime"),
-            "Thời gian kết thúc phải sau thời gian bắt đầu",
+            "Thời gian kết thúc phải sau thời gian bắt đầu"
         ),
-    notes: Yup.string().optional(),
 });
 
 const DeleteAvailabilityBlockForTutorModal: FC<
@@ -49,7 +46,7 @@ const DeleteAvailabilityBlockForTutorModal: FC<
         if (selectedAvailabilityBlock) {
             if (selectedAvailabilityBlock.startTime) {
                 setStartDate(
-                    dayjs(selectedAvailabilityBlock.startTime).toDate(),
+                    dayjs(selectedAvailabilityBlock.startTime).toDate()
                 );
             }
             if (selectedAvailabilityBlock.endTime) {
@@ -61,16 +58,13 @@ const DeleteAvailabilityBlockForTutorModal: FC<
     const [startDate, setStartDate] = useState<Date | null>(null);
     const [endDate, setEndDate] = useState<Date | null>(null);
     const dispatch = useAppDispatch();
+    const tutorProfile = useAppSelector(selectProfileTutor);
 
-    const handleSubmit = async (values: CreateTutorAvailabilityParams) => {
-        console.log(values);
-    };
-
-    const handleDelete = async () => {
+    const handleSubmit = async () => {
         await dispatch(
             deleteAvailabilityBlockForTutorApiThunk(
-                selectedAvailabilityBlock?.id.toLowerCase()!,
-            ),
+                selectedAvailabilityBlock?.id.toLowerCase()!
+            )
         )
             .unwrap()
             .then((res) => {
@@ -78,10 +72,11 @@ const DeleteAvailabilityBlockForTutorModal: FC<
                 toast.success(message);
                 setIsOpen(false);
                 dispatch(
-                    getAllAvailabilityBlockForTutorApiThunk({
-                        startTime: startDateProps,
-                        endTime: endDateProps,
-                    }),
+                    getAllScheduleForTutorApiThunk({
+                        tutorProfileId: tutorProfile?.tutorProfileId!,
+                        startDate: startDateProps,
+                        endDate: endDateProps,
+                    })
                 );
             })
             .catch((error) => {
@@ -94,7 +89,7 @@ const DeleteAvailabilityBlockForTutorModal: FC<
         <Modal isOpen={isOpen} setIsOpen={setIsOpen}>
             <section id="delete-availability-block-for-tutor-modal-section">
                 <div className="dabftm-container">
-                    <h2>Tạo lịch bận</h2>
+                    <h2>Xóa lịch bận</h2>
 
                     <Formik
                         initialValues={initialValues}
@@ -136,7 +131,7 @@ const DeleteAvailabilityBlockForTutorModal: FC<
                                                 setStartDate(date);
                                                 setFieldValue(
                                                     "startTime",
-                                                    date,
+                                                    date
                                                 );
                                             }}
                                             placeholder="Chọn thời gian bắt đầu"
@@ -191,16 +186,20 @@ const DeleteAvailabilityBlockForTutorModal: FC<
 
                                 {/* Nút hành động */}
                                 <div className="group-btn">
-                                    <div
-                                        className="sc-btn"
-                                        onClick={handleDelete}
+                                    <div className="sc-btn">Hủy</div>
+                                    <button
+                                        type="submit"
+                                        className={
+                                            isSubmitting
+                                                ? "disable-btn"
+                                                : "pr-btn"
+                                        }
                                     >
-                                        Xoá
-                                    </div>
-                                    <button type="submit" className="pr-btn">
-                                        {isSubmitting
-                                            ? "Đang cập nhật"
-                                            : "Cập nhật"}
+                                        {isSubmitting ? (
+                                            <LoadingSpinner />
+                                        ) : (
+                                            "Xóa lịch"
+                                        )}
                                     </button>
                                 </div>
                             </Form>

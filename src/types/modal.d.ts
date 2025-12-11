@@ -27,7 +27,10 @@ export interface DeleteAvailabilityBlockForTutorModalProps
     endDateProps: string;
 }
 
-export interface RemindLoginModalProps extends ModalCommonProps {}
+export interface RemindLoginModalProps extends ModalCommonProps { }
+export interface RemindWalletModalProps extends ModalCommonProps {
+    routes: string
+}
 export interface UpdateBookingTutorForStudentModalProps
     extends ModalCommonProps {
     selectedBooking: ClassRequests | null;
@@ -44,4 +47,37 @@ export interface updateClassModalProps extends ModalCommonProps {
 
 export interface CancelBookingTutorForStudentProps extends ModalCommonProps {
     requestId: string | null;
+}
+
+export interface CancelRequestFindTutorForStudentProps extends ModalCommonProps {
+    requestId: string | null;
+}
+
+export interface AdminCancelClassModalProps extends ModalCommonProps {
+    classId: string | null;
+    onSuccess?: () => void;
+}
+
+export interface AdminCancelStudentEnrollmentModalProps extends ModalCommonProps {
+    classId: string | null;
+    studentId: string | null;
+    studentName?: string | null;
+    onSuccess?: () => void;
+}
+
+export interface TutorCancelClassModalProps extends ModalCommonProps {
+    classId: string | null;
+}
+
+export interface TutorCompleteClassModalProps extends ModalCommonProps {
+    classId: string | null;
+}
+
+export interface StudentWithdrawClassModalProps extends ModalCommonProps {
+    classId: string | null;
+}
+
+export interface AdminSelectStudentToCancelModalProps extends ModalCommonProps {
+    classId: string | null;
+    onSelectStudent?: (studentId: string, studentName?: string) => void;
 }

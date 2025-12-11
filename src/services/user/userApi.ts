@@ -1,3 +1,4 @@
+import { TutorProfileUpdateParams } from "../../types/tutor";
 import type { UpdateStudentProfileParams } from "../../types/user";
 import request from "../request";
 
@@ -20,5 +21,12 @@ export const updateProfileStudentApi = async (
     params: UpdateStudentProfileParams
 ) => {
     const data = await request.put(`/profile/update/student`, params);
+    return data.data;
+};
+
+export const updateProfileTutorApi = async (
+    params: TutorProfileUpdateParams
+) => {
+    const data = await request.put(`/profile/update/tutor`, params);
     return data.data;
 };

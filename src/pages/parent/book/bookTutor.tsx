@@ -25,6 +25,7 @@ import { useAppDispatch, useAppSelector } from "../../../app/store";
 import {
     selectBalance,
     selectListChildAccount,
+    selectListChildSchedule,
     selectListTutorSchedule,
     selectPublicTutor,
 } from "../../../app/selector";
@@ -43,8 +44,28 @@ import type {
     CreateClassRequestParams,
     Schedule,
 } from "../../../types/student";
-import { checkBalanceApiThunk, transferWalletApiThunk } from "../../../services/wallet/walletThunk";
+import {
+    checkBalanceApiThunk,
+    tranferToAdminApiThunk,
+    transferWalletApiThunk,
+} from "../../../services/wallet/walletThunk";
 import type { WalletBalance } from "../../../types/wallet";
+import { getScheduleSpecificChildForParentApiThunk } from "../../../services/parent/childSchedule/childScheduleThunk";
+import { RemindWalletModal } from "../../../components/modal";
+
+export type ScheduleItem = {
+    id: string;
+    tutorId: string;
+    startTime: string;
+    endTime: string;
+    entryType: string;
+
+    // optional cho phần chỉ child mới có
+    lessonId?: string;
+    classId?: string;
+    title?: string | null;
+    attendanceStatus?: string | null;
+};
 
 const ParentBookTutor: FC = () => {
     const dispatch = useAppDispatch();
@@ -54,14 +75,23 @@ const ParentBookTutor: FC = () => {
     // === STATE ===
     const childAccounts = useAppSelector(selectListChildAccount);
     const tutor = useAppSelector(selectPublicTutor);
-    const tutorSchedules = useAppSelector(selectListTutorSchedule);
+    const tutorSchedules = useAppSelector(selectListTutorSchedule) || [];
+    const childSchedules = useAppSelector(selectListChildSchedule) || [];
+
     const balance: WalletBalance | null = useAppSelector(selectBalance);
 
+    const mergedSchedules: ScheduleItem[] = [
+        ...childSchedules,
+        ...tutorSchedules,
+    ];
+
+    const [childProfileId, setChildProfileId] = useState<string>("");
+    const [isRemindWalletOpen, setIsRemindWalletOpen] = useState(false);
     const [classOptions, setClassOptions] = useState<string[]>([]);
 
     const tutorSubjects = csvToArray(tutor?.teachingSubjects || "");
     const busySchedules = groupSchedulesByWeek(
-        Array.isArray(tutorSchedules) ? tutorSchedules : []
+        Array.isArray(mergedSchedules) ? mergedSchedules : []
     );
 
     // === EFFECTS ===
@@ -130,46 +160,49 @@ const ParentBookTutor: FC = () => {
                                 : bookingPrice;
 
                         if (balance?.balance && balance.balance < totalAmount) {
-                            toast.error(
-                                "Số dư ví của bạn không đủ, vui lòng nạp thêm tiền."
-                            );
+                            setIsRemindWalletOpen(true);
                             setSubmitting(false);
                             return;
                         }
 
-                        dispatch(createClassRequestForStudentApiThunk(values))
+                        dispatch(
+                            tranferToAdminApiThunk({
+                                Amount: totalAmount,
+                                Note: "Phí đặt lịch gia sư",
+                            })
+                        )
                             .unwrap()
                             .then(() => {
                                 dispatch(
-                                    transferWalletApiThunk({
-                                        toUserId:
-                                            "0E85EF35-39C1-418A-9A8C-0F83AC9520A6",
-                                        amount: totalAmount,
-                                        note: "Phí đặt lịch gia sư",
-                                    })
+                                    createClassRequestForStudentApiThunk(values)
                                 )
                                     .unwrap()
                                     .then((res) => {
-                                        const message = get(
-                                            res,
-                                            "data.message",
-                                            "Đặt lịch thành công"
+                                        toast.success(
+                                            get(
+                                                res,
+                                                "data.message",
+                                                "Đặt lịch thành công"
+                                            )
                                         );
-                                        toast.success(message);
-                                        navigateHook(routes.student.home);
+                                        navigateHook(routes.parent.home);
+                                    })
+                                    .catch((err) => {
+                                        toast.error(
+                                            get(
+                                                err,
+                                                "data.message",
+                                                "Có lỗi xảy ra"
+                                            )
+                                        );
                                     });
                             })
-                            .catch((error) => {
-                                const errorData = get(
-                                    error,
-                                    "data.message",
-                                    "Có lỗi xảy ra"
+                            .catch((err) => {
+                                toast.error(
+                                    get(err, "data.message", "Có lỗi xảy ra")
                                 );
-                                toast.error(errorData);
                             })
-                            .finally(() => {
-                                setSubmitting(false);
-                            });
+                            .finally(() => setSubmitting(false));
                     }}
                 >
                     {({ values, setFieldValue, isSubmitting }) => {
@@ -178,7 +211,8 @@ const ParentBookTutor: FC = () => {
                         useEffect(() => {
                             if (
                                 tutor?.tutorProfileId &&
-                                values.classStartDate
+                                values.classStartDate &&
+                                childProfileId
                             ) {
                                 const start = formatDateToYMD(
                                     new Date(values.classStartDate)
@@ -196,11 +230,20 @@ const ParentBookTutor: FC = () => {
                                         endDate: end,
                                     })
                                 );
+
+                                dispatch(
+                                    getScheduleSpecificChildForParentApiThunk({
+                                        childProfileId: childProfileId!,
+                                        startDate: start,
+                                        endDate: end,
+                                    })
+                                );
                             }
                         }, [
                             dispatch,
                             tutor?.tutorProfileId,
                             values.classStartDate,
+                            childProfileId,
                         ]);
 
                         // Cập nhật classOptions theo teachingLevel
@@ -266,6 +309,26 @@ const ParentBookTutor: FC = () => {
                                             as="select"
                                             name="studentUserId"
                                             className="form-input"
+                                            onChange={(e: any) => {
+                                                const value = e.target.value;
+                                                setFieldValue(
+                                                    "studentUserId",
+                                                    value
+                                                );
+
+                                                const selected =
+                                                    childAccounts?.find(
+                                                        (c) =>
+                                                            c.studentUserId ===
+                                                            value
+                                                    );
+
+                                                if (selected) {
+                                                    setChildProfileId(
+                                                        selected.studentId
+                                                    );
+                                                }
+                                            }}
                                         >
                                             <option value="">
                                                 -- Chọn tài khoản của con --
@@ -591,6 +654,11 @@ const ParentBookTutor: FC = () => {
                     }}
                 </Formik>
             </div>
+            <RemindWalletModal
+                isOpen={isRemindWalletOpen}
+                setIsOpen={setIsRemindWalletOpen}
+                routes={routes.parent.information + "?tab=wallet"}
+            />
         </section>
     );
 };

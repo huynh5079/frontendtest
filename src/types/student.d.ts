@@ -64,6 +64,8 @@ export type GetLearingScheduleForStudentParams = {
 
 export type learningScheduleForStudentState = {
     list: learningScheduleForStudent[] | null;
+    detail: DetailScheduleLessonForStudent | null;
+    listOneOnOne: OneOnOneTutorForStudent[] | null;
 };
 
 export type learningScheduleForStudent = {
@@ -76,7 +78,42 @@ export type learningScheduleForStudent = {
     classId: string;
     title: string | null;
     attendanceStatus: string | null;
-    tutorId: string;
+};
+
+export type OneOnOneTutorForStudent = {
+    profileId: string;
+    userId: string;
+    fullName: string;
+    avatarUrl: string;
+    email: string;
+    phone: string;
+};
+
+export type StudentInClass = {
+    studentId: string;
+    studentUserId: string;
+    fullName: string;
+    avatarUrl: string;
+    isPresent: boolean;
+    attendanceStatus: string | null;
+    note: string | null;
+};
+
+export type DetailScheduleLessonForStudent = {
+    id: string;
+    title: string | null;
+    lessonTitle: string;
+    status: string;
+    startTime: string;
+    endTime: string;
+    classId: string;
+    classTitle: string;
+    mode: string;
+    subject: string;
+    educationLevel: string;
+    location: string | null;
+    onlineStudyLink: string | null;
+    tutorUserId: string;
 };
 
 //apply request
@@ -123,3 +160,79 @@ export type AssignedClassForStudent = {
     mode: string;
     classStartDate: string;
 };
+
+//quiz
+export type QuizForStudentState = {
+    list: GetAllQuizForStudent[] | null;
+    detail: GetDetailQuizForStudent | null;
+    result: StudentQuizResult | null;
+    historic: StudentQuizResult[] | null;
+};
+
+export type GetAllQuizForStudent = {
+    id: string;
+    title: string;
+    description: string;
+    totalQuestions: number;
+    timeLimit: number;
+    passingScore: number;
+    quizType: string;
+    maxAttempts: number;
+    isActive: boolean;
+    createdAt: string;
+};
+
+export type QuizQuestion = {
+    id: string;
+    questionText: string;
+    imageUrl: string | null;
+    orderIndex: number;
+    points: number;
+    optionA: string;
+    optionB: string;
+    optionC: string;
+    optionD: string;
+};
+
+export type GetDetailQuizForStudent = {
+    id: string;
+    title: string;
+    description: string;
+    timeLimit: number;
+    passingScore: number;
+    quizType: "Practice" | "Exam" | "Test" | string;
+    maxAttempts: number;
+    totalQuestions: number;
+    currentAttemptCount: number;
+    questions: QuizQuestion[];
+    createdAt: string;
+};
+
+export type QuestionSubmit = {
+    questionId: string;
+    selectedAnswer: string;
+};
+
+export type SubmitQuizForStudentParams = {
+    quizId: string;
+    answers: QuestionSubmit[];
+};
+
+export interface AnswerDetail {
+    questionId: string;
+    questionText: string;
+    selectedAnswer: string;
+    correctAnswer: string;
+    isCorrect: boolean;
+    explanation: string;
+}
+
+export interface StudentQuizResult {
+    attemptId: string;
+    totalQuestions: number;
+    correctAnswers: number;
+    scorePercentage: number;
+    isPassed: boolean;
+    submittedAt: string; // hoặc Date nếu bạn muốn convert
+    answerDetails: AnswerDetail[];
+}

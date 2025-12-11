@@ -1,0 +1,96 @@
+.student-history-submit-quiz {
+    .shsq-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+
+        h3 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--main-black);
+        }
+
+        .sc-btn {
+            padding: 0.5rem 1.25rem;
+            font-size: 1.25rem;
+        }
+    }
+
+    .quiz-result {
+        padding: 1.25rem;
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .summary {
+            background: #f5f7fb;
+            padding: 0.9375rem;
+            border-radius: 0.625rem;
+            margin-bottom: 1.5625rem;
+
+            p {
+                margin: 0.3125rem 0;
+                font-size: 1rem;
+            }
+
+            .pass {
+                color: #1abc9c;
+            }
+
+            .fail {
+                color: #e74c3c;
+            }
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.9375rem;
+        }
+
+        .answer-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.9375rem;
+        }
+
+        .answer-item {
+            padding: 0.9375rem;
+            border-radius: 0.625rem;
+            border: 1px solid #ddd;
+
+            &.correct {
+                border-left: 0.3125rem solid #2ecc71;
+                background: #ecf9f1;
+            }
+
+            &.wrong {
+                border-left: 0.3125rem solid #e74c3c;
+                background: #fdecea;
+            }
+
+            h4 {
+                margin-bottom: 0.5rem;
+            }
+
+            .selected {
+                color: #3498db;
+            }
+
+            .correct-answer {
+                color: #2ecc71;
+            }
+
+            .explanation {
+                margin-top: 0.3125rem;
+                font-style: italic;
+            }
+        }
+
+        button.pr-btn {
+            margin-top: 1.25rem;
+        }
+    }
+}

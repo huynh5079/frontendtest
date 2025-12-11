@@ -1,4 +1,4 @@
-import { useEffect, type FC } from "react";
+import { useEffect, useState, type FC } from "react";
 import { useAppDispatch, useAppSelector } from "../../../app/store";
 import { selectListRequestFindTutorForTutor } from "../../../app/selector";
 import { getAllRequestFindTutorForTutorApiThunk } from "../../../services/tutor/requestFindTutor/requestFindTutorThunk";
@@ -10,6 +10,23 @@ import { formatDate, useDocumentTitle } from "../../../utils/helper";
 const ListReuqestFindtutorForTutorPage: FC = () => {
     const dispatch = useAppDispatch();
     const requests = useAppSelector(selectListRequestFindTutorForTutor);
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6;
+
+    // Tổng số trang
+    const totalPages = requests ? Math.ceil(requests.length / itemsPerPage) : 1;
+
+    // Lấy dữ liệu cho trang hiện tại
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedData = requests?.slice(
+        startIndex,
+        startIndex + itemsPerPage
+    );
+
+    useEffect(() => {
+        setCurrentPage(1); // reset khi đổi filter
+    }, [requests]);
 
     useEffect(() => {
         dispatch(getAllRequestFindTutorForTutorApiThunk());
@@ -77,7 +94,7 @@ const ListReuqestFindtutorForTutorPage: FC = () => {
                             </tr>
                         </thead>
                         <tbody className="table-body">
-                            {requests?.map((request) => (
+                            {paginatedData?.map((request) => (
                                 <tr className="table-body-row" key={request.id}>
                                     <td className="table-body-cell">
                                         {request.studentName}
@@ -105,6 +122,30 @@ const ListReuqestFindtutorForTutorPage: FC = () => {
                             ))}
                         </tbody>
                     </table>
+
+                    {totalPages > 1 && (
+                        <div className="pagination">
+                            <button
+                                className="sc-btn"
+                                disabled={currentPage === 1}
+                                onClick={() => setCurrentPage((p) => p - 1)}
+                            >
+                                Trang trước
+                            </button>
+
+                            <span>
+                                {currentPage} / {totalPages}
+                            </span>
+
+                            <button
+                                className="sc-btn"
+                                disabled={currentPage === totalPages}
+                                onClick={() => setCurrentPage((p) => p + 1)}
+                            >
+                                Trang sau
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </section>

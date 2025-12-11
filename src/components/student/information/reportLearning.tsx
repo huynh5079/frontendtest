@@ -1,67 +1,132 @@
-import { useState, type FC } from "react";
+import { useEffect, useState, type FC } from "react";
 import { PieChartStat } from "../../elements";
 import { sampleData, useDocumentTitle } from "../../../utils/helper";
-import { MdOutlineDriveFileRenameOutline } from "react-icons/md";
+import { useAppDispatch, useAppSelector } from "../../../app/store";
+import {
+    selectListAssignedClassForStudent,
+    selectListOneOnOneTutorForStudent,
+} from "../../../app/selector";
+import { getAllOneOnOneTutorForStudentApiThunk } from "../../../services/student/learningSchedule/learningScheduleThunk";
+import { getAllAssignedClassForStudentApiThunk } from "../../../services/student/class/classThunk";
+import { CiTextAlignLeft } from "react-icons/ci";
 
 const StudentReportLearning: FC = () => {
+    const dispatch = useAppDispatch();
+    const tutors = useAppSelector(selectListOneOnOneTutorForStudent) || [];
+    const classes =
+        useAppSelector(selectListAssignedClassForStudent)?.filter(
+            (c) => c.classStatus === "Ongoing",
+        ) || [];
+
     const [tab, setTab] = useState<string>("tutor");
+    const [tutorId, setTutorId] = useState<string>("");
+    const [classId, setClassId] = useState<string>("");
+
+    // ------------------- Load dữ liệu cơ bản theo TAB -------------------
+    useEffect(() => {
+        if (tab === "tutor") {
+            dispatch(getAllOneOnOneTutorForStudentApiThunk());
+        }
+
+        if (tab === "class") {
+            dispatch(getAllAssignedClassForStudentApiThunk());
+        }
+    }, [tab, dispatch]);
 
     useDocumentTitle("Tiến độ học tập");
 
     return (
         <div className="student-report-learning">
+            <h4>Thống kê học tập của bạn của bạn</h4>
+            
             <div className="tabs">
-                <div className={`tab ${tab === "tutor" ? "active" : ""}`} onClick={() => setTab("tutor")}>
-                    Gia sư
-                    <span
-                        className={`underline left ${tab === "tutor" ? "full" : ""
-                            }`}
-                    />
-                    <span
-                        className={`underline right ${tab === "tutor" ? "full" : ""
-                            }`}
-                    />
+                <div
+                    className={`tab ${tab === "all" ? "active" : ""}`}
+                    onClick={() => setTab("all")}
+                >
+                    Tất cả
                 </div>
-                <div className={`tab ${tab === "class" ? "active" : ""}`} onClick={() => setTab("class")}>
+                <div
+                    className={`tab ${tab === "tutor" ? "active" : ""}`}
+                    onClick={() => setTab("tutor")}
+                >
+                    Học kèm
+                </div>
+                <div
+                    className={`tab ${tab === "class" ? "active" : ""}`}
+                    onClick={() => setTab("class")}
+                >
                     Lớp học
-                    <span
-                        className={`underline left ${tab === "class" ? "full" : ""
-                            }`}
-                    />
-                    <span
-                        className={`underline right ${tab === "class" ? "full" : ""
-                            }`}
-                    />
                 </div>
             </div>
-            {tab === "tutor" && <>
-                <div className="form-field">
-                    <label className="form-label">Chọn gia sư</label>
-                    <div className="form-input-container">
-                        <MdOutlineDriveFileRenameOutline className="form-input-icon" />
-                        <select name="" id="" className="form-input">
-                            <option value="">-- Chọn gia sư --</option>
-                            <option value="">Nam</option>
-                            <option value="">Nữ</option>
-                        </select>
+            {tab === "all" && (
+                <>
+                    <PieChartStat data={sampleData} />
+                </>
+            )}
+            {tab === "tutor" && (
+                <>
+                    <div className="form">
+                        <div className="form-field">
+                            <label className="form-label">Gia sư</label>
+                            <div className="form-input-container">
+                                <CiTextAlignLeft className="form-input-icon" />
+                                <select
+                                    className="form-input"
+                                    value={tutorId}
+                                    onChange={(e) => setTutorId(e.target.value)}
+                                >
+                                    <option value="">
+                                        --- Chọn gia sư ---
+                                    </option>
+                                    {tutors.map((t) => (
+                                        <option
+                                            key={t.userId}
+                                            value={t.profileId}
+                                        >
+                                            {t.fullName}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <PieChartStat data={sampleData} />
-            </>}
-            {tab === "class" && <>
-                <div className="form-field">
-                    <label className="form-label">Chọn lớp học</label>
-                    <div className="form-input-container">
-                        <MdOutlineDriveFileRenameOutline className="form-input-icon" />
-                        <select name="" id="" className="form-input">
-                            <option value="">-- Chọn lớp học --</option>
-                            <option value="">Nam</option>
-                            <option value="">Nữ</option>
-                        </select>
+
+                    <PieChartStat data={sampleData} />
+                </>
+            )}
+            {tab === "class" && (
+                <>
+                    <div className="form">
+                        <div className="form-field">
+                            <label className="form-label">
+                                Lớp học đang học
+                            </label>
+                            <div className="form-input-container">
+                                <CiTextAlignLeft className="form-input-icon" />
+                                <select
+                                    className="form-input"
+                                    value={classId}
+                                    onChange={(e) => setClassId(e.target.value)}
+                                >
+                                    <option value="">
+                                        --- Chọn lớp học ---
+                                    </option>
+                                    {classes.map((c) => (
+                                        <option
+                                            key={c.classId}
+                                            value={c.classId}
+                                        >
+                                            "{c.classTitle}" - {c.tutorName}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <PieChartStat data={sampleData} />
-            </>}
+                    <PieChartStat data={sampleData} />
+                </>
+            )}
         </div>
     );
 };

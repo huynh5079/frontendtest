@@ -1,4 +1,4 @@
-import { useEffect, useState, type FC } from "react";
+import { useEffect, useState, useCallback, type FC } from "react";
 import { FaArrowCircleDown, FaArrowCircleUp, FaListUl } from "react-icons/fa";
 import { useAppDispatch, useAppSelector } from "../../../app/store";
 import {
@@ -10,6 +10,7 @@ import {
     depositWalletApiThunk,
     getAllTransactionHistoryApiThunk,
 } from "../../../services/wallet/walletThunk";
+import { retryPaymentApi } from "../../../services/wallet/walletApi";
 import { formatDate, useDocumentTitle } from "../../../utils/helper";
 import type {
     DepositWalletParams,
@@ -33,7 +34,6 @@ const TutorWalletPage: FC = () => {
     const initialValues: DepositWalletParams = {
         amount: 0,
         contextType: "WalletDeposit",
-        contextId: balance?.userId || "",
         description: "",
         extraData: "",
     };
@@ -45,6 +45,75 @@ const TutorWalletPage: FC = () => {
         description: Yup.string().required("Vui lòng nhập ghi chú"),
     });
 
+    // Function to retry payment and refresh balance (silent retry, only show success)
+    const checkPaymentAndRefreshBalance = useCallback(async (paymentId: string, retryCount = 0) => {
+        try {
+            const result = await retryPaymentApi(paymentId);
+            console.log("Payment retry result:", result);
+
+            // Chỉ hiển thị thông báo khi backend xác nhận thành công
+            if (result.status === "Ok") {
+                toast.success("💰 Thanh toán thành công! Tiền đã được cộng vào ví.");
+
+                // Refresh balance và transaction history sau 2 giây (đợi backend tạo transaction)
+                setTimeout(() => {
+                    dispatch(checkBalanceApiThunk());
+                    dispatch(
+                        getAllTransactionHistoryApiThunk({
+                            page: 1,
+                            size: 5,
+                        })
+                    );
+                }, 2000);
+
+                // Refresh lại lần nữa sau 5 giây để đảm bảo transaction đã được tạo
+                setTimeout(() => {
+                    dispatch(checkBalanceApiThunk());
+                    dispatch(
+                        getAllTransactionHistoryApiThunk({
+                            page: 1,
+                            size: 5,
+                        })
+                    );
+                }, 5000);
+            } else {
+                // Không hiển thị thông báo lỗi, chỉ refresh balance im lặng
+                dispatch(checkBalanceApiThunk());
+                dispatch(
+                    getAllTransactionHistoryApiThunk({
+                        page: 1,
+                        size: 5,
+                    })
+                );
+
+                // Retry im lặng nếu chưa thành công và chưa quá 3 lần
+                if (retryCount < 3) {
+                    const delaySeconds = 10;
+                    setTimeout(() => {
+                        checkPaymentAndRefreshBalance(paymentId, retryCount + 1);
+                    }, delaySeconds * 1000);
+                }
+            }
+        } catch (error: any) {
+            // Không hiển thị lỗi, chỉ refresh balance im lặng
+            dispatch(checkBalanceApiThunk());
+            dispatch(
+                getAllTransactionHistoryApiThunk({
+                    page: 1,
+                    size: 5,
+                })
+            );
+
+            // Retry im lặng nếu chưa quá 3 lần
+            if (retryCount < 3) {
+                const delaySeconds = 10;
+                setTimeout(() => {
+                    checkPaymentAndRefreshBalance(paymentId, retryCount + 1);
+                }, delaySeconds * 1000);
+            }
+        }
+    }, [dispatch]);
+
     useEffect(() => {
         dispatch(checkBalanceApiThunk());
         dispatch(
@@ -54,6 +123,36 @@ const TutorWalletPage: FC = () => {
             })
         );
     }, [dispatch]);
+
+    // Check payment status when window gains focus (user returns from payment)
+    useEffect(() => {
+        const handleFocus = () => {
+            const lastPaymentId = localStorage.getItem("lastPaymentId");
+            if (lastPaymentId) {
+                console.log("🔄 Window focused, checking payment status...");
+                // Retry khi user quay lại từ MoMo (đợi 5 giây để đảm bảo MoMo đã redirect và cập nhật)
+                setTimeout(() => {
+                    checkPaymentAndRefreshBalance(lastPaymentId);
+                    // Clear paymentId sau khi check
+                    localStorage.removeItem("lastPaymentId");
+                }, 5000); // 5 giây - tăng delay để đợi MoMo cập nhật status
+            } else {
+                // Nếu không có paymentId, chỉ refresh balance
+                dispatch(checkBalanceApiThunk());
+                dispatch(
+                    getAllTransactionHistoryApiThunk({
+                        page: 1,
+                        size: 5,
+                    })
+                );
+            }
+        };
+
+        window.addEventListener("focus", handleFocus);
+        return () => {
+            window.removeEventListener("focus", handleFocus);
+        };
+    }, [dispatch, checkPaymentAndRefreshBalance]);
 
     useDocumentTitle("Ví thanh toán");
 
@@ -94,7 +193,7 @@ const TutorWalletPage: FC = () => {
                         <span>Số dư hiện tại</span>:{" "}
                         {balance?.balance.toLocaleString()}Đ
                     </p>
-                    <button className="pr-btn">Nạp tiền</button>
+                    <button className="pr-btn" onClick={() => setIsDepositOpend(true)}>Nạp tiền</button>
                 </div>
                 <div className="twscr4">
                     <table className="table">
@@ -144,8 +243,13 @@ const TutorWalletPage: FC = () => {
                             .unwrap()
                             .then((res: DepositWalletResponse) => {
                                 setIsDepositOpend(false);
-                                // navigate(res.payUrl);
+                                // Lưu paymentId để query sau
+                                if (res.paymentId) {
+                                    localStorage.setItem("lastPaymentId", res.paymentId);
+                                }
+                                // Mở payment URL
                                 window.open(res.payUrl, "_blank");
+                                toast.success("✅ Đã tạo đơn thanh toán. Vui lòng thanh toán trên MoMo.");
                             })
                             .catch((error) => {
                                 const errorData = get(

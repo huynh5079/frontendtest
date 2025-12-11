@@ -59,6 +59,8 @@ const levelSubjectsMap: Record<string, string[]> = {
     ],
 };
 
+const ITEMS_PER_PAGE = 6;
+
 const ParentChildAccount: FC = () => {
     const dispatch = useAppDispatch();
     const parentProfile = useAppSelector(selectProfileParent);
@@ -67,6 +69,7 @@ const ParentChildAccount: FC = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const id = searchParams.get("id");
+    const [currentPage, setCurrentPage] = useState(1);
 
     const [isStep, setIsStep] = useState(1);
 
@@ -92,6 +95,20 @@ const ParentChildAccount: FC = () => {
 
     const handleBack = () => {
         navigate(`/parent/information?tab=child-account`);
+    };
+
+    const totalPages = Math.ceil((childAccounts?.length || 0) / ITEMS_PER_PAGE);
+    const paginatedItems = childAccounts?.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
+
+    const handlePrevPage = () => {
+        if (currentPage > 1) setCurrentPage(currentPage - 1);
+    };
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
     };
 
     const initialValues: CreateChildAccountParams = {
@@ -192,7 +209,7 @@ const ParentChildAccount: FC = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="table-body">
-                                        {childAccounts?.map((childAccount) => (
+                                        {paginatedItems?.map((childAccount) => (
                                             <tr key={childAccount.studentId}>
                                                 <td className="table-body-cell">
                                                     {childAccount.username}
@@ -216,6 +233,30 @@ const ParentChildAccount: FC = () => {
                                         ))}
                                     </tbody>
                                 </table>
+
+                                {totalPages > 1 && (
+                                    <div className="pagination">
+                                        <button
+                                            className="sc-btn"
+                                            onClick={handlePrevPage}
+                                            disabled={currentPage === 1}
+                                        >
+                                            Trước
+                                        </button>
+                                        <span>
+                                            {currentPage} / {totalPages}
+                                        </span>
+                                        <button
+                                            className="sc-btn"
+                                            onClick={handleNextPage}
+                                            disabled={
+                                                currentPage === totalPages
+                                            }
+                                        >
+                                            Sau
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ) : (
@@ -231,33 +272,59 @@ const ParentChildAccount: FC = () => {
                                 </button>
                             </div>
                             <div className="pcas1r2 pcas1r2-detail">
-                                <div className="pcas1r2dc1">
+                                <div className="pcas1r2dr1">
                                     <img src={childAccount?.avatarUrl} alt="" />
                                 </div>
-                                <div className="pcas1r2dc2">
-                                    <h4>Họ và tên:</h4>
-                                    <p>{childAccount?.username}</p>
-                                    <h4>Email:</h4>
-                                    <p>{childAccount?.email}</p>
-                                    <h4>Ngày sinh:</h4>
-                                    <p>
-                                        {childAccount?.dateOfBirth ||
-                                            "Chưa cập nhật"}
-                                    </p>
-                                    <h4>Giới tính:</h4>
-                                    <p>
-                                        {childAccount?.gender ||
-                                            "Chưa cập nhật"}
-                                    </p>
-                                    <h4>Trình độ học vấn:</h4>
-                                    <p>
-                                        {childAccount?.educationLevel ||
-                                            "Chưa cập nhật"}
-                                    </p>
-                                    <h4>Môn học yêu thích:</h4>
-                                    <p>{childAccount?.preferredSubjects}</p>
-                                    <h4>Mối quan hệ:</h4>
-                                    <p>{childAccount?.relationship}</p>
+                                <div className="pcas1r2dr2">
+                                    <div className="child-account-detail">
+                                        <div className="group-content">
+                                            <div className="detail-item">
+                                                <h4>Họ và tên:</h4>
+                                                <p>{childAccount?.username}</p>
+                                            </div>
+
+                                            <div className="detail-item">
+                                                <h4>Email:</h4>
+                                                <p>{childAccount?.email}</p>
+                                            </div>
+
+                                            <div className="detail-item">
+                                                <h4>Ngày sinh:</h4>
+                                                <p>
+                                                    {childAccount?.dateOfBirth ||
+                                                        "Chưa cập nhật"}
+                                                </p>
+                                            </div>
+                                            <div className="detail-item">
+                                                <h4>Giới tính:</h4>
+                                                <p>
+                                                    {childAccount?.gender ||
+                                                        "Chưa cập nhật"}
+                                                </p>
+                                            </div>
+                                            <div className="detail-item">
+                                                <h4>Trình độ học vấn:</h4>
+                                                <p>
+                                                    {childAccount?.educationLevel ||
+                                                        "Chưa cập nhật"}
+                                                </p>
+                                            </div>
+                                            <div className="detail-item">
+                                                <h4>Môn học yêu thích:</h4>
+                                                <p>
+                                                    {
+                                                        childAccount?.preferredSubjects
+                                                    }
+                                                </p>
+                                            </div>
+                                            <div className="detail-item">
+                                                <h4>Mối quan hệ:</h4>
+                                                <p>
+                                                    {childAccount?.relationship}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -35,7 +35,9 @@ const StudentInformtionSidebar: FC<Props> = ({ activeTab }) => {
                     Ví của tôi
                 </li>
                 <li
-                    className={activeTab === "schedule" ? "actived" : ""}
+                    className={
+                        activeTab.startsWith("schedule") ? "actived" : ""
+                    }
                     onClick={() => handleClick("schedule")}
                 >
                     Lịch học
@@ -63,6 +65,12 @@ const StudentInformtionSidebar: FC<Props> = ({ activeTab }) => {
                     onClick={() => handleClick("request")}
                 >
                     Yêu cầu tìm gia sư
+                </li>
+                <li
+                    className={activeTab === "notification" ? "actived" : ""}
+                    onClick={() => handleClick("notification")}
+                >
+                    Thông báo
                 </li>
                 <li onClick={logout}>Đăng xuất</li>
             </ul>

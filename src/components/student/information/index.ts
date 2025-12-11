@@ -7,6 +7,8 @@ import StudentRequestFindTutor from "./requestFindTutor";
 import StudentReportLearning from "./reportLearning";
 import StudentBookingTutor from "./bookingTutor";
 import StudentAssignedClass from "./assignedClass";
+import StudentNotifilcation from "./notifilcation";
+import StudentLessonDetail from "./lessonDetail";
 
 export {
     StudentInformtionSidebar,
@@ -17,5 +19,7 @@ export {
     StudentRequestFindTutor,
     StudentReportLearning,
     StudentBookingTutor,
-    StudentAssignedClass
+    StudentAssignedClass,
+    StudentNotifilcation,
+    StudentLessonDetail
 };

@@ -74,81 +74,164 @@
         }
     }
 
-    .sub-notification {
-        width: 350px;
+    .sub-chat {
+        width: 450px;
         position: absolute;
-        top: 3rem;
+        top: 3.5rem;
         right: 0;
         background: #fff;
         box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
         border-radius: 0.5rem;
         border: 1px solid var(--main-color);
-        padding: 0.5rem;
-        z-index: 10;
+        z-index: 100;
 
-        .tabs {
+        ul {
+            padding: 0;
+            margin: 0;
+        }
+
+        .no-conversation {
             display: flex;
             align-items: center;
-            justify-content: start;
-            gap: 1rem;
-            margin-bottom: 1rem;
+            justify-content: center;
+            padding: 1rem 2rem;
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: var(--main-black);
+        }
 
-            .tab {
-                position: relative;
-                color: inherit;
-                transition: color 0.3s ease;
-                text-decoration: none;
-                cursor: pointer;
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
 
-                &:hover {
-                    color: var(--main-color);
-                }
-
-                &.active {
-                    font-weight: 600;
-                    font-size: 1.25rem;
-                    color: var(--main-color);
-                }
+            h4 {
+                font-size: 1.5rem;
+                font-weight: 700;
+                color: var(--main-color);
             }
 
-            .underline {
-                position: absolute;
-                bottom: -2px;
-                height: 2px;
+            p {
+                font-size: 1rem;
+                font-weight: 500;
+                color: #fff;
+                padding: 0.25rem 0.5rem;
+                border-radius: 1rem;
                 background-color: var(--main-color);
-                width: 0;
-                transition: all 0.3s ease;
-            }
-
-            .underline.left {
-                left: 50%;
-            }
-
-            .underline.right {
-                right: 50%;
-            }
-
-            .tab:hover:not(.active) .underline.left {
-                width: 50%;
-                left: 0;
-            }
-
-            .tab:hover:not(.active) .underline.right {
-                width: 50%;
-                right: 0;
-            }
-
-            .underline.full {
-                width: 50%;
             }
         }
 
-        h4 {
-            font-size: 1.55rem;
-            font-weight: 700;
-            color: var(--main-color);
-            margin-bottom: 0.75rem;
-            text-align: center;
+        .chat-content {
+            display: flex;
+            align-items: center;
+            justify-content: start;
+            padding: 1rem 2rem;
+            gap: 1rem;
+
+            .chat-img {
+                flex: 1;
+                position: relative;
+                display: flex;
+                justify-content: center;
+
+                .img {
+                    width: 60px;
+                    height: 60px;
+                    border-radius: 50%;
+                    object-fit: cover;
+                }
+
+                span {
+                    position: absolute;
+                    bottom: 0;
+                    right: 0;
+                    width: 10px;
+                    height: 10px;
+                    background: var(--main-color);
+                    border-radius: 50%;
+                }
+            }
+
+            .chat-info {
+                flex: 4;
+
+                .chat-name {
+                    max-width: 294px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    font-size: 1.25rem;
+                    font-weight: 500;
+                    color: var(--main-color);
+                    margin-bottom: 0.5rem;
+                }
+
+                .chat-message {
+                    max-width: 294px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    font-size: 1rem;
+                    font-weight: 500;
+                    color: var(--main-black);
+                    display: flex;
+                    align-items: center;
+                    justify-content: start;
+                    gap: 0.25rem;
+
+                    .chat-dot {
+                        width: 3px;
+                        height: 3px;
+                        border-radius: 50%;
+                        background: var(--main-black);
+                    }
+                }
+            }
+        }
+
+        .button-container {
+            padding: 1rem 2rem;
+
+            .pr-btn {
+                width: 100%;
+                padding: 0.5rem 1.25rem;
+                font-size: 1.25rem;
+            }
+        }
+    }
+
+    .sub-notification {
+        width: 450px;
+        position: absolute;
+        top: 3.5rem;
+        right: 0;
+        background: #fff;
+        box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+        border-radius: 0.5rem;
+        border: 1px solid var(--main-color);
+        z-index: 100;
+
+        .noti-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+
+            h4 {
+                font-size: 1.5rem;
+                font-weight: 700;
+                color: var(--main-color);
+            }
+
+            p {
+                font-size: 1rem;
+                font-weight: 500;
+                color: #fff;
+                padding: 0.25rem 0.5rem;
+                border-radius: 1rem;
+                background-color: var(--main-color);
+            }
         }
 
         ul {
@@ -160,28 +243,76 @@
             div {
                 font-size: 1.25rem;
                 font-weight: 500;
-                padding: 0.75rem 2rem;
+                padding: 1rem 2rem;
+                cursor: pointer;
                 text-align: center;
             }
 
             li {
-                font-size: 1.25rem;
-                font-weight: 500;
                 list-style: none;
-                padding: 0.75rem 1rem;
-                border-radius: 0.5rem;
-                cursor: pointer;
-                transition: background-color 0.3s ease;
-                margin: 0.5rem 0;
+                border-radius: 1rem;
+                border: 1px solid var(--main-color);
 
-                &.n-unread {
-                    background-color: var(--main-color-50);
+                .noti-item {
+                    display: flex;
+                    justify-content: start;
+                    align-items: center;
+                    gap: 1rem;
+
+                    .noti-icon {
+                        padding: 1rem;
+                        border-radius: 50%;
+                        border: 1px solid var(--main-color);
+                        background-color: #fff;
+                        color: var(--main-color);
+                    }
+
+                    .noti-info {
+                        padding: 0;
+
+                        h5 {
+                            font-size: 1.25rem;
+                            font-weight: 600;
+                            color: var(--main-color);
+                            margin-bottom: 0.5rem;
+                        }
+
+                        p {
+                            font-size: 1rem;
+                            color: var(--main-black);
+                            text-align: start;
+                        }
+                    }
                 }
 
                 &:hover {
                     background-color: var(--main-color-20);
                 }
             }
+        }
+
+        .button-container {
+            padding: 1rem 2rem;
+
+            .pr-btn {
+                width: 100%;
+                padding: 0.5rem 1.25rem;
+                font-size: 1.25rem;
+            }
+        }
+    }
+
+    .notification-wrapper {
+        position: relative;
+
+        .noti-number {
+            position: absolute;
+            top: 0;
+            right: 0;
+            padding: 0.25rem 0.5rem;
+            color: #fff;
+            background-color: var(--main-color);
+            border-radius: 50%;
         }
     }
 }

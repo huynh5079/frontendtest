@@ -1,4 +1,8 @@
-import type { DepositWalletParams, TranferWalletParams } from "../../types/wallet";
+import type {
+    DepositWalletParams,
+    TranferToAdminParams,
+    TranferWalletParams,
+} from "../../types/wallet";
 import request from "../request";
 
 export const checkBalanceApi = async () => {
@@ -23,5 +27,15 @@ export const depositWalletApi = async (params: DepositWalletParams) => {
 
 export const tranferWalletApi = async (params: TranferWalletParams) => {
     const data = await request.post(`/api/wallet/transfer`, params);
+    return data.data;
+};
+
+export const tranferToAdminApi = async (params: TranferToAdminParams) => {
+    const data = await request.post(`/wallet/transfer-to-admin`, params);
+    return data.data;
+};
+
+export const retryPaymentApi = async (paymentId: string) => {
+    const data = await request.post(`/payments/momo/${paymentId}/retry`);
     return data.data;
 };

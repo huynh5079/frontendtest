@@ -53,30 +53,31 @@
                 transition: all 0.3s ease;
 
                 .twscr2-item-icon {
-                    padding: 0.75rem;
-                    font-size: 2.5rem;
+                    padding: 0.5rem;
+                    font-size: 1.75rem;
                     background: var(--main-color);
                     border-radius: 0.75rem;
                     color: #fff;
                 }
 
                 h5 {
-                    font-size: 1.5rem;
+                    font-size: 1.25rem;
                     font-weight: 600;
                     color: var(--main-color);
                     margin-bottom: 0.5rem;
                 }
 
                 p {
-                    font-size: 1.25rem;
+                    font-size: 1rem;
                     font-weight: 500;
                     color: var(--main-color);
                 }
 
                 &:hover {
-                    background: var(--main-color-30);
+                    background: var(--main-color-50);
 
-                    h5 {
+                    h5,
+                    p {
                         color: #fff;
                     }
                 }

@@ -1,11 +1,12 @@
 {
-    "references": [
-        { "path": "./tsconfig.app.json" },
-    ],
+    "references": [],
     "compilerOptions": {
         "strict": true,
         "esModuleInterop": true,
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "jsx": "react-jsx",
+        "module": "ESNext",
+        "moduleResolution": "bundler"
     },
     "include": ["src"]
 }

@@ -7,6 +7,7 @@ import { StudentBookTutor } from "../pages/student/book";
 import { ListCoursePage } from "../pages/system/course/list";
 import { DetailCoursePage } from "../pages/system/course/detail";
 import { LandingPage } from "../pages/system/landing";
+import { ChatPage } from "../pages/system/chat";
 import { PrivateAuthStudent } from "../components/private";
 
 const routeStudent: RouteObject[] = [
@@ -48,6 +49,10 @@ const routeStudent: RouteObject[] = [
                     {
                         path: "information",
                         element: <StudentInformationPage />,
+                    },
+                    {
+                        path: "chat",
+                        element: <ChatPage />,
                     },
                 ],
             },

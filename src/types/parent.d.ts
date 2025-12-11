@@ -50,3 +50,44 @@ export type ChildAccount = {
     relationship: string;
     createDate: string;
 };
+
+//child schedule
+export type GetScheduleSpecificChildParams = {
+    childProfileId: string;
+    startDate: string;
+    endDate;
+};
+
+export type ChildScheduleState = {
+    list: ChildSchedule[] | null;
+    detail: DetailChildScheduleLessonForParent | null;
+};
+
+export type ChildSchedule = {
+    id: string;
+    tutorId: string;
+    startTime: string;
+    endTime: string;
+    entryType: string;
+    lessonId: string;
+    classId: string;
+    title: string | null;
+    attendanceStatus: string | null;
+};
+
+export type DetailChildScheduleLessonForParent = {
+    id: string;
+    title: string | null;
+    lessonTitle: string;
+    status: string;
+    startTime: string;
+    endTime: string;
+    classId: string;
+    classTitle: string;
+    mode: string;
+    subject: string;
+    educationLevel: string;
+    location: string | null;
+    onlineStudyLink: string | null;
+    tutorUserId: string;
+};

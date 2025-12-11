@@ -1,4 +1,4 @@
-import { useEffect, useState, type FC } from "react";
+import { useEffect, useState, useCallback, type FC } from "react";
 import { useAppDispatch, useAppSelector } from "../../../app/store";
 import {
     selectBalance,
@@ -9,6 +9,7 @@ import {
     depositWalletApiThunk,
     getAllTransactionHistoryApiThunk,
 } from "../../../services/wallet/walletThunk";
+import { retryPaymentApi } from "../../../services/wallet/walletApi";
 import { formatDate, useDocumentTitle } from "../../../utils/helper";
 import { Modal } from "../../modal";
 import type {
@@ -33,7 +34,6 @@ const StudentWallet: FC = () => {
     const initialValues: DepositWalletParams = {
         amount: 0,
         contextType: "WalletDeposit",
-        contextId: balance?.userId || "",
         description: "",
         extraData: "",
     };
@@ -45,6 +45,77 @@ const StudentWallet: FC = () => {
         description: Yup.string().required("Vui lòng nhập ghi chú"),
     });
 
+    // Function to retry payment and refresh balance (silent retry, only show success)
+    const checkPaymentAndRefreshBalance = useCallback(async (paymentId: string, retryCount = 0) => {
+        try {
+            const result = await retryPaymentApi(paymentId);
+            console.log("Payment retry result:", result);
+
+            // Chỉ hiển thị thông báo khi backend xác nhận thành công
+            if (result.status === "Ok") {
+                toast.success("💰 Thanh toán thành công! Tiền đã được cộng vào ví.");
+
+                // Refresh balance và transaction history sau 2 giây (đợi backend tạo transaction)
+                setTimeout(() => {
+                    dispatch(checkBalanceApiThunk());
+                    dispatch(
+                        getAllTransactionHistoryApiThunk({
+                            page: 1,
+                            size: 5,
+                        })
+                    );
+                }, 2000);
+
+                // Refresh lại lần nữa sau 5 giây để đảm bảo transaction đã được tạo
+                setTimeout(() => {
+                    dispatch(checkBalanceApiThunk());
+                    dispatch(
+                        getAllTransactionHistoryApiThunk({
+                            page: 1,
+                            size: 5,
+                        })
+                    );
+                }, 5000);
+            } else {
+                // Không hiển thị thông báo lỗi, chỉ refresh balance im lặng
+                // Có thể payment chưa thành công trên MoMo hoặc MoMo chưa cập nhật
+                dispatch(checkBalanceApiThunk());
+                dispatch(
+                    getAllTransactionHistoryApiThunk({
+                        page: 1,
+                        size: 5,
+                    })
+                );
+
+                // Retry im lặng nếu chưa thành công và chưa quá 3 lần (giảm từ 5 xuống 3)
+                if (retryCount < 3) {
+                    const delaySeconds = 10; // Giảm delay từ 15s xuống 10s
+                    setTimeout(() => {
+                        checkPaymentAndRefreshBalance(paymentId, retryCount + 1);
+                    }, delaySeconds * 1000);
+                }
+            }
+        } catch (error: any) {
+            // Không hiển thị lỗi, chỉ refresh balance im lặng
+            // Có thể payment chưa thành công hoặc network error
+            dispatch(checkBalanceApiThunk());
+            dispatch(
+                getAllTransactionHistoryApiThunk({
+                    page: 1,
+                    size: 5,
+                })
+            );
+
+            // Retry im lặng nếu chưa quá 3 lần
+            if (retryCount < 3) {
+                const delaySeconds = 10;
+                setTimeout(() => {
+                    checkPaymentAndRefreshBalance(paymentId, retryCount + 1);
+                }, delaySeconds * 1000);
+            }
+        }
+    }, [dispatch]);
+
     useEffect(() => {
         dispatch(checkBalanceApiThunk());
         dispatch(
@@ -54,6 +125,36 @@ const StudentWallet: FC = () => {
             })
         );
     }, [dispatch]);
+
+    // Check payment status when window gains focus (user returns from payment)
+    useEffect(() => {
+        const handleFocus = () => {
+            const lastPaymentId = localStorage.getItem("lastPaymentId");
+            if (lastPaymentId) {
+                console.log("🔄 Window focused, checking payment status...");
+                // Retry khi user quay lại từ MoMo (đợi 5 giây để đảm bảo MoMo đã redirect và cập nhật)
+                setTimeout(() => {
+                    checkPaymentAndRefreshBalance(lastPaymentId);
+                    // Clear paymentId sau khi check
+                    localStorage.removeItem("lastPaymentId");
+                }, 5000); // 5 giây - tăng delay để đợi MoMo cập nhật status
+            } else {
+                // Nếu không có paymentId, chỉ refresh balance
+                dispatch(checkBalanceApiThunk());
+                dispatch(
+                    getAllTransactionHistoryApiThunk({
+                        page: 1,
+                        size: 5,
+                    })
+                );
+            }
+        };
+
+        window.addEventListener("focus", handleFocus);
+        return () => {
+            window.removeEventListener("focus", handleFocus);
+        };
+    }, [dispatch, checkPaymentAndRefreshBalance]);
 
     useDocumentTitle("Ví thanh toán");
 
@@ -119,8 +220,19 @@ const StudentWallet: FC = () => {
                             .unwrap()
                             .then((res: DepositWalletResponse) => {
                                 setIsDepositOpend(false);
-                                // navigate(res.payUrl);
+                                // Lưu paymentId để query sau
+                                if (res.paymentId) {
+                                    localStorage.setItem("lastPaymentId", res.paymentId);
+                                }
+                                // Mở payment URL
                                 window.open(res.payUrl, "_blank");
+                                toast.success("✅ Đã tạo đơn thanh toán. Vui lòng thanh toán trên MoMo.");
+                                // Tự động query payment status sau 15 giây (đợi MoMo cập nhật - MoMo có thể cần 15-30 giây)
+                                setTimeout(() => {
+                                    if (res.paymentId) {
+                                        checkPaymentAndRefreshBalance(res.paymentId);
+                                    }
+                                }, 15000); // 15 giây - tăng delay để đợi MoMo cập nhật
                             })
                             .catch((error) => {
                                 const errorData = get(

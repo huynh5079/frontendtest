@@ -21,6 +21,8 @@ export const routes = {
         detail: "/tutor/:id/detail",
         dashboard: "/tutor/dashboard",
         schedule: "/tutor/schedule",
+        study_schedule: "/tutor/study_schedule",
+        lesson_detail: "/tutor/study_schedule/lesson/:id/detail",
         class: {
             list: "/tutor/class",
             create: "/tutor/class/create",
@@ -37,6 +39,11 @@ export const routes = {
             list: "/tutor/request",
             detail: "/tutor/request/:id/detail",
         },
+        notification: {
+            list: "/tutor/notification",
+            detail: "/tutor/notification/:id/detail",
+        },
+        chat: "/tutor/chat",
     },
     course: {
         list: "/course",
@@ -54,6 +61,7 @@ export const routes = {
             detail: "/student/course/:id/detail",
         },
         information: "/student/information",
+        chat: "/student/chat",
     },
     parent: {
         home: "/parent",
@@ -67,6 +75,7 @@ export const routes = {
             detail: "/parent/course/:id/detail",
         },
         information: "/parent/information",
+        chat: "/parent/chat",
     },
     admin: {
         dashboard: "/admin/dashboard",

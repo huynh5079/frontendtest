@@ -31,20 +31,11 @@
         }
 
         .pcas1r2-detail {
-            display: flex;
-            align-items: start;
-            gap: 2rem;
-
-            .pcas1r2dc1,
-            .pcas1r2dc2 {
-                flex: 1;
-            }
-
-            .pcas1r2dc1 {
+            .pcas1r2dr1 {
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                
+
                 img {
                     width: 300px;
                     height: 300px;
@@ -53,21 +44,36 @@
                 }
             }
 
-            .pcas1r2dc2 {
-                h4 {
-                    font-size: 1.5rem;
-                    font-weight: 700;
-                    color: var(--main-color);
-                    margin: 0;
-                    margin-bottom: 0.5rem;
-                }
+            .pcas1r2dr2 {
+                .child-account-detail {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 2rem;
 
-                p {
-                    font-size: 1.25rem;
-                    font-weight: 500;
-                    color: var(--main-black);
-                    margin: 0;
-                    margin-bottom: 1rem;
+                    .group-content {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 1.5rem;
+                    }
+
+                    .detail-item {
+                        background: #fff;
+                        padding: 1rem;
+                        border-radius: 0.75rem;
+                        border: 1px solid var(--main-color);
+                    }
+
+                    .detail-item h4 {
+                        font-size: 1.5rem;
+                        font-weight: 600;
+                        color: var(--main-color);
+                        margin-bottom: 0.5rem;
+                    }
+
+                    .detail-item p {
+                        font-size: 1.25rem;
+                        color: var(--main-black);
+                    }
                 }
             }
         }
