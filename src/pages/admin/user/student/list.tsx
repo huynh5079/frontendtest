@@ -1,23 +1,42 @@
-import { useEffect, type FC } from "react";
+import { useEffect, useState, type FC } from "react";
 import { FaArrowLeft, FaArrowRight, FaListUl } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../app/store";
 import { selectListStudentsForAdmin } from "../../../../app/selector";
 import { formatDate, useDocumentTitle } from "../../../../utils/helper";
 import { routes } from "../../../../routes/routeName";
-import { navigateHook } from "../../../../routes/routeApp";
 import { getAllStudentForAdminApiThunk } from "../../../../services/admin/student/adminStudentThunk";
+import { AdminBanUnbanUserModal } from "../../../../components/modal";
 
 const AdminListStudentPage: FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const students = useAppSelector(selectListStudentsForAdmin);
+    const [banModalOpen, setBanModalOpen] = useState(false);
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+    const [selectedUsername, setSelectedUsername] = useState<string>("");
+    const [selectedIsBanned, setSelectedIsBanned] = useState<boolean>(false);
+    const [filterType, setFilterType] = useState<"all" | "linked">("all");
 
     const handleToDetail = (studentId: string) => {
         const url = routes.admin.student.detail.replace(":id", studentId);
-        return navigateHook(url)
+        navigate(url);
     }
+
+    const handleBanUnban = (studentId: string, username: string, isBanned: boolean) => {
+        setSelectedUserId(studentId);
+        setSelectedUsername(username);
+        setSelectedIsBanned(isBanned);
+        setBanModalOpen(true);
+    };
+
+    const handleRefresh = () => {
+        const query = new URLSearchParams(location.search);
+        const pageParam = query.get("page");
+        const pageNumber = Number(pageParam) || 1;
+        dispatch(getAllStudentForAdminApiThunk(pageNumber));
+    };
 
     // Lấy giá trị page từ URL
     const query = new URLSearchParams(location.search);
@@ -39,6 +58,23 @@ const AdminListStudentPage: FC = () => {
 
     useDocumentTitle("Danh sách học viên");
 
+    // Filter students based on filterType
+    // Note: This assumes backend will provide isLinked or parentId field
+    // For now, we'll filter based on available data
+    const filteredStudents = students?.filter((student) => {
+        if (filterType === "all") return true;
+        if (filterType === "linked") {
+            // Check if student is linked (has parentId or isLinked field)
+            // This will need backend support to return this information
+            return (student as any).parentId != null || (student as any).isLinked === true;
+        }
+        return true;
+    }) || [];
+
+    // Calculate counts
+    const allCount = students?.length || 0;
+    const linkedCount = students?.filter((s) => (s as any).parentId != null || (s as any).isLinked === true).length || 0;
+
     return (
         <section id="admin-list-student-section">
             <div className="alss-container">
@@ -49,18 +85,24 @@ const AdminListStudentPage: FC = () => {
                     </p>
                 </div>
                 <div className="alsscr2">
-                    <div className="alsscr2-item active">
+                    <div
+                        className={`alsscr2-item ${filterType === "all" ? "active" : ""}`}
+                        onClick={() => setFilterType("all")}
+                    >
                         <FaListUl className="alsscr2-item-icon" />
                         <div className="amount">
                             <h5>Tất cả</h5>
-                            <p>3 học viên</p>
+                            <p>{allCount} học viên</p>
                         </div>
                     </div>
-                    <div className="alsscr2-item">
+                    <div
+                        className={`alsscr2-item ${filterType === "linked" ? "active" : ""}`}
+                        onClick={() => setFilterType("linked")}
+                    >
                         <FaListUl className="alsscr2-item-icon" />
                         <div className="amount">
                             <h5>Được liên kết</h5>
-                            <p>2 học viên</p>
+                            <p>{linkedCount} học viên</p>
                         </div>
                     </div>
                 </div>
@@ -78,7 +120,8 @@ const AdminListStudentPage: FC = () => {
                             </tr>
                         </thead>
                         <tbody className="table-body">
-                             {students?.map((student, index) => (
+                             {filteredStudents.length > 0 ? (
+                                filteredStudents.map((student, index) => (
                                 <tr className="table-body-row" key={index}>
                                     <td className="table-body-cell">
                                         {student.username}
@@ -97,15 +140,36 @@ const AdminListStudentPage: FC = () => {
                                         {formatDate(student.createDate)}
                                     </td>
                                     <td className="table-body-cell">
-                                        <button
-                                            className="pr-btn"
-                                            onClick={() => handleToDetail(student.studentId)}
-                                        >
-                                            Xem chi tiết
-                                        </button>
+                                        <div style={{ display: "flex", gap: "8px" }}>
+                                            <button
+                                                className="pr-btn"
+                                                onClick={() => handleToDetail(student.studentId)}
+                                            >
+                                                Xem chi tiết
+                                            </button>
+                                            <button
+                                                className={student.isBanned ? "sc-btn" : "delete-btn"}
+                                                onClick={() =>
+                                                    handleBanUnban(
+                                                        student.studentId,
+                                                        student.username,
+                                                        student.isBanned || false
+                                                    )
+                                                }
+                                            >
+                                                {student.isBanned ? "Mở khóa" : "Khóa"}
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
-                            ))}
+                                ))
+                            ) : (
+                                <tr className="table-body-row">
+                                    <td colSpan={5} className="table-body-cell" style={{ textAlign: "center", padding: "2rem" }}>
+                                        Chưa có học viên nào
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -119,6 +183,21 @@ const AdminListStudentPage: FC = () => {
                     </div>
                 </div>
             </div>
+            <AdminBanUnbanUserModal
+                isOpen={banModalOpen}
+                setIsOpen={(open) => {
+                    setBanModalOpen(open);
+                    if (!open) {
+                        setSelectedUserId(null);
+                        setSelectedUsername("");
+                        setSelectedIsBanned(false);
+                    }
+                }}
+                userId={selectedUserId || ""}
+                username={selectedUsername}
+                isBanned={selectedIsBanned}
+                onSuccess={handleRefresh}
+            />
         </section>
     );
 };

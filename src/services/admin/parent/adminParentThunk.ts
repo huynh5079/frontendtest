@@ -1,13 +1,13 @@
 import type { ResponseFromServer } from "../../../types/app";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { getAllParentForAdminApi, getDetailParentForAdminApi } from "./adminParentApi";
-import type { ParentForAdmin, ParentsForAdmin } from "../../../types/admin";
+import type { ParentForAdmin, ParentsForAdmin, ResponseGetUsersForAdmin } from "../../../types/admin";
 
 const GET_ALL_PARENT_FOR_ADMIN = "GET_ALL_PARENT_FOR_ADMIN";
 const GET_DETAIL_PARENT_FOR_ADMIN = "GET_DETAIL_PARENT_FOR_ADMIN";
 
 export const getAllParentForAdminApiThunk = createAsyncThunk<
-    ResponseFromServer<ParentsForAdmin[]>,
+    ResponseFromServer<ResponseGetUsersForAdmin<ParentsForAdmin[]>>,
     number
 >(GET_ALL_PARENT_FOR_ADMIN, async (payload, { rejectWithValue }) => {
     try {

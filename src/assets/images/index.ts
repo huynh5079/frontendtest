@@ -9,6 +9,9 @@ import RemindLogin from "./remind-login.webp";
 import RemindWallet from "./remind-wallet.webp";
 import NoStar from "./no-star.png";
 import Homework from "./homework.webp";
+import SystemLogo from "./system-logo.png";
+import MoMoImg from "./momo.png";
+import PayOsImg from "./payos.webp";
 
 export {
     LandingBannerImage,
@@ -22,4 +25,7 @@ export {
     RemindWallet,
     NoStar,
     Homework,
+    SystemLogo,
+    MoMoImg,
+    PayOsImg,
 };

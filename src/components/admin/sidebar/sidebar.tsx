@@ -9,6 +9,8 @@ import {
     MdFamilyRestroom,
     MdNotifications,
     MdSchool,
+    MdAccountBalanceWallet,
+    MdPercent,
 } from "react-icons/md";
 import AdminSidebarLogo from "./sidebarLogo";
 import { FaChalkboardTeacher } from "react-icons/fa";
@@ -73,6 +75,11 @@ const SidebarAdmin: FC = () => {
             section: "Giao dịch",
             links: [
                 {
+                    to: routes.admin.wallet,
+                    icon: MdAccountBalanceWallet,
+                    label: "Ví quản trị",
+                },
+                {
                     to: routes.admin.transaction.tutor.list,
                     icon: MdNotifications,
                     label: "Gia sư",
@@ -86,6 +93,11 @@ const SidebarAdmin: FC = () => {
                     to: routes.admin.transaction.parent.list,
                     icon: MdClass,
                     label: "Phụ huynh",
+                },
+                {
+                    to: routes.admin.commission,
+                    icon: MdPercent,
+                    label: "Hoa hồng",
                 },
             ],
         },

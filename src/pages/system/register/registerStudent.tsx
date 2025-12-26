@@ -15,6 +15,7 @@ import { useAppDispatch } from "../../../app/store";
 import { verifyEmailApiThunk } from "../../../services/auth/authThunk";
 import { toast } from "react-toastify";
 import { get } from "lodash";
+import { formatDateToYMD } from "../../../utils/helper";
 
 // === MAX DATE & INITIAL VALUES & VALIDATION SCHEMA ===
 const today = new Date();
@@ -28,7 +29,7 @@ const initialValues: RegisterStudent = {
     username: "",
     email: "",
     password: "",
-    birthday: null,
+    dateOfBirth: null,
 };
 
 const validationSchema = Yup.object({
@@ -39,7 +40,7 @@ const validationSchema = Yup.object({
     password: Yup.string()
         .min(8, "Mật khẩu tối thiểu 8 ký tự")
         .required("Vui lòng nhập mật khẩu"),
-    birthday: Yup.date()
+    dateOfBirth: Yup.date()
         .nullable()
         .max(maxDate, "Học viên cần đủ từ 16 tuổi trở lên")
         .required("Vui lòng chọn ngày sinh"),
@@ -78,8 +79,8 @@ const RegisterStudentPage: FC = () => {
     ) => {
         const formatted = {
             ...values,
-            birthday: values.birthday
-                ? values.birthday.toLocaleDateString("en-CA")
+            dateOfBirth: values.dateOfBirth
+                ? values.dateOfBirth.toLocaleDateString("en-CA")
                 : "",
         };
 
@@ -152,9 +153,14 @@ const RegisterStudentPage: FC = () => {
                                     <div className="form-input-container">
                                         <CiCalendarDate className="form-input-icon" />
                                         <DatePickerElement
-                                            value={values.birthday}
+                                            value={values.dateOfBirth}
                                             onChange={(date) =>
-                                                setFieldValue("birthday", date)
+                                                setFieldValue(
+                                                    "dateOfBirth",
+                                                    date
+                                                        ? formatDateToYMD(date)
+                                                        : "",
+                                                )
                                             }
                                             maxDate={maxDate}
                                         />
@@ -164,7 +170,7 @@ const RegisterStudentPage: FC = () => {
                                         16 tuổi trở lên
                                     </p>
                                     <ErrorMessage
-                                        name="birthday"
+                                        name="dateOfBirth"
                                         component="p"
                                         className="text-error"
                                     />

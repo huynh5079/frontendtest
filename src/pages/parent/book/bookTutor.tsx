@@ -51,7 +51,10 @@ import {
 } from "../../../services/wallet/walletThunk";
 import type { WalletBalance } from "../../../types/wallet";
 import { getScheduleSpecificChildForParentApiThunk } from "../../../services/parent/childSchedule/childScheduleThunk";
-import { RemindWalletModal } from "../../../components/modal";
+import {
+    ConfirmPaymentModal,
+    RemindWalletModal,
+} from "../../../components/modal";
 
 export type ScheduleItem = {
     id: string;
@@ -88,6 +91,10 @@ const ParentBookTutor: FC = () => {
     const [childProfileId, setChildProfileId] = useState<string>("");
     const [isRemindWalletOpen, setIsRemindWalletOpen] = useState(false);
     const [classOptions, setClassOptions] = useState<string[]>([]);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [pendingValues, setPendingValues] =
+        useState<CreateClassRequestParams | null>(null);
+    const [isConfirmLoading, setIsConfirmLoading] = useState(false);
 
     const tutorSubjects = csvToArray(tutor?.teachingSubjects || "");
     const busySchedules = groupSchedulesByWeek(
@@ -144,6 +151,51 @@ const ParentBookTutor: FC = () => {
             .min(1, "Vui lòng chọn lịch đúng số buổi"),
     });
 
+    const handleConfirmPayment = () => {
+        if (!pendingValues || isConfirmLoading) return;
+
+        setIsConfirmLoading(true);
+
+        // Transform schedules: convert "HH:mm" to "HH:mm:ss" format
+        const transformedValues = {
+            ...pendingValues,
+            schedules: pendingValues.schedules.map((s) => ({
+                ...s,
+                startTime: s.startTime.includes(":") && s.startTime.split(":").length === 2
+                    ? `${s.startTime}:00`
+                    : s.startTime,
+                endTime: s.endTime.includes(":") && s.endTime.split(":").length === 2
+                    ? `${s.endTime}:00`
+                    : s.endTime,
+            })),
+        };
+
+        dispatch(
+            tranferToAdminApiThunk({
+                Amount: bookingPrice,
+                Note: "Phí đặt lịch gia sư",
+            })
+        )
+            .unwrap()
+            .then(() => {
+                return dispatch(
+                    createClassRequestForStudentApiThunk(transformedValues)
+                ).unwrap();
+            })
+            .then((res) => {
+                toast.success(get(res, "data.message", "Đặt lịch thành công"));
+                navigateHook(routes.parent.information + "?tab=booking_tutor");
+            })
+            .catch((err) => {
+                toast.error(get(err, "data.message", "Có lỗi xảy ra"));
+            })
+            .finally(() => {
+                setIsConfirmLoading(false);
+                setIsConfirmOpen(false);
+                setPendingValues(null);
+            });
+    };
+
     return (
         <section id="parent-book-tutor-section">
             <div className="pbts-container">
@@ -152,57 +204,18 @@ const ParentBookTutor: FC = () => {
                     initialValues={initialValues}
                     validationSchema={validationSchema}
                     onSubmit={(values, { setSubmitting }) => {
-                        setSubmitting(true);
+                        setSubmitting(false);
 
-                        const totalAmount =
-                            values.mode === "Online"
-                                ? bookingPrice + values.budget
-                                : bookingPrice;
-
-                        if (balance?.balance && balance.balance < totalAmount) {
+                        if (
+                            balance?.balance &&
+                            balance.balance < bookingPrice
+                        ) {
                             setIsRemindWalletOpen(true);
-                            setSubmitting(false);
                             return;
                         }
 
-                        dispatch(
-                            tranferToAdminApiThunk({
-                                Amount: totalAmount,
-                                Note: "Phí đặt lịch gia sư",
-                            })
-                        )
-                            .unwrap()
-                            .then(() => {
-                                dispatch(
-                                    createClassRequestForStudentApiThunk(values)
-                                )
-                                    .unwrap()
-                                    .then((res) => {
-                                        toast.success(
-                                            get(
-                                                res,
-                                                "data.message",
-                                                "Đặt lịch thành công"
-                                            )
-                                        );
-                                        navigateHook(routes.parent.home);
-                                    })
-                                    .catch((err) => {
-                                        toast.error(
-                                            get(
-                                                err,
-                                                "data.message",
-                                                "Có lỗi xảy ra"
-                                            )
-                                        );
-                                    });
-                            })
-                            .catch((err) => {
-                                toast.error(
-                                    get(err, "data.message", "Có lỗi xảy ra")
-                                );
-                            })
-                            .finally(() => setSubmitting(false));
+                        setPendingValues(values);
+                        setIsConfirmOpen(true);
                     }}
                 >
                     {({ values, setFieldValue, isSubmitting }) => {
@@ -293,15 +306,13 @@ const ParentBookTutor: FC = () => {
                             setFieldValue("budget", fee);
                         }, [values.schedules, setFieldValue]);
 
-                        const priceOffline = bookingPrice;
-                        const priceOnline = bookingPrice + values.budget;
-
                         return (
                             <Form className="form">
                                 {/* Tài khoản con */}
                                 <div className="form-field">
                                     <label className="form-label">
                                         Tài khoản của con
+                                        <span>*</span>
                                     </label>
                                     <div className="form-input-container">
                                         <MdOutlineDriveFileRenameOutline className="form-input-icon" />
@@ -354,6 +365,7 @@ const ParentBookTutor: FC = () => {
                                 <div className="form-field">
                                     <label className="form-label">
                                         Môn học
+                                        <span>*</span>
                                     </label>
                                     <div className="form-input-container">
                                         <MdMenuBook className="form-input-icon" />
@@ -386,7 +398,9 @@ const ParentBookTutor: FC = () => {
 
                                 {/* Lớp */}
                                 <div className="form-field">
-                                    <label className="form-label">Lớp</label>
+                                    <label className="form-label">
+                                        Lớp<span>*</span>
+                                    </label>
                                     <div className="form-input-container">
                                         <MdSchool className="form-input-icon" />
                                         <Field
@@ -413,7 +427,9 @@ const ParentBookTutor: FC = () => {
 
                                 {/* Mô tả */}
                                 <div className="form-field">
-                                    <label className="form-label">Mô tả</label>
+                                    <label className="form-label">
+                                        Mô tả<span>*</span>
+                                    </label>
                                     <div className="form-input-container">
                                         <MdDescription className="form-input-icon" />
                                         <Field
@@ -455,6 +471,7 @@ const ParentBookTutor: FC = () => {
                                 <div className="form-field">
                                     <label className="form-label">
                                         Ngày bắt đầu
+                                        <span>*</span>
                                     </label>
                                     <div className="form-input-container">
                                         <MdDateRange className="form-input-icon" />
@@ -463,8 +480,8 @@ const ParentBookTutor: FC = () => {
                                             value={
                                                 values.classStartDate
                                                     ? new Date(
-                                                          values.classStartDate
-                                                      )
+                                                        values.classStartDate
+                                                    )
                                                     : null
                                             }
                                             onChange={(date: any) =>
@@ -491,6 +508,7 @@ const ParentBookTutor: FC = () => {
                                 <div className="form-field">
                                     <label className="form-label">
                                         Hình thức học
+                                        <span>*</span>
                                     </label>
                                     <div className="form-input-container">
                                         <MdOutlineCastForEducation className="form-input-icon" />
@@ -519,6 +537,7 @@ const ParentBookTutor: FC = () => {
                                     <div className="form-field">
                                         <label className="form-label">
                                             Địa chỉ
+                                            <span>*</span>
                                         </label>
                                         <div className="form-input-container">
                                             <MdLocationOn className="form-input-icon" />
@@ -540,6 +559,7 @@ const ParentBookTutor: FC = () => {
                                 <div className="form-field">
                                     <label className="form-label">
                                         Học phí 1 tháng
+                                        <span>*</span>
                                     </label>
                                     <div className="form-input-container">
                                         <MdAttachMoney className="form-input-icon" />
@@ -549,8 +569,8 @@ const ParentBookTutor: FC = () => {
                                             value={
                                                 values.budget
                                                     ? values.budget.toLocaleString(
-                                                          "vi-VN"
-                                                      ) + " VND"
+                                                        "vi-VN"
+                                                    ) + " VND"
                                                     : ""
                                             }
                                             readOnly
@@ -603,19 +623,6 @@ const ParentBookTutor: FC = () => {
                                         </p>
                                     </div>
                                 </div>
-                                {values.mode === "Online" && (
-                                    <div className="price-container">
-                                        <div className="price-container-col">
-                                            <h4>Học phí một tháng</h4>
-                                        </div>
-                                        <div className="price-container-col">
-                                            <p>
-                                                {values.budget.toLocaleString()}{" "}
-                                                VNĐ
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
 
                                 <div className="price-container">
                                     <div className="price-container-col">
@@ -623,11 +630,7 @@ const ParentBookTutor: FC = () => {
                                     </div>
                                     <div className="price-container-col">
                                         <p>
-                                            {values.mode === "Online"
-                                                ? priceOnline.toLocaleString() +
-                                                  " VND"
-                                                : priceOffline.toLocaleString() +
-                                                  " VND"}
+                                            {bookingPrice.toLocaleString()} VNĐ
                                         </p>
                                     </div>
                                 </div>
@@ -658,6 +661,13 @@ const ParentBookTutor: FC = () => {
                 isOpen={isRemindWalletOpen}
                 setIsOpen={setIsRemindWalletOpen}
                 routes={routes.parent.information + "?tab=wallet"}
+            />
+            <ConfirmPaymentModal
+                isOpen={isConfirmOpen}
+                totalAmount={bookingPrice}
+                setIsOpen={setIsConfirmOpen}
+                onConfirm={handleConfirmPayment}
+                loading={isConfirmLoading}
             />
         </section>
     );

@@ -149,7 +149,7 @@ const TutorListNotificationPage: FC = () => {
                         <tbody className="table-body">
                             {paginatedNotifications.length === 0 && (
                                 <tr>
-                                    <td colSpan={4} className="empty">
+                                    <td colSpan={4} className="no-data">
                                         Không có thông báo
                                     </td>
                                 </tr>

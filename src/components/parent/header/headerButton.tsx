@@ -9,6 +9,7 @@ import {
     selectUserLogin,
     selectChatUnreadCount,
     selectOnlineUsers,
+    selectBalance,
 } from "../../../app/selector";
 import { getMyNotificationsApiThunk } from "../../../services/notification/notificationThunk";
 import * as signalR from "@microsoft/signalr";
@@ -77,6 +78,8 @@ import {
 } from "react-icons/ri";
 
 import { MdRateReview } from "react-icons/md";
+import { SystemLogo } from "../../../assets/images";
+import { checkBalanceApiThunk } from "../../../services/wallet/walletThunk";
 
 export const notificationIconMap: Record<string, JSX.Element> = {
     // 1. Auth & System
@@ -147,13 +150,14 @@ const HeaderParentButton: FC = () => {
 
     const dispatch = useAppDispatch();
     const isAuthenticated = useAppSelector(selectIsAuthenticated);
+    const balance = useAppSelector(selectBalance);
     const userLogin = useAppSelector(selectUserLogin);
     const notifications = useAppSelector(selectNotifications);
     const chatUnreadCount = useAppSelector(selectChatUnreadCount);
     const conversations = useAppSelector(selectConversations);
     const onlineUsers = useAppSelector(selectOnlineUsers);
     const unReadNotifications = notifications.filter(
-        (n) => n.status !== "Read"
+        (n) => n.status !== "Read",
     );
     const countNotificationUnread = unReadNotifications.length;
 
@@ -198,6 +202,7 @@ const HeaderParentButton: FC = () => {
     useEffect(() => {
         if (!isAuthenticated) return;
 
+        dispatch(checkBalanceApiThunk());
         dispatch(getMyNotificationsApiThunk({ pageNumber: 1, pageSize: 5 }));
         dispatch(getUnreadCountApiThunk());
         dispatch(getConversationsApiThunk());
@@ -259,8 +264,12 @@ const HeaderParentButton: FC = () => {
 
     return (
         <div className="hp-button">
-            <button className="pr-btn">Yêu cầu tìm gia sư</button>
-            <p className="welcome">Xin chào người dùng</p>
+            <p className="welcome">
+                Số dư:{" "}
+                <span style={{ fontWeight: "700", color: "var(--main-color)" }}>
+                    {balance?.balance ? balance.balance.toLocaleString() : 0}Đ
+                </span>
+            </p>
 
             {/* CHAT */}
             <div
@@ -308,7 +317,7 @@ const HeaderParentButton: FC = () => {
                                         />
                                         {conv.otherUserId &&
                                             onlineUsers.includes(
-                                                conv.otherUserId
+                                                conv.otherUserId,
                                             ) && <span title="Đang online" />}
                                     </div>
                                     <div className="chat-info">
@@ -324,7 +333,7 @@ const HeaderParentButton: FC = () => {
                                             {conv.lastMessageAt && (
                                                 <span className="chat-time">
                                                     {timeAgo(
-                                                        conv.lastMessageAt
+                                                        conv.lastMessageAt,
                                                     )}
                                                 </span>
                                             )}
@@ -343,7 +352,7 @@ const HeaderParentButton: FC = () => {
                             <button
                                 className="pr-btn"
                                 onClick={() => {
-                                    handleClickSubMenu(routes.student.chat);
+                                    handleClickSubMenu(routes.parent.chat);
                                 }}
                             >
                                 Xem tất cả
@@ -409,7 +418,7 @@ const HeaderParentButton: FC = () => {
                                 onClick={() => {
                                     navigateHook(
                                         routes.student.information +
-                                            "?tab=notification"
+                                            "?tab=notification",
                                     );
                                     setIsNotificateOpen(false);
                                 }}
@@ -423,9 +432,12 @@ const HeaderParentButton: FC = () => {
 
             <div ref={menuRef} className="menu-wrapper">
                 <img
-                    src={userLogin?.avatarUrl}
+                    src={userLogin?.avatarUrl || SystemLogo}
                     className="avatar"
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    onError={(e) => {
+                        e.currentTarget.src = SystemLogo;
+                    }}
                 />
 
                 {isMenuOpen && (
@@ -435,7 +447,7 @@ const HeaderParentButton: FC = () => {
                                 onClick={() =>
                                     handleClickSubMenu(
                                         routes.parent.information +
-                                            "?tab=profile"
+                                            "?tab=profile",
                                     )
                                 }
                             >
@@ -445,7 +457,7 @@ const HeaderParentButton: FC = () => {
                                 onClick={() =>
                                     handleClickSubMenu(
                                         routes.parent.information +
-                                            "?tab=change-password"
+                                            "?tab=change-password",
                                     )
                                 }
                             >
@@ -455,7 +467,7 @@ const HeaderParentButton: FC = () => {
                                 onClick={() =>
                                     handleClickSubMenu(
                                         routes.parent.information +
-                                            "?tab=wallet"
+                                            "?tab=wallet",
                                     )
                                 }
                             >
@@ -465,7 +477,7 @@ const HeaderParentButton: FC = () => {
                                 onClick={() =>
                                     handleClickSubMenu(
                                         routes.parent.information +
-                                            "?tab=schedule"
+                                            "?tab=schedule",
                                     )
                                 }
                             >

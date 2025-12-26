@@ -20,7 +20,10 @@ import {
     selectBalance,
     selectDetailPublicClass,
     selectIsAuthenticated,
+    selectIsEnrolledClassForParent,
     selectIsEnrolledClassForStudent,
+    selectListChildAccount,
+    selectProfileStudent,
     selectPublicTutor,
     selectUserLogin,
 } from "../../../../app/selector";
@@ -30,7 +33,6 @@ import {
     checkAssignClassForStudentApiThunk,
     withdrawClassForStudentApiThunk,
 } from "../../../../services/student/class/classThunk";
-import { createFeedbackInClassApiThunk } from "../../../../services/feedback/feedbackThunk";
 import {
     checkBalanceApiThunk,
     transferWalletApiThunk,
@@ -41,11 +43,17 @@ import {
     USER_PARENT,
     USER_STUDENT,
 } from "../../../../utils/helper";
-import type { CreateFeedbackInClass } from "../../../../types/feedback";
 import type { WalletBalance } from "../../../../types/wallet";
 import { publicGetDetailTutorApiThunk } from "../../../../services/public/tutor/tutorThunk";
 import { routes } from "../../../../routes/routeName";
 import { ClassFeedback } from "../../../../components/course/detail";
+import { getAllChildAccountApiThunk } from "../../../../services/parent/childAccount/childAccountThunk";
+import { CiTextAlignLeft } from "react-icons/ci";
+import {
+    assignClassForParentApiThunk,
+    checkAssignClassForParentApiThunk,
+    withdrawClassForParentApiThunk,
+} from "../../../../services/parent/class/parentClassThunk";
 
 /* ================================
    Constants
@@ -92,20 +100,27 @@ const DetailCoursePage: FC = () => {
     const classDetail = useAppSelector(selectDetailPublicClass);
     const isAuthendicated = useAppSelector(selectIsAuthenticated);
     const user = useAppSelector(selectUserLogin);
-    const isEnrolledForStduent = useAppSelector(
+    const studentProfile = useAppSelector(selectProfileStudent);
+    const isEnrolledForStudent = useAppSelector(
         selectIsEnrolledClassForStudent,
     );
+    const isEnrolledForParent = useAppSelector(selectIsEnrolledClassForParent);
     const balance: WalletBalance | null = useAppSelector(selectBalance);
     const tutor = useAppSelector(selectPublicTutor);
+    const childAccounts = useAppSelector(selectListChildAccount);
 
     /* Local state */
     const [isRemidLoginOpen, setIsRemidLoginOpen] = useState(false);
     const [isStudentAssignClassOpen, setIsStudentAssignClassOpen] =
         useState(false);
+    const [isParentAssignClassOpen, setIsParentAssignClassOpen] =
+        useState(false);
     const [isStudentWithdrawClassOpen, setIsStudentWithdrawClassOpen] =
         useState(false);
     const [isStudentAssignClassSubmitting, setIsStudentAssignClassSubmitting] =
         useState(false);
+    const [childProfileId, setChildProfileId] = useState<string>("");
+    const [isChildEnrolledClass, setIsChildEnrolledClass] = useState(false);
 
     const today = new Date();
     const currentTab = searchParams.get("tab") || "mota";
@@ -114,6 +129,10 @@ const DetailCoursePage: FC = () => {
        Effects
     ================================= */
     useDocumentTitle(`Lớp học ${classDetail?.title}`);
+
+    useEffect(() => {
+        setIsChildEnrolledClass(isEnrolledForParent);
+    }, [isEnrolledForParent]);
 
     useEffect(() => {
         dispatch(publicGetDetailClassApiThunk(id!));
@@ -130,14 +149,41 @@ const DetailCoursePage: FC = () => {
     }, [dispatch, classDetail]);
 
     useEffect(() => {
-        if (classDetail && isAuthendicated) {
-            dispatch(checkAssignClassForStudentApiThunk(id!));
+        if (classDetail && isAuthendicated && user?.role === USER_STUDENT) {
+            dispatch(
+                checkAssignClassForStudentApiThunk({
+                    classId: classDetail?.id!,
+                    studentId: studentProfile?.studentProfileId!,
+                }),
+            );
         }
-    }, [isAuthendicated, classDetail]);
+    }, [isAuthendicated, classDetail, studentProfile, id]);
+
+    useEffect(() => {
+        if (
+            classDetail &&
+            isAuthendicated &&
+            user?.role === USER_PARENT &&
+            childProfileId
+        ) {
+            dispatch(
+                checkAssignClassForParentApiThunk({
+                    studentId: childProfileId.toLocaleLowerCase(),
+                    classId: id!,
+                }),
+            );
+        }
+    }, [isAuthendicated, classDetail, childProfileId, id]);
 
     useEffect(() => {
         if (isAuthendicated) {
             dispatch(checkBalanceApiThunk());
+        }
+    }, [isAuthendicated]);
+
+    useEffect(() => {
+        if (isAuthendicated && user?.role === USER_PARENT) {
+            dispatch(getAllChildAccountApiThunk());
         }
     }, [isAuthendicated]);
 
@@ -149,63 +195,126 @@ const DetailCoursePage: FC = () => {
     const handleAssignClass = () => {
         if (!isAuthendicated) setIsRemidLoginOpen(true);
         else if (user?.role === USER_STUDENT) setIsStudentAssignClassOpen(true);
+        else if (user?.role === USER_PARENT) setIsParentAssignClassOpen(true);
     };
 
+    // student
     const handelStudentAssignClass = async () => {
         setIsStudentAssignClassSubmitting(true);
 
-        if (
-            classDetail?.mode === "Online" &&
-            balance?.balance! < classDetail?.price!
-        ) {
-            toast.error("Số dư ví của bạn không đủ, vui lòng nạp thêm tiền.");
-            setIsStudentAssignClassSubmitting(false);
-            return;
-        }
-
-        dispatch(assignClassForStudentApiThunk({ classId: id! }))
+        dispatch(
+            assignClassForStudentApiThunk({
+                classId: id!,
+                studentId: studentProfile?.studentProfileId!,
+            }),
+        )
             .unwrap()
             .then((res) => {
                 const message = get(res, "data.Message", "Đăng ký thành công");
                 toast.success(message);
-                if (classDetail?.mode === "Online") {
-                    dispatch(
-                        transferWalletApiThunk({
-                            toUserId: "0E85EF35-39C1-418A-9A8C-0F83AC9520A6",
-                            amount: classDetail?.price,
-                            note: "Phí đặt lịch gia sư",
-                        }),
-                    );
-                }
+                setIsStudentAssignClassOpen(false);
+                dispatch(publicGetDetailClassApiThunk(id!));
+                dispatch(
+                    checkAssignClassForStudentApiThunk({
+                        classId: classDetail?.id!,
+                        studentId: studentProfile?.studentProfileId!,
+                    }),
+                );
             })
             .catch((error) => {
                 toast.error(get(error, "data.Message", "Có lỗi xảy ra"));
             })
             .finally(() => {
-                setIsStudentAssignClassOpen(false);
                 setIsStudentAssignClassSubmitting(false);
-                dispatch(publicGetDetailClassApiThunk(id!));
-                dispatch(checkAssignClassForStudentApiThunk(id!));
             });
     };
 
     const handelStudentWithdrawClass = async () => {
         setIsStudentAssignClassSubmitting(true);
-        dispatch(withdrawClassForStudentApiThunk(id!))
+        dispatch(
+            withdrawClassForStudentApiThunk({
+                classId: id!,
+                studentId: studentProfile?.studentProfileId!,
+            }),
+        )
             .unwrap()
-            .then((res) =>
+            .then(async (res) => {
                 toast.success(
                     get(res, "data.message", "Rút đăng ký thành công"),
-                ),
-            )
+                );
+                setIsStudentWithdrawClassOpen(false);
+                // Wait a bit to ensure backend transaction is committed
+                await new Promise((resolve) => setTimeout(resolve, 300));
+                // Refresh class detail to update currentStudentCount
+                await dispatch(publicGetDetailClassApiThunk(id!));
+                dispatch(
+                    checkAssignClassForStudentApiThunk({
+                        classId: classDetail?.id!,
+                        studentId: studentProfile?.studentProfileId!,
+                    }),
+                );
+            })
             .catch((error) =>
                 toast.error(get(error, "data.message", "Có lỗi xảy ra")),
             )
             .finally(() => {
-                setIsStudentWithdrawClassOpen(false);
                 setIsStudentAssignClassSubmitting(false);
+            });
+    };
+
+    //parent
+    const handelParentAssignClass = async () => {
+        setIsStudentAssignClassSubmitting(true);
+
+        dispatch(
+            assignClassForParentApiThunk({
+                classId: id!,
+                studentId: childProfileId,
+            }),
+        )
+            .unwrap()
+            .then((res) => {
+                const message = get(res, "data.Message", "Đăng ký thành công");
+                toast.success(message);
+                setIsParentAssignClassOpen(false);
                 dispatch(publicGetDetailClassApiThunk(id!));
-                dispatch(checkAssignClassForStudentApiThunk(id!));
+                setChildProfileId("");
+                setIsChildEnrolledClass(false);
+            })
+            .catch((error) => {
+                toast.error(get(error, "data.Message", "Có lỗi xảy ra"));
+            })
+            .finally(() => {
+                setIsStudentAssignClassSubmitting(false);
+            });
+    };
+
+    const handelParentWithdrawClass = async () => {
+        setIsStudentAssignClassSubmitting(true);
+        dispatch(
+            withdrawClassForParentApiThunk({
+                classId: id!,
+                studentId: childProfileId,
+            }),
+        )
+            .unwrap()
+            .then(async (res) => {
+                toast.success(
+                    get(res, "data.message", "Rút đăng ký thành công"),
+                );
+                setIsParentAssignClassOpen(false);
+                // Wait a bit to ensure backend transaction is committed
+                await new Promise((resolve) => setTimeout(resolve, 300));
+                // Refresh class detail to update currentStudentCount
+                await dispatch(publicGetDetailClassApiThunk(id!));
+                setChildProfileId("");
+                setIsChildEnrolledClass(false);
+            })
+            .catch((error) =>
+                toast.error(get(error, "data.message", "Có lỗi xảy ra")),
+            )
+            .finally(() => {
+                setIsStudentAssignClassSubmitting(false);
             });
     };
 
@@ -215,7 +324,7 @@ const DetailCoursePage: FC = () => {
         const oneDayBefore = new Date(classDetail?.classStartDate!);
         oneDayBefore.setDate(oneDayBefore.getDate() - 1);
         const isCloseBefore1Day = today >= oneDayBefore;
-        const isEnrolled = isEnrolledForStduent === true;
+        const isEnrolled = isEnrolledForStudent === true;
 
         return {
             disabled: isFull || isCloseBefore1Day || isEnrolled,
@@ -286,7 +395,7 @@ const DetailCoursePage: FC = () => {
                     <h3>{classDetail?.title}</h3>
                     {/* Tabs */}
                     <div className="tabs">
-                        {["mota", "lichhoc", "danhgia"].map((tab) => (
+                        {["mota", "lichhoc"].map((tab: any) => (
                             <div
                                 key={tab}
                                 className={`tabs-item ${
@@ -296,11 +405,7 @@ const DetailCoursePage: FC = () => {
                                 }`}
                                 onClick={() => handleChangeTab(tab)}
                             >
-                                {tab === "mota"
-                                    ? "Mô tả"
-                                    : tab === "lichhoc"
-                                    ? "Lịch học"
-                                    : "Đánh giá"}
+                                {tab === "mota" ? "Mô tả" : "Lịch học"}
                             </div>
                         ))}
                     </div>
@@ -390,12 +495,6 @@ const DetailCoursePage: FC = () => {
                             />
                         </div>
                     )}
-
-                    {currentTab === "danhgia" && (
-                        <div className="content">
-                            <ClassFeedback classDetail={classDetail} />
-                        </div>
-                    )}
                 </div>
 
                 {/* Right */}
@@ -403,7 +502,11 @@ const DetailCoursePage: FC = () => {
                     <div className="dcscc2r1">
                         <h3>Thông tin gia sư</h3>
                         <div className="info">
-                            <img src={tutor?.avatarUrl} className="avatar" />
+                            <img
+                                src={tutor?.avatarUrl}
+                                className="avatar"
+                                alt={tutor?.username || "Tutor avatar"}
+                            />
                             <p className="name">{tutor?.username}</p>
                         </div>
                         <button
@@ -426,7 +529,10 @@ const DetailCoursePage: FC = () => {
                         {classDetail?.mode === "Offline" && (
                             <p>
                                 <FaMapMarkerAlt className="icon" />{" "}
-                                <span>Địa điểm</span>: {classDetail?.location}
+                                <span>Địa điểm</span>:{" "}
+                                <span className="address-text">
+                                    {classDetail?.location}
+                                </span>
                             </p>
                         )}
                         <p>
@@ -439,11 +545,16 @@ const DetailCoursePage: FC = () => {
                             <span>Ngày khóa học bắt đầu</span>:{" "}
                             {formatDate(String(classDetail?.classStartDate))}
                         </p>
-                        <p>
-                            <MdAttachMoney className="icon" />{" "}
-                            <span>Chi phí</span>:{" "}
-                            {classDetail?.price.toLocaleString()} / tháng
-                        </p>
+                        <div className="price-text">
+                            <h6>
+                                <MdAttachMoney className="icon" />
+                                Học phí 1 tháng:{" "}
+                                <span>
+                                    {classDetail?.price.toLocaleString()}{" "}
+                                    VNĐ/tháng
+                                </span>
+                            </h6>
+                        </div>
                         <p>
                             <FaUsers className="icon" />{" "}
                             <span>Số người đã đăng ký</span>:{" "}
@@ -464,7 +575,7 @@ const DetailCoursePage: FC = () => {
                                 >
                                     {checkDisabledButton().label}
                                 </button>
-                                {isEnrolledForStduent && (
+                                {isEnrolledForStudent && (
                                     <button
                                         className="delete-btn"
                                         onClick={() =>
@@ -479,13 +590,13 @@ const DetailCoursePage: FC = () => {
                     </div>
                 </div>
             </div>
-
             {/* Modals */}
             <RemindLoginModal
                 isOpen={isRemidLoginOpen}
                 setIsOpen={setIsRemidLoginOpen}
             />
 
+            {/* student */}
             <Modal
                 isOpen={isStudentAssignClassOpen}
                 setIsOpen={setIsStudentAssignClassOpen}
@@ -494,6 +605,94 @@ const DetailCoursePage: FC = () => {
                 <section id="student-assign-class-modal">
                     <div className="sacm-container">
                         <h3>Bạn có chắc chắn đăng ký lớp học này</h3>
+                        {classDetail?.mode === "Offline" ? (
+                            <div
+                                style={{
+                                    marginBottom: "15px",
+                                    padding: "10px",
+                                    backgroundColor: "#f0f8f0",
+                                    borderRadius: "5px",
+                                }}
+                            >
+                                <p
+                                    style={{
+                                        margin: "5px 0",
+                                        fontSize: "0.95em",
+                                    }}
+                                >
+                                    <strong>Lớp học offline:</strong>
+                                </p>
+                                <p
+                                    style={{
+                                        margin: "5px 0",
+                                        fontSize: "0.9em",
+                                        color: "#666",
+                                    }}
+                                >
+                                    • Học phí{" "}
+                                    {classDetail?.price?.toLocaleString()}{" "}
+                                    VNĐ/tháng chỉ là thông tin tham khảo
+                                </p>
+                                <p
+                                    style={{
+                                        margin: "5px 0",
+                                        fontSize: "0.9em",
+                                        color: "#28a745",
+                                        fontWeight: "bold",
+                                    }}
+                                >
+                                    • Phí đăng ký: <strong>50,000 VNĐ</strong>{" "}
+                                    (phí kết nối)
+                                </p>
+                                <p
+                                    style={{
+                                        margin: "5px 0",
+                                        fontSize: "0.85em",
+                                        color: "#666",
+                                        fontStyle: "italic",
+                                    }}
+                                >
+                                    Sau khi đăng ký, bạn và gia sư sẽ tự trao
+                                    đổi về học phí
+                                </p>
+                            </div>
+                        ) : (
+                            <div
+                                style={{
+                                    marginBottom: "15px",
+                                    padding: "10px",
+                                    backgroundColor: "#fff3cd",
+                                    borderRadius: "5px",
+                                }}
+                            >
+                                <p
+                                    style={{
+                                        margin: "5px 0",
+                                        fontSize: "0.95em",
+                                    }}
+                                >
+                                    <strong>Học phí cần thanh toán:</strong>{" "}
+                                    <span
+                                        style={{
+                                            color: "#d9534f",
+                                            fontWeight: "bold",
+                                        }}
+                                    >
+                                        {classDetail?.price?.toLocaleString()}{" "}
+                                        VNĐ/tháng
+                                    </span>
+                                </p>
+                                <p
+                                    style={{
+                                        margin: "5px 0",
+                                        fontSize: "0.85em",
+                                        color: "#666",
+                                    }}
+                                >
+                                    Số tiền sẽ được trừ từ ví của bạn
+                                </p>
+                            </div>
+                        )}
                         <button
                             onClick={handelStudentAssignClass}
                             className={
@@ -514,7 +713,6 @@ const DetailCoursePage: FC = () => {
                     </div>
                 </section>
             </Modal>
-
             <Modal
                 isOpen={isStudentWithdrawClassOpen}
                 setIsOpen={setIsStudentWithdrawClassOpen}
@@ -528,7 +726,7 @@ const DetailCoursePage: FC = () => {
                             className={
                                 isStudentAssignClassSubmitting
                                     ? "disable-btn"
-                                    : "sc-btn"
+                                    : "delete-btn"
                             }
                         >
                             {isStudentAssignClassSubmitting ? (
@@ -538,6 +736,179 @@ const DetailCoursePage: FC = () => {
                             )}
                         </button>
                         <p onClick={() => setIsStudentAssignClassOpen(false)}>
+                            Lúc khác
+                        </p>
+                    </div>
+                </section>
+            </Modal>
+
+            {/* parent */}
+            <Modal
+                isOpen={isParentAssignClassOpen}
+                setIsOpen={setIsParentAssignClassOpen}
+                title="Đăng ký lớp học"
+            >
+                <section id="student-assign-class-modal">
+                    <div className="sacm-container">
+                        <h3>
+                            Bạn có chắc chắn muốn đăng ký lớp học này cho con
+                            của mình không?
+                        </h3>
+                        {classDetail?.mode === "Offline" ? (
+                            <div
+                                style={{
+                                    marginBottom: "15px",
+                                    padding: "10px",
+                                    backgroundColor: "#f0f8f0",
+                                    borderRadius: "5px",
+                                }}
+                            >
+                                <p
+                                    style={{
+                                        margin: "5px 0",
+                                        fontSize: "0.95em",
+                                    }}
+                                >
+                                    <strong>Lớp học offline:</strong>
+                                </p>
+                                <p
+                                    style={{
+                                        margin: "5px 0",
+                                        fontSize: "0.9em",
+                                        color: "#666",
+                                    }}
+                                >
+                                    • Học phí{" "}
+                                    {classDetail?.price?.toLocaleString()}{" "}
+                                    VNĐ/tháng chỉ là thông tin tham khảo
+                                </p>
+                                <p
+                                    style={{
+                                        margin: "5px 0",
+                                        fontSize: "0.9em",
+                                        color: "#28a745",
+                                        fontWeight: "bold",
+                                    }}
+                                >
+                                    • Phí đăng ký: <strong>50,000 VNĐ</strong>{" "}
+                                    (phí kết nối)
+                                </p>
+                                <p
+                                    style={{
+                                        margin: "5px 0",
+                                        fontSize: "0.85em",
+                                        color: "#666",
+                                        fontStyle: "italic",
+                                    }}
+                                >
+                                    Sau khi đăng ký, con bạn và gia sư sẽ tự
+                                    trao đổi về học phí
+                                </p>
+                            </div>
+                        ) : (
+                            <div
+                                style={{
+                                    marginBottom: "15px",
+                                    padding: "10px",
+                                    backgroundColor: "#fff3cd",
+                                    borderRadius: "5px",
+                                }}
+                            >
+                                <p
+                                    style={{
+                                        margin: "5px 0",
+                                        fontSize: "0.95em",
+                                    }}
+                                >
+                                    <strong>Học phí cần thanh toán:</strong>{" "}
+                                    <span
+                                        style={{
+                                            color: "#d9534f",
+                                            fontWeight: "bold",
+                                        }}
+                                    >
+                                        {classDetail?.price?.toLocaleString()}{" "}
+                                        VNĐ/tháng
+                                    </span>
+                                </p>
+                                <p
+                                    style={{
+                                        margin: "5px 0",
+                                        fontSize: "0.85em",
+                                        color: "#666",
+                                    }}
+                                >
+                                    Số tiền sẽ được trừ từ ví của bạn
+                                </p>
+                            </div>
+                        )}
+                        <div className="form">
+                            <div className="form-field">
+                                <label className="form-label">
+                                    Chọn tài khoản của con
+                                </label>
+                                <div className="form-input-container">
+                                    <CiTextAlignLeft className="form-input-icon" />
+                                    <select
+                                        className="form-input"
+                                        value={childProfileId}
+                                        aria-label="Chọn tài khoản của con"
+                                        onChange={(e) =>
+                                            setChildProfileId(e.target.value)
+                                        }
+                                    >
+                                        <option value="">
+                                            --- Chọn tài khoản ---
+                                        </option>
+                                        {childAccounts?.map((t) => (
+                                            <option
+                                                key={t.studentId}
+                                                value={t.studentId}
+                                            >
+                                                {t.username}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        {!isChildEnrolledClass ? (
+                            <button
+                                onClick={handelParentAssignClass}
+                                className={
+                                    isStudentAssignClassSubmitting
+                                        ? "disable-btn"
+                                        : "sc-btn"
+                                }
+                            >
+                                {isStudentAssignClassSubmitting ? (
+                                    <LoadingSpinner />
+                                ) : (
+                                    "Đăng ký"
+                                )}
+                            </button>
+                        ) : (
+                            <>
+                                <button className="disable-btn">
+                                    Đã đăng ký
+                                </button>
+                                <button
+                                    onClick={handelParentWithdrawClass}
+                                    className={
+                                        isStudentAssignClassSubmitting
+                                            ? "disable-btn"
+                                            : "delete-btn"
+                                    }
+                                >
+                                    {isStudentAssignClassSubmitting ? (
+                                        <LoadingSpinner />
+                                    ) : (
+                                        "Huỷ đăng ký"
+                                    )}
+                                </button>
+                            </>
+                        )}
+                        <p onClick={() => setIsParentAssignClassOpen(false)}>
                             Lúc khác
                         </p>
                     </div>

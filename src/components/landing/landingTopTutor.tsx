@@ -1,38 +1,20 @@
 import { useState, type FC } from "react";
 import { FaRegStar, FaStar } from "react-icons/fa";
-import { RatingStarsProps, Tutor, TutorCardProps } from "../../types/tutor";
+import {
+    PublicTutors,
+    RatingStarsProps,
+    Tutor,
+    TutorCardProps,
+} from "../../types/tutor";
+import { SystemLogo } from "../../assets/images";
+import { navigateHook } from "../../routes/routeApp";
+import { routes } from "../../routes/routeName";
 
-const LandingTopTutors: FC = () => {
-    const tutors: Tutor[] = [
-        {
-            id: 1,
-            name: "TS. Nguyễn Thị Lan",
-            specialty: ["Toán", "Vật lí"],
-            rating: 4.9,
-            totalReviews: 128,
-            profileImage:
-                "https://images.unsplash.com/photo-1494790108377-be9c29b29330",
-        },
-        {
-            id: 2,
-            name: "ThS. Trần Minh Quang",
-            specialty: ["Tin học"],
-            rating: 4.7,
-            totalReviews: 95,
-            profileImage:
-                "https://images.unsplash.com/photo-1500648767791-00dcc994a43e",
-        },
-        {
-            id: 3,
-            name: "TS. Lê Hoàng Anh",
-            specialty: ["Sinh học", "Hóa học"],
-            rating: 4.8,
-            totalReviews: 156,
-            profileImage:
-                "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e",
-        },
-    ];
+interface LandingTopTutorProps {
+    tutors: PublicTutors[];
+}
 
+const LandingTopTutors: FC<LandingTopTutorProps> = ({ tutors }) => {
     const RatingStars: React.FC<RatingStarsProps> = ({ rating }) => (
         <div className="rating-stars">
             {[...Array(5)].map((_, index) => (
@@ -55,27 +37,27 @@ const LandingTopTutors: FC = () => {
             <div className="tutor-card">
                 <div className="tutor-image">
                     <img
-                        src={
-                            imageError
-                                ? "https://images.unsplash.com/photo-1633332755192-727a05c4013d"
-                                : tutor.profileImage
-                        }
-                        alt={tutor.name}
+                        src={imageError ? SystemLogo : tutor.avatarUrl}
+                        alt={tutor.username}
                         onError={() => setImageError(true)}
                         loading="lazy"
                     />
                 </div>
-                <h3 className="tutor-name">{tutor.name}</h3>
-                <p className="tutor-specialty">{tutor.specialty}</p>
+                <h3 className="tutor-name">{tutor.username}</h3>
+                <p className="tutor-specialty">{tutor.teachingSubjects}</p>
                 <div className="tutor-rating">
-                    <RatingStars rating={tutor.rating} />
+                    <RatingStars rating={tutor.rating!} />
                     <p className="review-count">
-                        {tutor.totalReviews} đánh giá
+                        {tutor.feedbackCount} đánh giá
                     </p>
                 </div>
                 <button
                     className="view-details-btn"
-                    aria-label={`View details for ${tutor.name}`}
+                    onClick={() =>
+                        navigateHook(routes.tutor.detail, {
+                            tutorId: tutor.tutorId,
+                        })
+                    }
                 >
                     Xem thông tin
                 </button>
@@ -85,10 +67,10 @@ const LandingTopTutors: FC = () => {
 
     return (
         <div className="top-rated-tutors">
-            {tutors.length > 0 ? (
+            {tutors?.length > 0 ? (
                 <div className="tutors-grid">
                     {tutors.map((tutor) => (
-                        <TutorCard key={tutor.id} tutor={tutor} />
+                        <TutorCard key={tutor.tutorId} tutor={tutor} />
                     ))}
                 </div>
             ) : (

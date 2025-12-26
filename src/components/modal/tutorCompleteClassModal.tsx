@@ -45,13 +45,13 @@ const TutorCompleteClassModal: FC<TutorCompleteClassModalProps> = ({
 
     return (
         <Modal isOpen={isOpen} setIsOpen={setIsOpen} title="Hoàn thành lớp học">
-            <section id="tutor-complete-class-modal">
-                <div className="tccm-container">
-                    <p className="tccm-warning">
+            <section id="student-assign-class-modal">
+                <div className="sacm-container">
+                    <h3 className="tccm-warning">
                         Bạn có chắc chắn muốn đánh dấu lớp học này là đã hoàn thành không?
-                    </p>
+                    </h3>
                     <p className="tccm-note">
-                        Lưu ý: Lớp học phải hoàn thành ít nhất 80% số buổi học. Khi hoàn thành, tiền học phí sẽ được giải ngân và tiền cọc sẽ được hoàn lại.
+                        Lưu ý: Lớp học phải hoàn thành ít nhất 90% số buổi học. Khi hoàn thành, tiền học phí sẽ được giải ngân và tiền cọc sẽ được hoàn lại.
                     </p>
 
                     <div className="group-btn">

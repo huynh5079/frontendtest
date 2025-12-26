@@ -1,4 +1,4 @@
-import { useEffect, useState, type FC } from "react";
+import { useEffect, useRef, useState, type FC } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { CiCalendarDate, CiMail } from "react-icons/ci";
@@ -14,13 +14,18 @@ import {
     MdOutlineDescription,
     MdOutlineDriveFileRenameOutline,
 } from "react-icons/md";
-import { DatePickerElement, MultiSelect } from "../../../components/elements";
+import {
+    DatePickerElement,
+    LoadingSpinner,
+    MultiSelect,
+} from "../../../components/elements";
 import { navigateHook } from "../../../routes/routeApp";
 import { routes } from "../../../routes/routeName";
 import { useAppDispatch, useAppSelector } from "../../../app/store";
 import { selectProfileTutor } from "../../../app/selector";
 import {
     getProfileTutorApiThunk,
+    updateAvatarApiThunk,
     updateProfileTutorApiThunk,
 } from "../../../services/user/userThunk";
 import type {
@@ -33,6 +38,7 @@ import { HiOutlineIdentification } from "react-icons/hi";
 import { PiGenderIntersex } from "react-icons/pi";
 import { csvToArray, useDocumentTitle } from "../../../utils/helper";
 import { toast } from "react-toastify";
+import { get } from "lodash";
 
 // --- Subject options ---
 export const subjectsOptions: OptionMultiSelectData[] = [
@@ -74,6 +80,8 @@ const TutorInformationPage: FC = () => {
     const [filteredSubjects, setFilteredSubjects] = useState<
         OptionMultiSelectData[]
     >([]);
+    const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     const initialValues: TutorProfileUpdateParams = {
         username: tutorProfile?.username || "",
@@ -119,6 +127,34 @@ const TutorInformationPage: FC = () => {
 
     useDocumentTitle("Trang cá nhân");
 
+    const handleUpdateAvatar = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("avatar", file);
+
+        setIsUploadingAvatar(true);
+
+        dispatch(updateAvatarApiThunk(formData))
+            .unwrap()
+            .then(() => {
+                toast.success("Cập nhật ảnh đại diện thành công");
+                dispatch(getProfileTutorApiThunk());
+            })
+            .catch((err) => {
+                toast.error(
+                    get(err, "data.message", "Cập nhật ảnh đại diện thất bại"),
+                );
+            })
+            .finally(() => {
+                setIsUploadingAvatar(false);
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                }
+            });
+    };
+
     const buildFormData = (values: TutorProfileUpdateParams) => {
         const formData = new FormData();
 
@@ -133,14 +169,14 @@ const TutorInformationPage: FC = () => {
                             ? "male"
                             : value === "female"
                             ? "female"
-                            : "other"
+                            : "other",
                     );
                     break;
 
                 case "dateOfBirth":
                     formData.append(
                         "DateOfBirth",
-                        new Date(value as string).toISOString().split("T")[0]
+                        new Date(value as string).toISOString().split("T")[0],
                     );
                     break;
 
@@ -238,17 +274,35 @@ const TutorInformationPage: FC = () => {
                                             src={tutorProfile?.avatarUrl || ""}
                                         />
                                         <div className="group-btn">
-                                            <div className="pr-btn">
-                                                Tải ảnh lên
-                                            </div>
-                                            <div
-                                                className="sc-btn"
-                                                onClick={() => resetForm()}
+                                            {/* Input ẩn */}
+                                            <input
+                                                ref={fileInputRef}
+                                                type="file"
+                                                accept="image/*"
+                                                style={{ display: "none" }}
+                                                onChange={handleUpdateAvatar}
+                                            />
+
+                                            {/* Button thay thế */}
+                                            <button
+                                                type="button"
+                                                className={
+                                                    isUploadingAvatar
+                                                        ? "disable-btn"
+                                                        : "pr-btn"
+                                                }
+                                                disabled={isUploadingAvatar}
+                                                onClick={() =>
+                                                    fileInputRef.current?.click()
+                                                }
                                             >
-                                                Làm mới
-                                            </div>
+                                                {isUploadingAvatar ? (
+                                                    <LoadingSpinner />
+                                                ) : (
+                                                    "Thay đổi ảnh đại diện"
+                                                )}
+                                            </button>
                                         </div>
-                                        <p>Cho phép JPG hoặc PNG</p>
                                     </div>
                                 </div>
 
@@ -330,14 +384,14 @@ const TutorInformationPage: FC = () => {
                                                     value={
                                                         tutorProfile?.dateOfBirth
                                                             ? new Date(
-                                                                  tutorProfile?.dateOfBirth
+                                                                  tutorProfile?.dateOfBirth,
                                                               )
                                                             : null
                                                     }
                                                     onChange={(date) =>
                                                         setFieldValue(
                                                             "dateOfBirth",
-                                                            date
+                                                            date,
                                                         )
                                                     }
                                                 />
@@ -513,17 +567,17 @@ const TutorInformationPage: FC = () => {
                                                     (level) => ({
                                                         value: level,
                                                         label: level,
-                                                    })
+                                                    }),
                                                 )}
                                                 onChange={(selected) => {
                                                     // Lưu vào Formik
                                                     const selectedLevels =
                                                         selected.map(
-                                                            (s) => s.value
+                                                            (s) => s.value,
                                                         );
                                                     setFieldValue(
                                                         "teachingLevel",
-                                                        selectedLevels
+                                                        selectedLevels,
                                                     );
 
                                                     // Lọc lại môn học tương ứng
@@ -532,17 +586,17 @@ const TutorInformationPage: FC = () => {
                                                             (level) =>
                                                                 levelSubjectsMap[
                                                                     level
-                                                                ] || []
+                                                                ] || [],
                                                         );
                                                     const newFiltered =
                                                         subjectsOptions.filter(
                                                             (s) =>
                                                                 allowedSubjects.includes(
-                                                                    s.value
-                                                                )
+                                                                    s.value,
+                                                                ),
                                                         );
                                                     setFilteredSubjects(
-                                                        newFiltered
+                                                        newFiltered,
                                                     );
 
                                                     // Reset môn học nếu không còn hợp lệ
@@ -550,12 +604,12 @@ const TutorInformationPage: FC = () => {
                                                         teachingSubjects.filter(
                                                             (subj) =>
                                                                 allowedSubjects.includes(
-                                                                    subj
-                                                                )
+                                                                    subj,
+                                                                ),
                                                         );
                                                     setFieldValue(
                                                         "teachingSubjects",
-                                                        validSelectedSubjects
+                                                        validSelectedSubjects,
                                                     );
                                                 }}
                                             />
@@ -575,14 +629,14 @@ const TutorInformationPage: FC = () => {
                                                     (level) => ({
                                                         value: level,
                                                         label: level,
-                                                    })
+                                                    }),
                                                 )}
                                                 onChange={(selected) =>
                                                     setFieldValue(
                                                         "teachingSubjects",
                                                         selected.map(
-                                                            (s) => s.value
-                                                        )
+                                                            (s) => s.value,
+                                                        ),
                                                     )
                                                 }
                                             />
@@ -607,8 +661,9 @@ const TutorInformationPage: FC = () => {
                                                             "identityDocuments",
                                                             Array.from(
                                                                 e.target
-                                                                    .files || []
-                                                            )
+                                                                    .files ||
+                                                                    [],
+                                                            ),
                                                         )
                                                     }
                                                     className="form-input"
@@ -635,8 +690,9 @@ const TutorInformationPage: FC = () => {
                                                             "certificatesFiles",
                                                             Array.from(
                                                                 e.target
-                                                                    .files || []
-                                                            )
+                                                                    .files ||
+                                                                    [],
+                                                            ),
                                                         )
                                                     }
                                                     className="form-input"
@@ -667,7 +723,7 @@ const TutorInformationPage: FC = () => {
                                                             width: "250px",
                                                         }}
                                                     />
-                                                )
+                                                ),
                                             )}
                                         </div>
 
@@ -692,13 +748,14 @@ const TutorInformationPage: FC = () => {
                                                                 href={
                                                                     certificate.url
                                                                 }
-                                                                download
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
                                                             >
                                                                 Xem
                                                             </a>
                                                         </div>
                                                     );
-                                                }
+                                                },
                                             )}
                                         </div>
                                     </div>

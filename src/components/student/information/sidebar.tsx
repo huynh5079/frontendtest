@@ -52,7 +52,7 @@ const StudentInformtionSidebar: FC<Props> = ({ activeTab }) => {
                     className={activeTab === "assigned_class" ? "actived" : ""}
                     onClick={() => handleClick("assigned_class")}
                 >
-                    Lớp học đã đăng ký
+                    Lớp học
                 </li>
                 <li
                     className={activeTab === "report" ? "actived" : ""}
@@ -67,10 +67,28 @@ const StudentInformtionSidebar: FC<Props> = ({ activeTab }) => {
                     Yêu cầu tìm gia sư
                 </li>
                 <li
+                    className={activeTab === "reschedule" ? "actived" : ""}
+                    onClick={() => handleClick("reschedule")}
+                >
+                    Yêu cầu dời lịch học
+                </li>
+                <li
+                    className={activeTab === "favorite" ? "actived" : ""}
+                    onClick={() => handleClick("favorite")}
+                >
+                    Gia sư yêu thích
+                </li>
+                <li
                     className={activeTab === "notification" ? "actived" : ""}
                     onClick={() => handleClick("notification")}
                 >
                     Thông báo
+                </li>
+                <li
+                    className={activeTab === "chat" ? "actived" : ""}
+                    onClick={() => handleClick("chat")}
+                >
+                    Tin nhắn
                 </li>
                 <li onClick={logout}>Đăng xuất</li>
             </ul>

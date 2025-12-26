@@ -12,22 +12,76 @@
     }
 
     .prft-step-1 {
+        h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--main-color);
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--main-color);
+            text-align: center;
+        }
+
+        .form {
+            max-width: 500px;
+            margin: 0 auto;
+            margin-bottom: 2rem;
+        }
         .prfts1r1 {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
             margin-bottom: 2rem;
 
+            .pr-btn,
+            .sc-btn {
+                padding: 0.75rem 1.25rem;
+                font-size: 1.25rem;
+            }
+
             h3 {
-                font-size: 1.75rem;
+                font-size: 2rem;
                 font-weight: 800;
+                text-align: center;
                 color: var(--main-color);
                 margin: 0;
             }
+        }
 
-            .pr-btn {
-                padding: 0.75rem 1.25rem;
-                font-size: 1.25rem;
+        .sub-tabs {
+            max-width: 500px;
+            display: flex;
+            align-items: center;
+            padding: 0.25rem;
+            margin: 0 auto 2rem;
+            background: #fff;
+            border-radius: 1.5rem;
+            border: 1px solid var(--main-color);
+            gap: 0.5rem;
+
+            .sub-tab {
+                position: relative;
+                flex: 1;
+                padding: 0.75rem 0 0.5rem;
+                font-size: 1.15rem;
+                font-weight: 500;
+                text-align: center;
+                color: var(--main-color);
+                cursor: pointer;
+                transition: color 0.3s ease;
+                border-radius: 1.15rem;
+
+                &.active {
+                    background: var(--main-color);
+                    color: #fff;
+                    font-weight: 700;
+                    font-size: 1.15rem;
+                }
+
+                &:hover:not(.active) {
+                    background: var(--main-color-10);
+                    color: var(--main-color);
+                }
             }
         }
 
@@ -61,7 +115,7 @@
 
         .group-title {
             font-size: 1.5rem;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--main-black);
             margin-bottom: 1rem;
             padding-bottom: 1rem;
@@ -83,7 +137,7 @@
 
         .detail-item h4 {
             font-size: 1.5rem;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--main-color);
             margin-bottom: 0.5rem;
         }
@@ -104,7 +158,7 @@
 
         .schedule-day {
             font-size: 1.25rem;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--main-black);
             margin-bottom: 0.5rem;
         }
@@ -160,14 +214,39 @@
 
     .prft-step-2 {
         .form {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            width: 100% !important;
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
             gap: 1rem;
             margin-bottom: 2rem;
 
             .calendar-container,
-            .form-submit {
+            .form-submit,
+            .price-container {
                 grid-column: span 2;
+            }
+
+            .price-container {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+
+                .price-container-col {
+                    p {
+                        font-size: 1.25rem;
+                        font-weight: 700;
+                        color: var(--main-black);
+                        margin: 0;
+                        margin-bottom: 0.5rem;
+                    }
+
+                    h4 {
+                        font-size: 1.5rem;
+                        font-weight: 800;
+                        color: var(--main-color);
+                        margin: 0;
+                    }
+                }
             }
         }
 

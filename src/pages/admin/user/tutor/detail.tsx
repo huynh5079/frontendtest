@@ -56,7 +56,7 @@ const AdminDetailTutorPage: FC = () => {
             rejectTutorApiThunk({
                 tutorId,
                 params: { rejectReason: resonReject },
-            })
+            }),
         )
             .unwrap()
             .then((res) => {
@@ -75,7 +75,7 @@ const AdminDetailTutorPage: FC = () => {
             provideTutorApiThunk({
                 tutorId,
                 params: { provideText: provideText },
-            })
+            }),
         )
             .unwrap()
             .then((res) => {
@@ -183,22 +183,24 @@ const AdminDetailTutorPage: FC = () => {
                                         src={identityDocument.url}
                                         alt=""
                                     />
-                                )
+                                ),
                             )}
 
                             <h6>Chứng chỉ cá nhân:</h6>
-                            {tutor?.certificates.map((certificate, index) => {
-                                return (
-                                    <div key={index}>
-                                        <h2 key={certificate.id}>
-                                            {certificate.fileName}{" "}
-                                        </h2>
-                                        <a href={certificate.url} download>
-                                            Xem
-                                        </a>
-                                    </div>
-                                );
-                            })}
+
+                            {tutor?.certificates.map((certificate, index) => (
+                                <div key={certificate.id ?? index}>
+                                    <h2>{certificate.fileName}</h2>
+
+                                    <a
+                                        href={certificate.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        Xem
+                                    </a>
+                                </div>
+                            ))}
                         </div>
                     </div>
                     {tutor?.status === "PendingApproval" ||
@@ -266,7 +268,7 @@ const AdminDetailTutorPage: FC = () => {
                                             onClick={() =>
                                                 rejectTutor(
                                                     String(tutor?.userId),
-                                                    rejectReason
+                                                    rejectReason,
                                                 )
                                             }
                                         >
@@ -290,7 +292,7 @@ const AdminDetailTutorPage: FC = () => {
                                             onClick={() =>
                                                 provideTutor(
                                                     String(tutor?.userId),
-                                                    provideText
+                                                    provideText,
                                                 )
                                             }
                                         >

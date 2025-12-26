@@ -1,6 +1,7 @@
-import { FC } from "react";
-import { GetDetailQuizForTutor } from "../../../../types/tutor";
+import { FC, useState } from "react";
+import { GetDetailQuizForTutor, QuizQuestion } from "../../../../types/tutor";
 import { getQuizTypeText } from "../../../../utils/helper";
+import { UpdateQuestionModal } from "../../../modal";
 
 interface TutorDetailQuizProps {
     quiz: GetDetailQuizForTutor;
@@ -9,7 +10,7 @@ interface TutorDetailQuizProps {
 
 const calculateRequiredCorrectAnswers = (
     totalQuestions: number,
-    passingScore: number,
+    passingScore: number
 ): number => {
     return Math.ceil((totalQuestions * passingScore) / 100);
 };
@@ -27,6 +28,15 @@ const getAvailableOptions = (question: any) => {
 };
 
 const TutorDetailQuiz: FC<TutorDetailQuizProps> = ({ quiz, setSection }) => {
+    const [isUpdateQuestionOpen, setIsUpdateQuestionOpen] = useState(false);
+    const [selectedQuestion, setSelectedQuestion] =
+        useState<QuizQuestion | null>(null);
+
+    const handleUpdateQuestion = (question: QuizQuestion) => {
+        setSelectedQuestion(question);
+        setIsUpdateQuestionOpen(true);
+    };
+
     return (
         <div className="detail-quiz">
             <button className="sc-btn" onClick={() => setSection("list")}>
@@ -56,7 +66,7 @@ const TutorDetailQuiz: FC<TutorDetailQuizProps> = ({ quiz, setSection }) => {
                         <p>
                             {calculateRequiredCorrectAnswers(
                                 quiz?.questions?.length,
-                                quiz?.passingScore,
+                                quiz?.passingScore
                             )}
                         </p>
                     </div>
@@ -89,10 +99,23 @@ const TutorDetailQuiz: FC<TutorDetailQuizProps> = ({ quiz, setSection }) => {
                                 Câu trả lời đúng: {question.correctAnswer} (Giải
                                 thích: {question.explanation} )
                             </p>
+
+                            <button
+                                className="sc-btn"
+                                onClick={() => handleUpdateQuestion(question)}
+                            >
+                                Chỉnh sửa
+                            </button>
                         </div>
                     ))}
                 </div>
             </div>
+            <UpdateQuestionModal
+                question={selectedQuestion!}
+                quizId={quiz?.id!}
+                isOpen={isUpdateQuestionOpen}
+                setIsOpen={setIsUpdateQuestionOpen}
+            />
         </div>
     );
 };

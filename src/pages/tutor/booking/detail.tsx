@@ -50,9 +50,47 @@ const DetailTutorBookingPage: FC = () => {
     const [isAcceptBookingOpen, setIsAcceptBookingOpen] = useState(false);
     const [isRejectBookingOpen, setIsRejectBookingOpen] = useState(false);
     const [meetingLink, setMeetingLink] = useState<string | null>(null);
-    const depositFee = booking?.budget ? booking.budget * 0.2 : 0;
+    // Offline: chỉ cần phí kết nối 50k (backend xử lý), Online: cần 20% học phí
+    const CONNECTION_FEE = 50000; // Phí kết nối cho offline
+    const depositFee =
+        booking?.mode === "Offline"
+            ? CONNECTION_FEE
+            : booking?.budget
+            ? booking.budget * 0.2
+            : 0;
     const balance: WalletBalance | null = useAppSelector(selectBalance);
     const [isRemindWalletOpen, setIsRemindWalletOpen] = useState(false);
+    const [meetingLinkError, setMeetingLinkError] = useState<string | null>(
+        null,
+    );
+    const [studentAddress, setStudentAddress] = useState<string | null>(null);
+    const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+
+    const isValidUrl = (url: string) => {
+        try {
+            new URL(url);
+            return true;
+        } catch {
+            return false;
+        }
+    };
+
+    const isValidMeetingLink = (url: string) => {
+        const allowedDomains = [
+            "meet.google.com",
+            "zoom.us",
+            "teams.microsoft.com",
+        ];
+
+        try {
+            const parsedUrl = new URL(url);
+            return allowedDomains.some((domain) =>
+                parsedUrl.hostname.includes(domain),
+            );
+        } catch {
+            return false;
+        }
+    };
 
     useEffect(() => {
         if (id) {
@@ -65,51 +103,119 @@ const DetailTutorBookingPage: FC = () => {
         if (!isAcceptBookingOpen) setMeetingLink("");
     }, [isAcceptBookingOpen]);
 
+    const handleAccept = () => {
+        if (booking?.mode === "Online") {
+            if (!meetingLink) {
+                setMeetingLinkError("Vui lòng nhập link học");
+                return;
+            }
+
+            if (!isValidMeetingLink(meetingLink)) {
+                setMeetingLinkError(
+                    "Link học không hợp lệ (Zoom / Google Meet / Teams)",
+                );
+                return;
+            }
+        }
+
+        setMeetingLinkError(null);
+        handleAcceptBooking(booking?.id!);
+    };
+
     const handleAcceptBooking = async (bookingId: string) => {
         setIsSubmittingAccept(true);
 
-        if (balance?.balance && balance.balance < depositFee) {
+        // Kiểm tra số dư: Offline cần 50k, Online cần 20% học phí
+        const requiredBalance =
+            booking?.mode === "Offline" ? CONNECTION_FEE : depositFee;
+
+        if (balance?.balance! < requiredBalance) {
             setIsRemindWalletOpen(true);
             setIsSubmittingAccept(false);
             return;
         }
 
-        dispatch(
-            tranferToAdminApiThunk({
-                Amount: depositFee,
-                Note: "Phí chấp nhận lịch dạy",
-            })
-        )
-            .unwrap()
-            .then(() => {
-                dispatch(
-                    acceptBookingForTutorApiThunk({
-                        boookingId: bookingId,
-                        params: {
-                            status: "Active",
-                            meetingLink: meetingLink!,
-                        },
-                    })
-                )
-                    .unwrap()
-                    .then((res) => {
-                        toast.success(
-                            get(res, "data.message", "Đặt lịch thành công")
-                        );
-                        dispatch(getDetailBookingForTutorApiThunk(id!));
-                    })
-                    .catch((err) => {
-                        toast.error(get(err, "data.message", "Có lỗi xảy ra"));
-                    });
-            })
-            .catch((err) => {
-                toast.error(get(err, "data.message", "Có lỗi xảy ra"));
-            })
-            .finally(() => {
-                setIsSubmittingAccept(false);
-                setIsAcceptBookingOpen(false);
-                dispatch(getDetailBookingForTutorApiThunk(id!));
-            });
+        // Chỉ trừ tiền ở frontend nếu là Online (20% học phí)
+        // Offline: backend sẽ tự động trừ phí kết nối 50k
+        if (booking?.mode === "Online") {
+            dispatch(
+                tranferToAdminApiThunk({
+                    Amount: depositFee,
+                    Note: "Phí chấp nhận lịch dạy (20% học phí)",
+                }),
+            )
+                .unwrap()
+                .then(() => {
+                    dispatch(
+                        acceptBookingForTutorApiThunk({
+                            boookingId: bookingId,
+                            params: {
+                                meetingLink: meetingLink || "",
+                            },
+                        }),
+                    )
+                        .unwrap()
+                        .then((res) => {
+                            const message = get(
+                                res,
+                                "data.message",
+                                "Đặt lịch thành công",
+                            );
+                            toast.success(message);
+                            dispatch(getDetailBookingForTutorApiThunk(id!));
+                        })
+                        .catch((err) => {
+                            toast.error(
+                                get(err, "data.message", "Có lỗi xảy ra"),
+                            );
+                        });
+                })
+                .catch((err) => {
+                    toast.error(get(err, "data.message", "Có lỗi xảy ra"));
+                })
+                .finally(() => {
+                    setIsSubmittingAccept(false);
+                    setIsAcceptBookingOpen(false);
+                    dispatch(getDetailBookingForTutorApiThunk(id!));
+                });
+        } else {
+            // Offline: backend tự động trừ phí kết nối, không cần trừ ở frontend
+            dispatch(
+                acceptBookingForTutorApiThunk({
+                    boookingId: bookingId,
+                    params: {
+                        meetingLink: "",
+                    },
+                }),
+            )
+                .unwrap()
+                .then((res) => {
+                    const message = get(
+                        res,
+                        "data.message",
+                        "Đặt lịch thành công",
+                    );
+                    const address = get(res, "data.studentAddress", null);
+
+                    toast.success(message);
+
+                    // Nếu là offline và có địa chỉ học sinh, hiển thị modal
+                    if (booking?.mode === "Offline" && address) {
+                        setStudentAddress(address);
+                        setIsAddressModalOpen(true);
+                    }
+
+                    dispatch(getDetailBookingForTutorApiThunk(id!));
+                })
+                .catch((err) => {
+                    toast.error(get(err, "data.message", "Có lỗi xảy ra"));
+                })
+                .finally(() => {
+                    setIsSubmittingAccept(false);
+                    setIsAcceptBookingOpen(false);
+                    dispatch(getDetailBookingForTutorApiThunk(id!));
+                });
+        }
     };
 
     const handleRejectBooking = async (bookingId: string) => {
@@ -171,23 +277,14 @@ const DetailTutorBookingPage: FC = () => {
                                         <p>{booking?.description}</p>
                                     </div>
 
-                                    <div className="detail-item">
-                                        <h4>Yêu cầu đặc biệt</h4>
-                                        <p>{booking?.specialRequirements}</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* NHÓM 2: Thông tin gia sư */}
-                            <div className="detail-group">
-                                <h3 className="group-title">
-                                    Thông tin gia sư
-                                </h3>
-                                <div className="group-content">
-                                    <div className="detail-item">
-                                        <h4>Gia sư</h4>
-                                        <p>{booking?.tutorName}</p>
-                                    </div>
+                                    {booking?.specialRequirements && (
+                                        <div className="detail-item">
+                                            <h4>Yêu cầu đặc biệt</h4>
+                                            <p>
+                                                {booking?.specialRequirements}
+                                            </p>
+                                        </div>
+                                    )}
 
                                     <div className="detail-item">
                                         <h4>Môn học</h4>
@@ -212,12 +309,25 @@ const DetailTutorBookingPage: FC = () => {
                                         <p>{booking?.mode}</p>
                                     </div>
 
-                                    {booking?.mode === "Offline" && (
-                                        <div className="detail-item">
-                                            <h4>Địa điểm</h4>
-                                            <p>{booking?.location}</p>
-                                        </div>
-                                    )}
+                                    {booking?.mode === "Offline" &&
+                                        booking?.status !== "Pending" &&
+                                        booking?.location && (
+                                            <div className="detail-item">
+                                                <h4>Địa điểm</h4>
+                                                <p>{booking?.location}</p>
+                                            </div>
+                                        )}
+                                    {booking?.mode === "Offline" &&
+                                        booking?.status === "Pending" && (
+                                            <div className="detail-item">
+                                                <h4>Địa điểm</h4>
+                                                <p className="text-muted">
+                                                    Địa chỉ sẽ được hiển thị sau
+                                                    khi bạn thanh toán phí kết
+                                                    nối
+                                                </p>
+                                            </div>
+                                        )}
 
                                     <div className="detail-item">
                                         <h4>Học phí</h4>
@@ -242,7 +352,7 @@ const DetailTutorBookingPage: FC = () => {
                                         <h4>Ngày bắt đầu</h4>
                                         <p>
                                             {formatDate(
-                                                String(booking?.classStartDate)
+                                                String(booking?.classStartDate),
                                             )}
                                         </p>
                                     </div>
@@ -251,7 +361,7 @@ const DetailTutorBookingPage: FC = () => {
                                         <h4>Ngày hết hạn</h4>
                                         <p>
                                             {formatDate(
-                                                String(booking?.expiryDate)
+                                                String(booking?.expiryDate),
                                             )}
                                         </p>
                                     </div>
@@ -260,7 +370,7 @@ const DetailTutorBookingPage: FC = () => {
                                         <h4>Ngày tạo</h4>
                                         <p>
                                             {formatDate(
-                                                String(booking?.createdAt)
+                                                String(booking?.createdAt),
                                             )}
                                         </p>
                                     </div>
@@ -272,11 +382,11 @@ const DetailTutorBookingPage: FC = () => {
                                             .sort(
                                                 (a, b) =>
                                                     sortOrder.indexOf(
-                                                        a.dayOfWeek
+                                                        a.dayOfWeek,
                                                     ) -
                                                     sortOrder.indexOf(
-                                                        b.dayOfWeek
-                                                    )
+                                                        b.dayOfWeek,
+                                                    ),
                                             )
                                             .map((s, index) => (
                                                 <div
@@ -307,7 +417,7 @@ const DetailTutorBookingPage: FC = () => {
                                 className="pr-btn"
                                 onClick={() => setIsAcceptBookingOpen(true)}
                             >
-                                Chấp thuận
+                                Chấp nhận
                             </button>
                             <button
                                 className="delete-btn"
@@ -322,12 +432,12 @@ const DetailTutorBookingPage: FC = () => {
             <Modal
                 isOpen={isAcceptBookingOpen}
                 setIsOpen={setIsAcceptBookingOpen}
-                title={"Chấp thuận lịch đặt"}
+                title={"Chấp nhận lịch đặt"}
             >
                 <section id="tutor-accept-booking">
                     <div className="tab-container">
                         <h3>
-                            Bạn có chắc chắn muốn chấp thuận lịch đặt này không?
+                            Bạn có chắc chắn muốn chấp nhận lịch đặt này không?
                         </h3>
                         {booking?.mode === "Online" && (
                             <div className="form">
@@ -351,42 +461,71 @@ const DetailTutorBookingPage: FC = () => {
                                             }
                                         />
                                     </div>
+                                    {meetingLinkError && (
+                                        <p className="text-error">
+                                            {meetingLinkError}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         )}
-                        <p>
-                            Nếu bạn đồng ý với lịch dạy này, vui lòng thanh toán
-                            trước học phí để xác nhận lớp. Lưu ý: khoản phí này
-                            chỉ thanh toán một lần duy nhất và không hoàn lại.
-                            Trong trường hợp sau khi xác nhận lớp mà hủy, phí
-                            này sẽ không được hoàn trả
-                        </p>
-                        <div className="fee">
-                            <h5>Phí chấp nhận (20% học phí)</h5>
-                            <span>
-                                {depositFee
-                                    ? `${depositFee.toLocaleString()} VNĐ`
-                                    : "Không có"}
-                            </span>
-                        </div>
+                        {booking?.mode === "Online" ? (
+                            <>
+                                <p>
+                                    Nếu bạn đồng ý với lịch dạy này, vui lòng
+                                    thanh toán trước học phí để xác nhận lớp.
+                                    Lưu ý: khoản phí này chỉ thanh toán một lần
+                                    duy nhất và không hoàn lại. Trong trường hợp
+                                    sau khi xác nhận lớp mà hủy, phí này sẽ
+                                    không được hoàn trả
+                                </p>
+                                <div className="fee">
+                                    <h5>Phí chấp nhận (20% học phí)</h5>
+                                    <span>
+                                        {depositFee
+                                            ? `${depositFee.toLocaleString()} VNĐ`
+                                            : "Không có"}
+                                    </span>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <p>
+                                    Nếu bạn đồng ý với lịch dạy này, vui lòng
+                                    thanh toán phí kết nối để xác nhận lớp. Lưu
+                                    ý: khoản phí này chỉ thanh toán một lần duy
+                                    nhất và không hoàn lại. Sau khi chấp nhận,
+                                    bạn sẽ nhận được địa chỉ của học sinh.
+                                </p>
+                                <div className="fee">
+                                    <h5>Phí kết nối</h5>
+                                    <span>
+                                        {CONNECTION_FEE.toLocaleString()} VNĐ
+                                    </span>
+                                </div>
+                            </>
+                        )}
                         <div className="group-btn">
                             <button className="sc-btn">Hủy</button>
                             <button
                                 className={
-                                    isSubmittingAccept
+                                    isSubmittingAccept ||
+                                    (booking?.mode === "Online" && !meetingLink)
                                         ? "disable-btn"
                                         : "pr-btn"
                                 }
-                                onClick={() =>
-                                    handleAcceptBooking(booking?.id!)
+                                disabled={
+                                    isSubmittingAccept ||
+                                    (booking?.mode === "Online" && !meetingLink)
                                 }
+                                onClick={handleAccept}
                             >
                                 {isSubmittingAccept ? (
                                     <>
                                         <LoadingSpinner />
                                     </>
                                 ) : (
-                                    "Chấp thuận"
+                                    "Chấp nhận"
                                 )}
                             </button>
                         </div>
@@ -422,6 +561,28 @@ const DetailTutorBookingPage: FC = () => {
                                 ) : (
                                     "Từ chối"
                                 )}
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </Modal>
+            <Modal
+                isOpen={isAddressModalOpen}
+                setIsOpen={setIsAddressModalOpen}
+                title={"Địa chỉ học sinh"}
+            >
+                <section id="student-address-modal">
+                    <div className="tab-container">
+                        <h3>Địa chỉ học sinh:</h3>
+                        <div className="address-info">
+                            <p>{studentAddress}</p>
+                        </div>
+                        <div className="group-btn">
+                            <button
+                                className="pr-btn"
+                                onClick={() => setIsAddressModalOpen(false)}
+                            >
+                                Đã hiểu
                             </button>
                         </div>
                     </div>

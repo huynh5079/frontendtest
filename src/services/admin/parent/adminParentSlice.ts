@@ -4,6 +4,7 @@ import type {
     ParentForAdmin,
     ParentForAdminState,
     ParentsForAdmin,
+    ResponseGetUsersForAdmin,
 } from "../../../types/admin";
 import {
     getAllParentForAdminApiThunk,
@@ -25,9 +26,9 @@ export const parentForAdminSlice = createSlice({
                 getAllParentForAdminApiThunk.fulfilled,
                 (
                     state,
-                    action: PayloadAction<ResponseFromServer<ParentsForAdmin[]>>
+                    action: PayloadAction<ResponseFromServer<ResponseGetUsersForAdmin<ParentsForAdmin[]>>>
                 ) => {
-                    state.listParents = action.payload.data;
+                    state.listParents = action.payload.data.items;
                 }
             )
             .addCase(

@@ -1,6 +1,7 @@
 export const routes = {
     home: "/",
     about: "/about",
+    contact: "/contact",
     login: "/login",
     forgot_password: "/forgot_password",
     unauthorized: "/unauthorized",
@@ -44,6 +45,10 @@ export const routes = {
             detail: "/tutor/notification/:id/detail",
         },
         chat: "/tutor/chat",
+        reschedule: {
+            list: "/tutor/reschedule",
+            detail: "/tutor/reschedule/:id/detail",
+        },
     },
     course: {
         list: "/course",
@@ -51,6 +56,8 @@ export const routes = {
     },
     student: {
         home: "/student",
+        about: "/student/about",
+        contact: "/student/contact",
         tutor: {
             list: "/student/tutor",
             detail: "/student/tutor/:id/detail",
@@ -65,6 +72,8 @@ export const routes = {
     },
     parent: {
         home: "/parent",
+        about: "/parent/about",
+        contact: "/parent/contact",
         tutor: {
             list: "/parent/tutor",
             detail: "/parent/tutor/:id/detail",
@@ -93,6 +102,7 @@ export const routes = {
         },
         class: {
             list: "/admin/class",
+            detail: "/admin/class/:id/detail",
         },
         notification: {
             list: "/admin/notification",
@@ -111,5 +121,8 @@ export const routes = {
                 list: "/admin/transaction/parent",
             },
         },
+        wallet: "/admin/wallet",
+        commission: "/admin/commission",
+        commissionHistory: "/admin/commission/history",
     },
 };

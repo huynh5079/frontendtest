@@ -31,7 +31,7 @@
     }
 
     .ttc-info {
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
 
         .ttci-name {
             font-size: 1.25rem;
@@ -54,15 +54,29 @@
             background: var(--main-color);
             border-radius: 1rem;
         }
+
+        .ttci-address {
+            max-width: 200px;
+            margin: 0 auto;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.875rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
     }
 
     .ttc-rating {
-        margin-bottom: 1rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
 
         .star-rating {
             display: flex;
             justify-content: center;
-            margin-bottom: 0.25rem;
 
             .star {
                 width: 18px;
@@ -75,37 +89,31 @@
                 }
             }
         }
+    }
 
-        .ttc-reviews {
-            display: flex;
-            gap: 0.5rem;
-            justify-content: center;
-            align-items: center;
+    .ttcr-reviews {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 0.5rem;
 
-            .rating {
-                font-weight: 600;
-                color: #16a34a;
-            }
+        .rating {
+            font-weight: 700;
+            color: #16a34a;
+        }
 
-            .reviews {
-                font-size: 0.875rem;
-                color: #666;
-            }
+        .reviews {
+            font-size: 0.875rem;
+            color: #666;
         }
     }
 
-    .ttc-btn {
-        background: #2563eb;
-        color: #fff;
+    .pr-btn {
         padding: 0.5rem 1.25rem;
-        border: none;
         border-radius: 9999px;
         cursor: pointer;
         font-weight: 500;
         transition: background 0.3s ease;
-
-        &:hover {
-            background: #1d4ed8;
-        }
     }
 }

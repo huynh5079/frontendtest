@@ -4,8 +4,10 @@ import {
     ParentBookingTutor,
     ParentChangePassword,
     ParentChildAccount,
+    ParentChildClass,
     ParentChildReportLearning,
     ParentChildScheduleSchedule,
+    ParentFavoriteTutor,
     ParentInformtionSidebar,
     ParentLessonDetail,
     ParentProfile,
@@ -14,6 +16,7 @@ import {
 } from "../../../components/parent/information";
 import { useAppDispatch } from "../../../app/store";
 import { getProfileParentApiThunk } from "../../../services/user/userThunk";
+import { ChatPage } from "../../system/chat";
 
 const ParentInformationPage: FC = () => {
     const dispatch = useAppDispatch();
@@ -45,6 +48,12 @@ const ParentInformationPage: FC = () => {
                 return <ParentChildReportLearning />;
             case "child-account":
                 return <ParentChildAccount />;
+            case "favorite":
+                return <ParentFavoriteTutor />;
+            case "class":
+                return <ParentChildClass />;
+            case "chat":
+                return <ChatPage />;
             case "profile":
             default:
                 return <ParentProfile />;

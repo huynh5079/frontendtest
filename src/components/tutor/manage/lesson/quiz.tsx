@@ -138,37 +138,54 @@ const TutorManageQuiz: FC<TutorManageQuizProps> = ({ lessonId }) => {
                                 </thead>
 
                                 <tbody className="table-body">
-                                    {quizes?.map((quiz) => (
-                                        <tr
-                                            className="table-body-row"
-                                            key={quiz.id}
-                                        >
-                                            <td className="table-body-cell">
-                                                {quiz.title}
-                                            </td>
-                                            <td className="table-body-cell">
-                                                {quiz.totalQuestions}
-                                            </td>
-                                            <td className="table-body-cell">
-                                                {getQuizTypeText(quiz.quizType)}
-                                            </td>
-                                            <td className="table-body-cell">
-                                                {formatTimeAdd7(quiz.createdAt)}{" "}
-                                                {formatDate(quiz.createdAt)}
-                                            </td>
-                                            <td className="table-body-cell">
-                                                <button
-                                                    className="pr-btn"
-                                                    onClick={() => {
-                                                        setSection("detail");
-                                                        setQuizId(quiz.id);
-                                                    }}
-                                                >
-                                                    Xem chi tiết
-                                                </button>
+                                    {paginatedQuizes?.length! > 0 ? (
+                                        quizes?.map((quiz) => (
+                                            <tr
+                                                className="table-body-row"
+                                                key={quiz.id}
+                                            >
+                                                <td className="table-body-cell">
+                                                    {quiz.title}
+                                                </td>
+                                                <td className="table-body-cell">
+                                                    {quiz.totalQuestions}
+                                                </td>
+                                                <td className="table-body-cell">
+                                                    {getQuizTypeText(
+                                                        quiz.quizType,
+                                                    )}
+                                                </td>
+                                                <td className="table-body-cell">
+                                                    {formatTimeAdd7(
+                                                        quiz.createdAt,
+                                                    )}{" "}
+                                                    {formatDate(quiz.createdAt)}
+                                                </td>
+                                                <td className="table-body-cell">
+                                                    <button
+                                                        className="pr-btn"
+                                                        onClick={() => {
+                                                            setSection(
+                                                                "detail",
+                                                            );
+                                                            setQuizId(quiz.id);
+                                                        }}
+                                                    >
+                                                        Xem chi tiết
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td
+                                                colSpan={5}
+                                                className="table-body-cell no-data"
+                                            >
+                                                Chưa có bài tập nào
                                             </td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
 

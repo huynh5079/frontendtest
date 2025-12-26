@@ -13,6 +13,7 @@ import {
     getOrCreateClassRequestConversationApi,
     getConversationsApi,
     getConversationByIdApi,
+    deleteConversationApi,
     getOnlineUsersApi,
     getUserOnlineStatusApi,
     checkUsersOnlineStatusApi,
@@ -40,6 +41,7 @@ const GET_OR_CREATE_CLASS_CONVERSATION = "GET_OR_CREATE_CLASS_CONVERSATION";
 const GET_OR_CREATE_CLASS_REQUEST_CONVERSATION = "GET_OR_CREATE_CLASS_REQUEST_CONVERSATION";
 const GET_CONVERSATIONS = "GET_CONVERSATIONS";
 const GET_CONVERSATION_BY_ID = "GET_CONVERSATION_BY_ID";
+const DELETE_CONVERSATION = "DELETE_CONVERSATION";
 const GET_ONLINE_USERS = "GET_ONLINE_USERS";
 const GET_USER_ONLINE_STATUS = "GET_USER_ONLINE_STATUS";
 const CHECK_USERS_ONLINE_STATUS = "CHECK_USERS_ONLINE_STATUS";
@@ -237,6 +239,21 @@ export const getConversationByIdApiThunk = createAsyncThunk<
 >(GET_CONVERSATION_BY_ID, async (conversationId, { rejectWithValue }) => {
     try {
         const response = await getConversationByIdApi(conversationId);
+        return response;
+    } catch (err: any) {
+        return rejectWithValue({
+            errorMessage: err.message,
+            data: err.response?.data,
+        });
+    }
+});
+
+export const deleteConversationApiThunk = createAsyncThunk<
+    ApiResponse<{ deleted: boolean }>,
+    string
+>(DELETE_CONVERSATION, async (conversationId, { rejectWithValue }) => {
+    try {
+        const response = await deleteConversationApi(conversationId);
         return response;
     } catch (err: any) {
         return rejectWithValue({

@@ -15,6 +15,7 @@ import {
     selectUserLogin,
     selectChatUnreadCount,
     selectOnlineUsers,
+    selectBalance,
 } from "../../../app/selector";
 
 import connection, {
@@ -28,14 +29,21 @@ import {
     getConversationsApiThunk,
     markConversationAsReadApiThunk,
     getOnlineUsersApiThunk,
+    getConversationByIdApiThunk,
+    deleteConversationApiThunk,
 } from "../../../services/chat/chatThunk";
-import { selectConversations } from "../../../app/selector";
+import {
+    selectConversations,
+    selectCurrentConversation,
+} from "../../../app/selector";
 import chatConnection, {
     startChatConnection,
 } from "../../../signalR/signalRChat";
 import {
     addMessage,
     setCurrentConversation,
+    updateConversation,
+    incrementUnreadCount,
 } from "../../../services/chat/chatSlice";
 import type { MessageDto, ConversationDto } from "../../../types/chat";
 import { ChatModal } from "../../chat";
@@ -82,6 +90,8 @@ import {
 } from "react-icons/ri";
 
 import { MdRateReview } from "react-icons/md";
+import { SystemLogo } from "../../../assets/images";
+import { checkBalanceApiThunk } from "../../../services/wallet/walletThunk";
 
 export const notificationIconMap: Record<string, JSX.Element> = {
     // 1. Auth & System
@@ -159,14 +169,16 @@ const HeaderStudentButton: FC = () => {
     // ---------------------- STORE -----------------------
     const dispatch = useAppDispatch();
     const isAuthenticated = useAppSelector(selectIsAuthenticated);
+    const balance = useAppSelector(selectBalance);
     const userLogin = useAppSelector(selectUserLogin);
     const notifications = useAppSelector(selectNotifications);
     const unReadNotifications = notifications.filter(
-        (n) => n.status !== "Read"
+        (n) => n.status !== "Read",
     );
     const chatUnreadCount = useAppSelector(selectChatUnreadCount);
     const conversations = useAppSelector(selectConversations);
     const onlineUsers = useAppSelector(selectOnlineUsers);
+    const currentConversation = useAppSelector(selectCurrentConversation);
 
     // ------------------- DERIVED VALUES -----------------
     const countNotificationUnread = unReadNotifications.length;
@@ -206,13 +218,160 @@ const HeaderStudentButton: FC = () => {
         dispatch(getOnlineUsersApiThunk());
     };
 
-    const handleNewMessage = (message: MessageDto) => {
-        dispatch(addMessage(message));
-        // Update conversation last message
-        if (message.conversationId) {
-            dispatch(getConversationsApiThunk());
+    const handleDeleteConversation = async (e: React.MouseEvent, conversationId: string) => {
+        e.stopPropagation(); // Ngăn chặn click vào conversation item
+        if (window.confirm("Bạn có chắc chắn muốn xóa cuộc trò chuyện này không?")) {
+            try {
+                await dispatch(deleteConversationApiThunk(conversationId)).unwrap();
+                toast.success("Đã xóa cuộc trò chuyện");
+                // Refresh conversations list
+                dispatch(getConversationsApiThunk());
+            } catch (error: any) {
+                toast.error(error?.errorMessage || "Xóa cuộc trò chuyện thất bại");
+            }
         }
-        toast.info(`💬 Tin nhắn mới từ ${message.senderName}`);
+    };
+
+    const handleNewMessage = (message: MessageDto) => {
+        console.log("=== handleNewMessage called (Student) ===", message);
+        dispatch(addMessage(message));
+
+        // Update conversation with new last message immediately
+        if (message.conversationId) {
+            // Find the conversation in current state
+            const currentConv = conversations.find(
+                (c) => c.id === message.conversationId,
+            );
+            console.log("Current conversation found:", currentConv);
+
+            if (currentConv) {
+                const lastMessageContent =
+                    message.content ||
+                    (message.messageType === "Image"
+                        ? "Đã gửi một hình ảnh"
+                        : message.messageType === "File"
+                        ? "Đã gửi một file"
+                        : "");
+
+                // Check if user is currently viewing this conversation in ChatModal
+                const isViewingConversation =
+                    currentConversation?.id === message.conversationId;
+
+                const updatedConv: ConversationDto = {
+                    ...currentConv,
+                    lastMessageContent: lastMessageContent,
+                    lastMessageAt:
+                        message.createdAt || new Date().toISOString(),
+                    lastMessageType: message.messageType,
+                    // Don't update unreadCount here - server already updated it, and we'll sync from server
+                    // Only update lastMessage info for immediate UI update
+                };
+
+                console.log("Updating conversation:", updatedConv);
+                dispatch(updateConversation(updatedConv));
+            } else {
+                // Conversation not in state, fetch it from server
+                console.log(
+                    "Conversation not in state, fetching from server...",
+                );
+                dispatch(getConversationByIdApiThunk(message.conversationId))
+                    .then((result) => {
+                        if (
+                            getConversationByIdApiThunk.fulfilled.match(result)
+                        ) {
+                            const fetchedConv = result.payload.data;
+                            console.log(
+                                "Fetched conversation from server:",
+                                fetchedConv,
+                            );
+
+                            // Update with last message info
+                            const lastMessageContent =
+                                message.content ||
+                                (message.messageType === "Image"
+                                    ? "Đã gửi một hình ảnh"
+                                    : message.messageType === "File"
+                                    ? "Đã gửi một file"
+                                    : "");
+
+                            // Check if user is currently viewing this conversation in ChatModal
+                            const isViewingConversation =
+                                currentConversation?.id ===
+                                message.conversationId;
+
+                            const updatedConv: ConversationDto = {
+                                ...fetchedConv,
+                                lastMessageContent: lastMessageContent,
+                                lastMessageAt:
+                                    message.createdAt ||
+                                    new Date().toISOString(),
+                                lastMessageType: message.messageType,
+                                // Don't update unreadCount here - server already updated it
+                                // Only update lastMessage info for immediate UI update
+                            };
+
+                            console.log(
+                                "Updating fetched conversation:",
+                                updatedConv,
+                            );
+                            dispatch(updateConversation(updatedConv));
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("Error fetching conversation:", error);
+                    });
+            }
+        }
+
+        // Update global unread count immediately (only if not viewing the conversation)
+        const isViewingConversation =
+            currentConversation?.id === message.conversationId;
+        console.log(
+            "isViewingConversation:",
+            isViewingConversation,
+            "currentConversation?.id:",
+            currentConversation?.id,
+            "message.conversationId:",
+            message.conversationId,
+        );
+        console.log(
+            "message.senderId:",
+            message.senderId,
+            "userLogin?.id:",
+            userLogin?.id,
+            "areEqual:",
+            message.senderId === userLogin?.id,
+        );
+
+        if (message.senderId !== userLogin?.id && !isViewingConversation) {
+            // Increment global unread count immediately for instant UI update
+            console.log("Dispatching incrementUnreadCount (Student)...");
+            dispatch(incrementUnreadCount());
+            console.log(
+                "Incremented unread count for message from:",
+                message.senderName,
+            );
+        } else {
+            console.log(
+                "Message is from current user or viewing conversation, skipping unread count increment (Student)",
+                {
+                    isFromCurrentUser: message.senderId === userLogin?.id,
+                    isViewing: isViewingConversation,
+                },
+            );
+        }
+
+        // Refresh unread count from server to sync (but keep local increment if higher)
+        setTimeout(() => {
+            console.log("Refreshing unread count from server (Student)...");
+            dispatch(getUnreadCountApiThunk());
+        }, 500);
+
+        // Refresh conversations to get latest data
+        setTimeout(() => {
+            console.log("Refreshing conversations from server (Student)...");
+            dispatch(getConversationsApiThunk());
+        }, 1000);
     };
 
     const handleNewNotification = (n: NotificationResponseItem) => {
@@ -228,6 +387,7 @@ const HeaderStudentButton: FC = () => {
     useEffect(() => {
         if (!isAuthenticated) return;
 
+        dispatch(checkBalanceApiThunk());
         dispatch(getMyNotificationsApiThunk({ pageNumber: 1, pageSize: 200 }));
         dispatch(getUnreadCountApiThunk());
         dispatch(getConversationsApiThunk());
@@ -287,9 +447,12 @@ const HeaderStudentButton: FC = () => {
 
     return (
         <div className="hs-button">
-            <button className="pr-btn">Yêu cầu tìm gia sư</button>
-            <p className="welcome">Xin chào người dùng</p>
-
+            <p className="welcome">
+                Số dư:{" "}
+                <span style={{ fontWeight: "700", color: "var(--main-color)" }}>
+                    {balance?.balance ? balance.balance.toLocaleString() : 0}Đ
+                </span>
+            </p>
             {/* CHAT */}
             <div
                 ref={chatRef}
@@ -325,6 +488,7 @@ const HeaderStudentButton: FC = () => {
                                         handleConversationClick(conv)
                                     }
                                     className="chat-content"
+                                    style={{ position: "relative" }}
                                 >
                                     <div className="chat-img">
                                         <img
@@ -337,13 +501,28 @@ const HeaderStudentButton: FC = () => {
                                         />
                                         {conv.otherUserId &&
                                             onlineUsers.includes(
-                                                conv.otherUserId
+                                                conv.otherUserId,
                                             ) && <span title="Đang online" />}
                                     </div>
                                     <div className="chat-info">
-                                        <div className="chat-name">
-                                            {conv.otherUserName || conv.title}
-                                        </div>
+                                        {(() => {
+                                            const baseName =
+                                                conv.otherUserName ||
+                                                conv.title ||
+                                                "Cuộc trò chuyện";
+                                            const suffix = conv.id
+                                                ? ` • ${conv.id.slice(-4)}`
+                                                : "";
+                                            return (
+                                                <div
+                                                    className="chat-name"
+                                                    title={`${baseName}${suffix}`}
+                                                >
+                                                    {baseName}
+                                                    {suffix}
+                                                </div>
+                                            );
+                                        })()}
                                         <div className="chat-message">
                                             {conv.lastMessageContent ||
                                                 "Chưa có tin nhắn"}
@@ -353,7 +532,7 @@ const HeaderStudentButton: FC = () => {
                                             {conv.lastMessageAt && (
                                                 <span className="chat-time">
                                                     {timeAgo(
-                                                        conv.lastMessageAt
+                                                        conv.lastMessageAt,
                                                     )}
                                                 </span>
                                             )}
@@ -364,6 +543,32 @@ const HeaderStudentButton: FC = () => {
                                     {conv.unreadCount > 0 && (
                                         <span>{conv.unreadCount}</span>
                                     )}
+                                    <button
+                                        onClick={(e) => handleDeleteConversation(e, conv.id)}
+                                        aria-label="Xóa cuộc trò chuyện"
+                                        style={{
+                                            position: "absolute",
+                                            top: "8px",
+                                            right: "8px",
+                                            background: "#ff4444",
+                                            border: "none",
+                                            borderRadius: "50%",
+                                            width: "24px",
+                                            height: "24px",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            cursor: "pointer",
+                                            color: "white",
+                                            fontSize: "18px",
+                                            fontWeight: "bold",
+                                            lineHeight: "1",
+                                            zIndex: 10,
+                                        }}
+                                        title="Xóa cuộc trò chuyện"
+                                    >
+                                        ×
+                                    </button>
                                 </li>
                             ))}
                         </ul>
@@ -438,7 +643,7 @@ const HeaderStudentButton: FC = () => {
                                 onClick={() => {
                                     navigateHook(
                                         routes.student.information +
-                                            "?tab=notification"
+                                            "?tab=notification",
                                     );
                                     setIsNotificateOpen(false);
                                 }}
@@ -453,9 +658,13 @@ const HeaderStudentButton: FC = () => {
             {/* USER MENU */}
             <div ref={menuRef} className="menu-wrapper">
                 <img
-                    src={userLogin?.avatarUrl}
+                    src={userLogin?.avatarUrl || SystemLogo}
                     className="avatar"
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    onError={(e) => {
+                        e.currentTarget.src = SystemLogo;
+                    }}
+                    alt="avatar"
                 />
 
                 {isMenuOpen && (
@@ -465,7 +674,7 @@ const HeaderStudentButton: FC = () => {
                                 onClick={() =>
                                     handleClickSubMenu(
                                         routes.student.information +
-                                            "?tab=profile"
+                                            "?tab=profile",
                                     )
                                 }
                             >
@@ -476,7 +685,7 @@ const HeaderStudentButton: FC = () => {
                                 onClick={() =>
                                     handleClickSubMenu(
                                         routes.student.information +
-                                            "?tab=change-password"
+                                            "?tab=change-password",
                                     )
                                 }
                             >
@@ -487,7 +696,7 @@ const HeaderStudentButton: FC = () => {
                                 onClick={() =>
                                     handleClickSubMenu(
                                         routes.student.information +
-                                            "?tab=wallet"
+                                            "?tab=wallet",
                                     )
                                 }
                             >
@@ -498,7 +707,7 @@ const HeaderStudentButton: FC = () => {
                                 onClick={() =>
                                     handleClickSubMenu(
                                         routes.student.information +
-                                            "?tab=schedule"
+                                            "?tab=schedule",
                                     )
                                 }
                             >

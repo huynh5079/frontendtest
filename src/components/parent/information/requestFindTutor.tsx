@@ -51,9 +51,10 @@ import {
 } from "../../../utils/helper";
 import {
     CancelBookingTutorForStudent,
+    ConfirmPaymentModal,
     Modal,
     RemindWalletModal,
-    UpdateRequestFindTutorForStudentModal,
+    UpdateBookingTutorForStudentModal,
 } from "../../modal";
 import { getScheduleSpecificChildForParentApiThunk } from "../../../services/parent/childSchedule/childScheduleThunk";
 import {
@@ -61,6 +62,8 @@ import {
     tranferToAdminApiThunk,
 } from "../../../services/wallet/walletThunk";
 import { WalletBalance } from "../../../types/wallet";
+import { CiTextAlignLeft } from "react-icons/ci";
+import { getAllClassRequestForParentApiThunk } from "../../../services/parent/classRequest/classRequestThunk";
 
 type LevelType = "Tiểu học" | "Trung học cơ sở" | "Trung học phổ thông";
 
@@ -111,11 +114,11 @@ const ParentRequestFindTutor: FC = () => {
     const [_, setSubject] = useState("");
     const [classOptions, setClassOptions] = useState<string[]>([]);
     const bookingTutors = useAppSelector(
-        selectListClassRequestForStudent
+        selectListClassRequestForStudent,
     )?.filter((b) => !b.tutorId);
     const bookingTutor = useAppSelector(selectDetailClassRequestForStudent);
     const applyRequests = useAppSelector(
-        selectListApplyRequestFindTutorForStudent
+        selectListApplyRequestFindTutorForStudent,
     );
     const [searchParams] = useSearchParams();
     const id = searchParams.get("id");
@@ -138,21 +141,43 @@ const ParentRequestFindTutor: FC = () => {
         useState(false);
     const [selectedApplyRequestId, setSelectedApplyRequestId] =
         useState<string>("");
+    const [tabSubActive, setTabSubActive] = useState("request");
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [pendingValues, setPendingValues] =
+        useState<CreateClassRequestParams | null>(null);
+    const [isConfirmLoading, setIsConfirmLoading] = useState(false);
 
     const busySchedules = groupSchedulesByWeek(
-        Array.isArray(childSchedules) ? childSchedules : []
+        Array.isArray(childSchedules) ? childSchedules : [],
     );
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [childProfileId]);
 
     useEffect(() => {
         dispatch(getAllChildAccountApiThunk());
     }, [dispatch]);
+
     useEffect(() => {
-        dispatch(getAllClassRequestForStudentApiThunk());
         dispatch(checkBalanceApiThunk());
     }, [dispatch]);
+
+    // Load danh sách
+    useEffect(() => {
+        if (childProfileId) {
+            dispatch(
+                getAllClassRequestForParentApiThunk(
+                    childProfileId.toLocaleLowerCase()!,
+                ),
+            );
+        }
+    }, [dispatch, childProfileId]);
+
     useEffect(() => {
         if (id) dispatch(getDetailClassRequestForStudentApiThunk(id));
     }, [dispatch, id]);
+
     useEffect(() => {
         if (id && bookingTutor?.status === "Pending")
             dispatch(getAllApplyRequestFindTutorForStudentApiThunk(id));
@@ -171,7 +196,7 @@ const ParentRequestFindTutor: FC = () => {
                 ? Array.from({ length: 4 }, (_, i) => `Lớp ${i + 6}`)
                 : value === "Trung học phổ thông"
                 ? Array.from({ length: 3 }, (_, i) => `Lớp ${i + 10}`)
-                : []
+                : [],
         );
     };
 
@@ -180,7 +205,7 @@ const ParentRequestFindTutor: FC = () => {
     const totalPages = Math.ceil((bookingTutors?.length || 0) / ITEMS_PER_PAGE);
     const paginatedItems = bookingTutors?.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
-        currentPage * ITEMS_PER_PAGE
+        currentPage * ITEMS_PER_PAGE,
     );
 
     const handlePrevPage = () => {
@@ -205,15 +230,16 @@ const ParentRequestFindTutor: FC = () => {
         setIsSubmittingAcceptApplyRequest(true);
         await dispatch(
             acceptApplyRequestFindTutorForStudentApiThunk(
-                selectedApplyRequestId
-            )
+                selectedApplyRequestId,
+            ),
         )
             .unwrap()
-            .then((res) =>
-                toast.success(get(res, "data.message", "Xử lí thành công"))
-            )
+            .then((res) => {
+                toast.success(get(res, "data.message", "Xử lí thành công"));
+                navigateHook(`/parent/information?tab=class`);
+            })
             .catch((err) =>
-                toast.error(get(err, "data.message", "Có lỗi xảy ra"))
+                toast.error(get(err, "data.message", "Có lỗi xảy ra")),
             )
             .finally(() => {
                 dispatch(getAllApplyRequestFindTutorForStudentApiThunk(id!)),
@@ -227,15 +253,15 @@ const ParentRequestFindTutor: FC = () => {
         setIsSubmittingRejectApplyRequest(true);
         await dispatch(
             rejectApplyRequestFindTutorForStudentApiThunk(
-                selectedApplyRequestId
-            )
+                selectedApplyRequestId,
+            ),
         )
             .unwrap()
             .then((res) =>
-                toast.success(get(res, "data.message", "Xử lí thành công"))
+                toast.success(get(res, "data.message", "Xử lí thành công")),
             )
             .catch((err) =>
-                toast.error(get(err, "data.message", "Có lỗi xảy ra"))
+                toast.error(get(err, "data.message", "Có lỗi xảy ra")),
             )
             .finally(() => {
                 dispatch(getAllApplyRequestFindTutorForStudentApiThunk(id!)),
@@ -279,12 +305,417 @@ const ParentRequestFindTutor: FC = () => {
                     dayOfWeek: Yup.number().required(),
                     startTime: Yup.string().required(),
                     endTime: Yup.string().required(),
-                })
+                }),
             )
             .min(1, "Vui lòng chọn lịch đúng số buổi"),
     });
 
+    const handleConfirmPayment = () => {
+        if (!pendingValues || isConfirmLoading) return;
+
+        setIsConfirmLoading(true);
+
+        dispatch(
+            tranferToAdminApiThunk({
+                Amount: createRequestFee,
+                Note: "Phí đặt lịch gia sư",
+            }),
+        )
+            .unwrap()
+            .then(() => {
+                return dispatch(
+                    createClassRequestForStudentApiThunk(pendingValues),
+                ).unwrap();
+            })
+            .then((res) => {
+                toast.success(get(res, "data.message", "Đặt lịch thành công"));
+                handlePrevStep();
+                setChildProfileId("");
+            })
+            .catch((err) => {
+                toast.error(get(err, "data.message", "Có lỗi xảy ra"));
+            })
+            .finally(() => {
+                setIsConfirmLoading(false);
+                setIsConfirmOpen(false);
+                setPendingValues(null);
+            });
+    };
+
     useDocumentTitle("Danh sách đơn tìm gia sư");
+
+    const handleViewDetailTutor = (id: string) => {
+        const url = routes.parent.tutor.detail.replace(":id", id);
+        navigate(url);
+    };
+
+    const renderBookingList = () => {
+        return (
+            <>
+                <div className="prfts1r1">
+                    <h3>Đơn tìm gia sư</h3>
+                    <button className="pr-btn" onClick={handleNextStep}>
+                        Tạo đơn
+                    </button>
+                </div>
+                <table className="table">
+                    <thead className="table-head">
+                        <tr className="table-head-row">
+                            <th className="table-head-cell">Môn học</th>
+                            <th className="table-head-cell">Cấp bậc học</th>
+                            <th className="table-head-cell">Trạng thái</th>
+                            <th className="table-head-cell">
+                                Thời gian đặt lịch
+                            </th>
+                            <th className="table-head-cell">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody className="table-body">
+                        {paginatedItems?.length === 0 ? (
+                            <tr>
+                                <td
+                                    colSpan={5}
+                                    className="table-body-cell no-data"
+                                >
+                                    Không có dữ liệu
+                                </td>
+                            </tr>
+                        ) : (
+                            paginatedItems?.map((booking) => (
+                                <tr key={booking.id}>
+                                    <td className="table-body-cell">
+                                        {booking.subject}
+                                    </td>
+                                    <td className="table-body-cell">
+                                        {booking.educationLevel}
+                                    </td>
+                                    <td className="table-body-cell">
+                                        {getStatusText(booking.status)}
+                                    </td>
+                                    <td className="table-body-cell">
+                                        {formatDate(booking.createdAt)}
+                                    </td>
+                                    <td className="table-body-cell">
+                                        <button
+                                            className="sc-btn"
+                                            onClick={() =>
+                                                handleViewDetail(booking.id)
+                                            }
+                                        >
+                                            Xem chi tiết
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                    <div className="pagination">
+                        <button
+                            className="sc-btn"
+                            onClick={handlePrevPage}
+                            disabled={currentPage === 1}
+                        >
+                            Trước
+                        </button>
+                        <span>
+                            {currentPage} / {totalPages}
+                        </span>
+                        <button
+                            className="sc-btn"
+                            onClick={handleNextPage}
+                            disabled={currentPage === totalPages}
+                        >
+                            Sau
+                        </button>
+                    </div>
+                )}
+            </>
+        );
+    };
+
+    const renderBookingDetail = () => {
+        return (
+            <>
+                <h3 className="detail-title">Chi tiết lịch đặt gia sư</h3>
+
+                <div className="sub-tabs">
+                    {["request", "tutor"].map((t) => (
+                        <div
+                            key={t}
+                            className={`sub-tab ${
+                                tabSubActive === t ? "active" : ""
+                            }`}
+                            onClick={() => {
+                                setTabSubActive(t);
+                            }}
+                        >
+                            {t === "request" && "Đơn yêu cầu"}
+                            {t === "tutor" && "Gia sư ứng tuyển"}
+                        </div>
+                    ))}
+                </div>
+
+                {tabSubActive === "request" && (
+                    <div className="detail-request-find-tutor">
+                        {/* NHÓM 1: Thông tin học sinh */}
+                        <div className="detail-group">
+                            <h3 className="group-title">Thông tin học sinh</h3>
+                            <div className="group-content">
+                                <div className="detail-item">
+                                    <h4>Học sinh</h4>
+                                    <p>{bookingTutor?.studentName}</p>
+                                </div>
+
+                                <div className="detail-item">
+                                    <h4>Mô tả</h4>
+                                    <p>{bookingTutor?.description}</p>
+                                </div>
+
+                                {bookingTutor?.specialRequirements && (
+                                    <div className="detail-item">
+                                        <h4>Yêu cầu đặc biệt</h4>
+                                        <p>
+                                            {bookingTutor?.specialRequirements}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* NHÓM 3: Hình thức & Học phí */}
+                        <div className="detail-group">
+                            <h3 className="group-title">Thông tin yêu cầu</h3>
+                            <div className="group-content">
+                                <div className="detail-item">
+                                    <h4>Môn học</h4>
+                                    <p>{bookingTutor?.subject}</p>
+                                </div>
+
+                                <div className="detail-item">
+                                    <h4>Cấp bậc học</h4>
+                                    <p>{bookingTutor?.educationLevel}</p>
+                                </div>
+
+                                <div className="detail-item">
+                                    <h4>Hình thức học</h4>
+                                    <p>
+                                        {bookingTutor?.mode === "Online"
+                                            ? "Học trực tuyến"
+                                            : "Học trực tiếp"}
+                                    </p>
+                                </div>
+
+                                {bookingTutor?.mode === "Offline" && (
+                                    <div className="detail-item">
+                                        <h4>Địa điểm</h4>
+                                        <p>{bookingTutor?.location}</p>
+                                    </div>
+                                )}
+
+                                <div className="detail-item">
+                                    <h4>Học phí</h4>
+                                    <p>
+                                        {bookingTutor?.budget?.toLocaleString()}{" "}
+                                        VNĐ
+                                    </p>
+                                </div>
+
+                                <div className="detail-item">
+                                    <h4>Trạng thái</h4>
+                                    <p>{getStatusText(bookingTutor?.status)}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* NHÓM 4: Thời gian & Lịch trình */}
+                        <div className="detail-group">
+                            <h3 className="group-title">Lịch học</h3>
+                            <div className="group-content">
+                                <div className="detail-item">
+                                    <h4>Ngày bắt đầu</h4>
+                                    <p>
+                                        {formatDate(
+                                            String(
+                                                bookingTutor?.classStartDate,
+                                            ),
+                                        )}
+                                    </p>
+                                </div>
+
+                                <div className="detail-item">
+                                    <h4>Ngày hết hạn</h4>
+                                    <p>
+                                        {formatDate(
+                                            String(bookingTutor?.expiryDate),
+                                        )}
+                                    </p>
+                                </div>
+
+                                <div className="detail-item">
+                                    <h4>Ngày tạo</h4>
+                                    <p>
+                                        {formatDate(
+                                            String(bookingTutor?.createdAt),
+                                        )}
+                                    </p>
+                                </div>
+
+                                <div className="detail-item detail-item-schedule">
+                                    <h4>Lịch học chi tiết</h4>
+
+                                    {[...(bookingTutor?.schedules || [])]
+                                        .sort(
+                                            (a, b) =>
+                                                sortOrder.indexOf(a.dayOfWeek) -
+                                                sortOrder.indexOf(b.dayOfWeek),
+                                        )
+                                        .map((s, index) => (
+                                            <div
+                                                key={index}
+                                                className="schedule-item"
+                                            >
+                                                <p className="schedule-day">
+                                                    {daysOfWeek[s.dayOfWeek]}
+                                                </p>
+                                                <p className="schedule-time">
+                                                    {s.startTime} → {s.endTime}
+                                                </p>
+                                            </div>
+                                        ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {tabSubActive === "tutor" && (
+                    <>
+                        {/* Danh sách ứng tuyển */}
+                        <div className="srfts1r1">
+                            <h3>Danh sách ứng tuyển</h3>
+                        </div>
+
+                        <div className="srfts1r2">
+                            <table className="table">
+                                <thead className="table-head">
+                                    <tr className="table-head-row">
+                                        <th className="table-head-cell">
+                                            Tên gia sư
+                                        </th>
+                                        <th className="table-head-cell">
+                                            Trạng thái
+                                        </th>
+                                        <th className="table-head-cell">
+                                            Thời gian ứng tuyển
+                                        </th>
+                                        <th className="table-head-cell">
+                                            Thao tác
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="table-body">
+                                    {applyRequests?.length === 0 ? (
+                                        <tr>
+                                            <td
+                                                colSpan={4}
+                                                className="table-body-cell no-data"
+                                            >
+                                                Không có dữ liệu
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        applyRequests?.map((applyRequest) => (
+                                            <tr key={applyRequest.id}>
+                                                <td className="table-body-cell">
+                                                    {applyRequest.tutorName}
+                                                </td>
+                                                <td className="table-body-cell">
+                                                    {getStatusText(
+                                                        applyRequest.status,
+                                                    )}
+                                                </td>
+                                                <td className="table-body-cell">
+                                                    {formatDate(
+                                                        applyRequest.createdAt,
+                                                    )}
+                                                </td>
+                                                <td className="table-body-cell">
+                                                    {applyRequest.status ===
+                                                        "Pending" && (
+                                                        <>
+                                                            <button
+                                                                className="pr-btn"
+                                                                onClick={() => {
+                                                                    handleAcceptApplyRequestOpen(
+                                                                        applyRequest.id,
+                                                                    );
+                                                                }}
+                                                            >
+                                                                Chấp thuận
+                                                            </button>
+                                                            <button
+                                                                className="delete-btn"
+                                                                onClick={() => {
+                                                                    handleRejectApplyRequestOpen(
+                                                                        applyRequest.id,
+                                                                    );
+                                                                }}
+                                                            >
+                                                                Từ chối
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    <button
+                                                        className="sc-btn"
+                                                        onClick={() => {}}
+                                                    >
+                                                        Chi tiết gia sư
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </>
+                )}
+
+                {/* Nút */}
+                <div className="group-btn mt-4">
+                    {bookingTutor?.status === "Pending" && (
+                        <button
+                            className="pr-btn"
+                            onClick={() =>
+                                setIsUpdateBookingTutorModalOpen(true)
+                            }
+                        >
+                            Cập nhật
+                        </button>
+                    )}
+
+                    <button className="sc-btn" onClick={handleBack}>
+                        Quay lại
+                    </button>
+
+                    {bookingTutor?.status === "Pending" && (
+                        <button
+                            className="delete-btn"
+                            onClick={() =>
+                                setIsCancelBookingTutorModalOpen(true)
+                            }
+                        >
+                            Huỷ lịch
+                        </button>
+                    )}
+                </div>
+            </>
+        );
+    };
 
     return (
         <div className="parent-request-find-tutor">
@@ -294,387 +725,48 @@ const ParentRequestFindTutor: FC = () => {
                         isStep === 1 ? "step-active" : "step-hidden"
                     }`}
                 >
-                    {!id ? (
-                        <>
-                            <div className="prfts1r1">
-                                <h3>Danh sách đơn tìm gia sư</h3>
-                                <button
-                                    className="pr-btn"
-                                    onClick={handleNextStep}
+                    <h2>Đơn tìm gia sư của con</h2>
+
+                    <div className="form">
+                        <div className="form-field">
+                            <label className="form-label">
+                                Chọn tài khoản của con
+                            </label>
+                            <div className="form-input-container">
+                                <CiTextAlignLeft className="form-input-icon" />
+                                <select
+                                    className="form-input"
+                                    value={childProfileId}
+                                    onChange={(e) => {
+                                        const newChildId = e.target.value;
+                                        setChildProfileId(newChildId);
+
+                                        // Nếu đang xem detail thì quay về list
+                                        if (id) {
+                                            navigateHook(
+                                                `/parent/information?tab=booking_tutor`,
+                                            );
+                                        }
+                                    }}
                                 >
-                                    Tạo đơn
-                                </button>
-                            </div>
-                            <div className="prfts1r2">
-                                <table className="table">
-                                    <thead className="table-head">
-                                        <tr className="table-head-row">
-                                            <th className="table-head-cell">
-                                                Môn học
-                                            </th>
-                                            <th className="table-head-cell">
-                                                Cấp bậc học
-                                            </th>
-                                            <th className="table-head-cell">
-                                                Thời gian đặt lịch
-                                            </th>
-                                            <th className="table-head-cell">
-                                                Thao tác
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="table-body">
-                                        {paginatedItems?.map((bookingTutor) => (
-                                            <tr key={bookingTutor.id}>
-                                                <td className="table-body-cell">
-                                                    {bookingTutor.subject}
-                                                </td>
-                                                <td className="table-body-cell">
-                                                    {
-                                                        bookingTutor.educationLevel
-                                                    }
-                                                </td>
-                                                <td className="table-body-cell">
-                                                    {formatDate(
-                                                        bookingTutor.createdAt
-                                                    )}
-                                                </td>
-                                                <td className="table-body-cell">
-                                                    <button
-                                                        className="pr-btn"
-                                                        onClick={() =>
-                                                            handleViewDetail(
-                                                                bookingTutor.id
-                                                            )
-                                                        }
-                                                    >
-                                                        Chi tiết
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-
-                                {/* Pagination Controls */}
-                                {totalPages > 1 && (
-                                    <div className="pagination">
-                                        <button
-                                            className="sc-btn"
-                                            onClick={handlePrevPage}
-                                            disabled={currentPage === 1}
+                                    <option value="">
+                                        --- Chọn tài khoản ---
+                                    </option>
+                                    {childAccounts?.map((t) => (
+                                        <option
+                                            key={t.studentId}
+                                            value={t.studentId}
                                         >
-                                            Trước
-                                        </button>
-                                        <span>
-                                            {currentPage} / {totalPages}
-                                        </span>
-                                        <button
-                                            className="sc-btn"
-                                            onClick={handleNextPage}
-                                            disabled={
-                                                currentPage === totalPages
-                                            }
-                                        >
-                                            Sau
-                                        </button>
-                                    </div>
-                                )}
+                                            {t.username}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
-                        </>
-                    ) : (
-                        <>
-                            {/* Chi tiết bookingTutor */}
-                            <div className="prfts1r1">
-                                <h3>Chi tiết lịch đặt gia sư</h3>
-                                <button className="pr-btn" onClick={handleBack}>
-                                    Quay lại
-                                </button>
-                            </div>
-                            <div className="detail-request-find-tutor">
-                                {/* NHÓM 1: Thông tin học sinh */}
-                                <div className="detail-group">
-                                    <h3 className="group-title">
-                                        Thông tin học sinh
-                                    </h3>
-                                    <div className="group-content">
-                                        <div className="detail-item">
-                                            <h4>Học sinh</h4>
-                                            <p>{bookingTutor?.studentName}</p>
-                                        </div>
+                        </div>
+                    </div>
 
-                                        <div className="detail-item">
-                                            <h4>Mô tả</h4>
-                                            <p>{bookingTutor?.description}</p>
-                                        </div>
-
-                                        <div className="detail-item">
-                                            <h4>Yêu cầu đặc biệt</h4>
-                                            <p>
-                                                {
-                                                    bookingTutor?.specialRequirements
-                                                }
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* NHÓM 2: Thông tin gia sư */}
-                                <div className="detail-group">
-                                    <h3 className="group-title">
-                                        Thông tin gia sư
-                                    </h3>
-                                    <div className="group-content">
-                                        <div className="detail-item">
-                                            <h4>Môn học</h4>
-                                            <p>{bookingTutor?.subject}</p>
-                                        </div>
-
-                                        <div className="detail-item">
-                                            <h4>Cấp bậc học</h4>
-                                            <p>
-                                                {bookingTutor?.educationLevel}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* NHÓM 3: Hình thức & Học phí */}
-                                <div className="detail-group">
-                                    <h3 className="group-title">
-                                        Hình thức học & học phí
-                                    </h3>
-                                    <div className="group-content">
-                                        <div className="detail-item">
-                                            <h4>Hình thức học</h4>
-                                            <p>{bookingTutor?.mode}</p>
-                                        </div>
-
-                                        {bookingTutor?.mode === "Offline" && (
-                                            <div className="detail-item">
-                                                <h4>Địa điểm</h4>
-                                                <p>{bookingTutor?.location}</p>
-                                            </div>
-                                        )}
-
-                                        <div className="detail-item">
-                                            <h4>Học phí</h4>
-                                            <p>
-                                                {bookingTutor?.budget?.toLocaleString()}{" "}
-                                                VNĐ
-                                            </p>
-                                        </div>
-
-                                        <div className="detail-item">
-                                            <h4>Trạng thái</h4>
-                                            <p>
-                                                {getStatusText(
-                                                    bookingTutor?.status
-                                                )}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* NHÓM 4: Thời gian & Lịch trình */}
-                                <div className="detail-group">
-                                    <h3 className="group-title">Lịch học</h3>
-                                    <div className="group-content">
-                                        <div className="detail-item">
-                                            <h4>Ngày bắt đầu</h4>
-                                            <p>
-                                                {formatDate(
-                                                    String(
-                                                        bookingTutor?.classStartDate
-                                                    )
-                                                )}
-                                            </p>
-                                        </div>
-
-                                        <div className="detail-item">
-                                            <h4>Ngày hết hạn</h4>
-                                            <p>
-                                                {formatDate(
-                                                    String(
-                                                        bookingTutor?.expiryDate
-                                                    )
-                                                )}
-                                            </p>
-                                        </div>
-
-                                        <div className="detail-item">
-                                            <h4>Ngày tạo</h4>
-                                            <p>
-                                                {formatDate(
-                                                    String(
-                                                        bookingTutor?.createdAt
-                                                    )
-                                                )}
-                                            </p>
-                                        </div>
-
-                                        <div className="detail-item detail-item-schedule">
-                                            <h4>Lịch học chi tiết</h4>
-
-                                            {[
-                                                ...(bookingTutor?.schedules ||
-                                                    []),
-                                            ]
-                                                .sort(
-                                                    (a, b) =>
-                                                        sortOrder.indexOf(
-                                                            a.dayOfWeek
-                                                        ) -
-                                                        sortOrder.indexOf(
-                                                            b.dayOfWeek
-                                                        )
-                                                )
-                                                .map((s, index) => (
-                                                    <div
-                                                        key={index}
-                                                        className="schedule-item"
-                                                    >
-                                                        <p className="schedule-day">
-                                                            {
-                                                                daysOfWeek[
-                                                                    s.dayOfWeek
-                                                                ]
-                                                            }
-                                                        </p>
-                                                        <p className="schedule-time">
-                                                            {s.startTime} →{" "}
-                                                            {s.endTime}
-                                                        </p>
-                                                    </div>
-                                                ))}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Danh sách ứng tuyển */}
-                            {applyRequests?.length! > 0 && (
-                                <div className="prfts1r2">
-                                    <h3>Danh sách ứng tuyển</h3>
-                                    <table className="table">
-                                        <thead className="table-head">
-                                            <tr className="table-head-row">
-                                                <th className="table-head-cell">
-                                                    Tên gia sư
-                                                </th>
-                                                <th className="table-head-cell">
-                                                    Trạng thái
-                                                </th>
-                                                <th className="table-head-cell">
-                                                    Thời gian ứng tuyển
-                                                </th>
-                                                <th className="table-head-cell">
-                                                    Thao tác
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="table-body">
-                                            {applyRequests?.map(
-                                                (applyRequest) => (
-                                                    <tr key={applyRequest.id}>
-                                                        <td className="table-body-cell">
-                                                            {
-                                                                applyRequest.tutorName
-                                                            }
-                                                        </td>
-                                                        <td className="table-body-cell">
-                                                            {getStatusText(
-                                                                applyRequest.status
-                                                            )}
-                                                        </td>
-                                                        <td className="table-body-cell">
-                                                            {formatDate(
-                                                                applyRequest.createdAt
-                                                            )}
-                                                        </td>
-                                                        <td className="table-body-cell">
-                                                            {applyRequest.status ===
-                                                                "Pending" && (
-                                                                <>
-                                                                    <button
-                                                                        className="pr-btn"
-                                                                        onClick={() => {
-                                                                            handleAcceptApplyRequestOpen(
-                                                                                applyRequest.id
-                                                                            );
-                                                                        }}
-                                                                    >
-                                                                        Chấp
-                                                                        thuận
-                                                                    </button>
-                                                                    <button
-                                                                        className="delete-btn"
-                                                                        onClick={() => {
-                                                                            handleRejectApplyRequestOpen(
-                                                                                applyRequest.id
-                                                                            );
-                                                                        }}
-                                                                    >
-                                                                        Từ chối
-                                                                    </button>
-                                                                </>
-                                                            )}
-                                                            <button
-                                                                className="sc-btn"
-                                                                onClick={() => {}}
-                                                            >
-                                                                Chi tiết gia sư
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                )
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-
-                            <div className="group-btn">
-                                {bookingTutor?.status === "Pending" && (
-                                    <button
-                                        className="pr-btn"
-                                        onClick={() =>
-                                            setIsUpdateBookingTutorModalOpen(
-                                                true
-                                            )
-                                        }
-                                    >
-                                        Cập nhật
-                                    </button>
-                                )}
-                                <button className="sc-btn" onClick={handleBack}>
-                                    Quay lại
-                                </button>
-                                {bookingTutor?.status === "Pending" && (
-                                    <button
-                                        className="delete-btn"
-                                        onClick={() =>
-                                            setIsCancelBookingTutorModalOpen(
-                                                true
-                                            )
-                                        }
-                                    >
-                                        Huỷ lịch
-                                    </button>
-                                )}
-                            </div>
-
-                            <UpdateRequestFindTutorForStudentModal
-                                isOpen={isUpdateBookingTutorModalOpen}
-                                setIsOpen={setIsUpdateBookingTutorModalOpen}
-                                selectedBooking={bookingTutor}
-                            />
-                            <CancelBookingTutorForStudent
-                                isOpen={isCancelBookingTutorModalOpen}
-                                setIsOpen={setIsCancelBookingTutorModalOpen}
-                                requestId={bookingTutor?.id!}
-                            />
-                        </>
+                    {childProfileId && (
+                        <>{!id ? renderBookingList() : renderBookingDetail()}</>
                     )}
                 </div>
             )}
@@ -692,62 +784,15 @@ const ParentRequestFindTutor: FC = () => {
                         initialValues={initialValues}
                         validationSchema={validationSchema}
                         onSubmit={(values, { setSubmitting }) => {
-                            setSubmitting(true);
+                            setSubmitting(false);
 
-                            const totalAmount = createRequestFee;
-
-                            if (
-                                balance?.balance &&
-                                balance.balance < totalAmount
-                            ) {
+                            if (balance?.balance! < createRequestFee) {
                                 setIsRemindWalletOpen(true);
-                                setSubmitting(false);
                                 return;
                             }
 
-                            dispatch(
-                                tranferToAdminApiThunk({
-                                    Amount: totalAmount,
-                                    Note: "Phí đặt lịch gia sư",
-                                })
-                            )
-                                .unwrap()
-                                .then(() => {
-                                    dispatch(
-                                        createClassRequestForStudentApiThunk(
-                                            values
-                                        )
-                                    )
-                                        .unwrap()
-                                        .then((res) => {
-                                            const message = get(
-                                                res,
-                                                "data.message",
-                                                "Gửi thành công"
-                                            );
-                                            toast.success(message);
-                                            navigateHook(routes.student.home);
-                                        })
-                                        .catch((error) => {
-                                            const errorData = get(
-                                                error,
-                                                "data.message",
-                                                "Có lỗi xảy ra"
-                                            );
-                                            toast.error(errorData);
-                                        });
-                                })
-                                .catch((error) => {
-                                    const errorData = get(
-                                        error,
-                                        "data.message",
-                                        "Có lỗi xảy ra"
-                                    );
-                                    toast.error(errorData);
-                                })
-                                .finally(() => {
-                                    setSubmitting(false);
-                                });
+                            setPendingValues(values);
+                            setIsConfirmOpen(true);
                         }}
                     >
                         {({ values, setFieldValue, isSubmitting }) => {
@@ -768,10 +813,10 @@ const ParentRequestFindTutor: FC = () => {
                             useEffect(() => {
                                 if (values.classStartDate && childProfileId) {
                                     const start = formatDateToYMD(
-                                        new Date(values.classStartDate)
+                                        new Date(values.classStartDate),
                                     );
                                     const endDate = new Date(
-                                        values.classStartDate
+                                        values.classStartDate,
                                     );
                                     endDate.setDate(endDate.getDate() + 30);
                                     const end = formatDateToYMD(endDate);
@@ -782,8 +827,8 @@ const ParentRequestFindTutor: FC = () => {
                                                 childProfileId: childProfileId!,
                                                 startDate: start,
                                                 endDate: end,
-                                            }
-                                        )
+                                            },
+                                        ),
                                     );
                                 }
                             }, [
@@ -798,6 +843,7 @@ const ParentRequestFindTutor: FC = () => {
                                     <div className="form-field">
                                         <label className="form-label">
                                             Tài khoản của con
+                                            <span>*</span>
                                         </label>
                                         <div className="form-input-container">
                                             <MdOutlineDriveFileRenameOutline className="form-input-icon" />
@@ -810,19 +856,19 @@ const ParentRequestFindTutor: FC = () => {
                                                         e.target.value;
                                                     setFieldValue(
                                                         "studentUserId",
-                                                        value
+                                                        value,
                                                     );
 
                                                     const selected =
                                                         childAccounts?.find(
                                                             (c) =>
                                                                 c.studentUserId ===
-                                                                value
+                                                                value,
                                                         );
 
                                                     if (selected) {
                                                         setChildProfileId(
-                                                            selected.studentId
+                                                            selected.studentId,
                                                         );
                                                     }
                                                 }}
@@ -851,6 +897,7 @@ const ParentRequestFindTutor: FC = () => {
                                     <div className="form-field">
                                         <label className="form-label">
                                             Cấp bậc học
+                                            <span>*</span>
                                         </label>
                                         <div className="form-input-container">
                                             <MdOutlineDriveFileRenameOutline className="form-input-icon" />
@@ -860,7 +907,7 @@ const ParentRequestFindTutor: FC = () => {
                                                 onChange={(e) =>
                                                     handleLevelChange(
                                                         e.target
-                                                            .value as LevelType
+                                                            .value as LevelType,
                                                     )
                                                 }
                                             >
@@ -884,6 +931,7 @@ const ParentRequestFindTutor: FC = () => {
                                     <div className="form-field">
                                         <label className="form-label">
                                             Môn học
+                                            <span>*</span>
                                         </label>
                                         <div className="form-input-container">
                                             <MdOutlineDriveFileRenameOutline className="form-input-icon" />
@@ -893,11 +941,11 @@ const ParentRequestFindTutor: FC = () => {
                                                 className="form-input"
                                                 onChange={(e: any) => {
                                                     handleSubjectChange(
-                                                        e.target.value
+                                                        e.target.value,
                                                     );
                                                     setFieldValue(
                                                         "subject",
-                                                        e.target.value
+                                                        e.target.value,
                                                     );
                                                 }}
                                             >
@@ -913,7 +961,7 @@ const ParentRequestFindTutor: FC = () => {
                                                             >
                                                                 {subj}
                                                             </option>
-                                                        )
+                                                        ),
                                                     )}
                                             </Field>
                                         </div>
@@ -928,6 +976,7 @@ const ParentRequestFindTutor: FC = () => {
                                     <div className="form-field">
                                         <label className="form-label">
                                             Lớp
+                                            <span>*</span>
                                         </label>
                                         <div className="form-input-container">
                                             <MdOutlineDriveFileRenameOutline className="form-input-icon" />
@@ -960,6 +1009,7 @@ const ParentRequestFindTutor: FC = () => {
                                     <div className="form-field">
                                         <label className="form-label">
                                             Mô tả
+                                            <span>*</span>
                                         </label>
                                         <div className="form-input-container">
                                             <MdDescription className="form-input-icon" />
@@ -1002,6 +1052,7 @@ const ParentRequestFindTutor: FC = () => {
                                     <div className="form-field">
                                         <label className="form-label">
                                             Ngày bắt đầu
+                                            <span>*</span>
                                         </label>
                                         <div className="form-input-container">
                                             <MdDateRange className="form-input-icon" />
@@ -1010,7 +1061,7 @@ const ParentRequestFindTutor: FC = () => {
                                                 value={
                                                     values.classStartDate
                                                         ? new Date(
-                                                              values.classStartDate
+                                                              values.classStartDate,
                                                           )
                                                         : null
                                                 }
@@ -1018,7 +1069,7 @@ const ParentRequestFindTutor: FC = () => {
                                                     setFieldValue(
                                                         "classStartDate",
                                                         date?.toISOString() ||
-                                                            ""
+                                                            "",
                                                     )
                                                 }
                                             />
@@ -1034,6 +1085,7 @@ const ParentRequestFindTutor: FC = () => {
                                     <div className="form-field">
                                         <label className="form-label">
                                             Hình thức học
+                                            <span>*</span>
                                         </label>
                                         <div className="form-input-container">
                                             <MdOutlineCastForEducation className="form-input-icon" />
@@ -1062,6 +1114,7 @@ const ParentRequestFindTutor: FC = () => {
                                         <div className="form-field">
                                             <label className="form-label">
                                                 Địa chỉ
+                                                <span>*</span>
                                             </label>
                                             <div className="form-input-container">
                                                 <MdLocationOn className="form-input-icon" />
@@ -1083,6 +1136,7 @@ const ParentRequestFindTutor: FC = () => {
                                     <div className="form-field">
                                         <label className="form-label">
                                             Học phí 1 tháng
+                                            <span>*</span>
                                         </label>
                                         <div className="form-input-container">
                                             <MdAttachMoney className="form-input-icon" />
@@ -1092,7 +1146,7 @@ const ParentRequestFindTutor: FC = () => {
                                                 value={
                                                     values.budget
                                                         ? values.budget.toLocaleString(
-                                                              "vi-VN"
+                                                              "vi-VN",
                                                           ) + " VND"
                                                         : ""
                                                 }
@@ -1106,19 +1160,48 @@ const ParentRequestFindTutor: FC = () => {
                                         </p>
                                     </div>
 
-                                    {values.classStartDate && (
-                                        <div className="calendar-container">
-                                            <WeekCalendar
-                                                busySchedules={busySchedules}
-                                                onSelectedChange={(schedules) =>
-                                                    setFieldValue(
-                                                        "schedules",
-                                                        schedules
-                                                    )
-                                                }
-                                            />
+                                    {values.classStartDate &&
+                                        values.studentUserId && (
+                                            <div className="calendar-container">
+                                                <WeekCalendar
+                                                    busySchedules={
+                                                        busySchedules
+                                                    }
+                                                    onSelectedChange={(
+                                                        schedules,
+                                                    ) =>
+                                                        setFieldValue(
+                                                            "schedules",
+                                                            schedules,
+                                                        )
+                                                    }
+                                                />
+                                            </div>
+                                        )}
+
+                                    <div className="price-container">
+                                        <div className="price-container-col">
+                                            <h4>Phí tạo đơn</h4>
                                         </div>
-                                    )}
+                                        <div className="price-container-col">
+                                            <p>
+                                                {createRequestFee.toLocaleString()}{" "}
+                                                VNĐ
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="price-container">
+                                        <div className="price-container-col">
+                                            <h4>Tổng cộng</h4>
+                                        </div>
+                                        <div className="price-container-col">
+                                            <p>
+                                                {createRequestFee.toLocaleString() +
+                                                    " VND"}
+                                            </p>
+                                        </div>
+                                    </div>
 
                                     <div className="form-submit">
                                         <button
@@ -1212,6 +1295,23 @@ const ParentRequestFindTutor: FC = () => {
                     </div>
                 </section>
             </Modal>
+            <UpdateBookingTutorForStudentModal
+                isOpen={isUpdateBookingTutorModalOpen}
+                setIsOpen={setIsUpdateBookingTutorModalOpen}
+                selectedBooking={bookingTutor}
+            />
+            <CancelBookingTutorForStudent
+                isOpen={isCancelBookingTutorModalOpen}
+                setIsOpen={setIsCancelBookingTutorModalOpen}
+                requestId={bookingTutor?.id!}
+            />
+            <ConfirmPaymentModal
+                isOpen={isConfirmOpen}
+                totalAmount={createRequestFee}
+                setIsOpen={setIsConfirmOpen}
+                onConfirm={handleConfirmPayment}
+                loading={isConfirmLoading}
+            />
         </div>
     );
 };

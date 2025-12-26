@@ -1,27 +1,55 @@
-import { useEffect, useState, type FC } from "react";
+import { useEffect, useMemo, useState, type FC } from "react";
 import { useAppDispatch, useAppSelector } from "../../../app/store";
 import { selectListRequestFindTutorForTutor } from "../../../app/selector";
 import { getAllRequestFindTutorForTutorApiThunk } from "../../../services/tutor/requestFindTutor/requestFindTutorThunk";
 import { routes } from "../../../routes/routeName";
 import { navigateHook } from "../../../routes/routeApp";
-import { FaArrowCircleDown, FaArrowCircleUp, FaListUl } from "react-icons/fa";
 import { formatDate, useDocumentTitle } from "../../../utils/helper";
+import {
+    FaListUl, // Tất cả
+    FaClock, // Đợi xử lí
+    FaCheckCircle, // Đã ứng tuyển
+    FaTimesCircle, // Đã từ chối
+} from "react-icons/fa";
 
 const ListReuqestFindtutorForTutorPage: FC = () => {
     const dispatch = useAppDispatch();
     const requests = useAppSelector(selectListRequestFindTutorForTutor);
 
+    const totalAll = requests?.length || 0;
+    const totalPending =
+        requests?.filter((r) => r.status === "Pending").length || 0;
+    const totalApplied =
+        requests?.filter((r) => r.status === "Applied").length || 0;
+    const totalRejected =
+        requests?.filter((r) => r.status === "Rejected").length || 0;
+
+    const [tabActive, setTabActive] = useState<
+        "all" | "pending" | "applied" | "rejected"
+    >("all");
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 6;
 
-    // Tổng số trang
-    const totalPages = requests ? Math.ceil(requests.length / itemsPerPage) : 1;
+    const filteredRequests = useMemo(() => {
+        if (!requests) return [];
 
-    // Lấy dữ liệu cho trang hiện tại
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const paginatedData = requests?.slice(
-        startIndex,
-        startIndex + itemsPerPage
+        switch (tabActive) {
+            case "pending":
+                return requests.filter((r) => r.status === "Pending");
+            case "applied":
+                return requests.filter((r) => r.status === "Applied");
+            case "rejected":
+                return requests.filter((r) => r.status === "Rejected");
+            default:
+                return requests;
+        }
+    }, [requests, tabActive]);
+
+    const totalPages = Math.ceil((filteredRequests.length || 0) / itemsPerPage);
+
+    const paginatedData = filteredRequests.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage,
     );
 
     useEffect(() => {
@@ -31,6 +59,11 @@ const ListReuqestFindtutorForTutorPage: FC = () => {
     useEffect(() => {
         dispatch(getAllRequestFindTutorForTutorApiThunk());
     }, [dispatch]);
+
+    const handleChangeTab = (tab: typeof tabActive) => {
+        setTabActive(tab);
+        setCurrentPage(1);
+    };
 
     const handleViewDetail = (id: string) => {
         const url = routes.tutor.request.detail.replace(":id", id);
@@ -49,35 +82,59 @@ const ListReuqestFindtutorForTutorPage: FC = () => {
                     </p>
                 </div>
                 <div className="lrftftscr2">
-                    <div className="lrftftscr2-item active">
+                    <div
+                        className={`lrftftscr2-item ${
+                            tabActive === "all" ? "active" : ""
+                        }`}
+                        onClick={() => handleChangeTab("all")}
+                    >
                         <FaListUl className="lrftftscr2-item-icon" />
                         <div className="amount">
                             <h5>Tất cả</h5>
-                            <p>3 đơn</p>
+                            <p>{totalAll} đơn</p>
                         </div>
                     </div>
-                    <div className="lrftftscr2-item">
-                        <FaArrowCircleUp className="lrftftscr2-item-icon" />
+
+                    <div
+                        className={`lrftftscr2-item ${
+                            tabActive === "pending" ? "active" : ""
+                        }`}
+                        onClick={() => handleChangeTab("pending")}
+                    >
+                        <FaClock className="lrftftscr2-item-icon" />
                         <div className="amount">
-                            <h5>Đợi xữ lí</h5>
-                            <p>2 đơn</p>
+                            <h5>Đợi xử lí</h5>
+                            <p>{totalPending} đơn</p>
                         </div>
                     </div>
-                    <div className="lrftftscr2-item">
-                        <FaArrowCircleUp className="lrftftscr2-item-icon" />
+
+                    <div
+                        className={`lrftftscr2-item ${
+                            tabActive === "applied" ? "active" : ""
+                        }`}
+                        onClick={() => handleChangeTab("applied")}
+                    >
+                        <FaCheckCircle className="lrftftscr2-item-icon" />
                         <div className="amount">
                             <h5>Đã ứng tuyển</h5>
-                            <p>2 đơn</p>
+                            <p>{totalApplied} đơn</p>
                         </div>
                     </div>
-                    <div className="lrftftscr2-item">
-                        <FaArrowCircleDown className="lrftftscr2-item-icon" />
+
+                    <div
+                        className={`lrftftscr2-item ${
+                            tabActive === "rejected" ? "active" : ""
+                        }`}
+                        onClick={() => handleChangeTab("rejected")}
+                    >
+                        <FaTimesCircle className="lrftftscr2-item-icon" />
                         <div className="amount">
                             <h5>Đã từ chối</h5>
-                            <p>1 giao dịch</p>
+                            <p>{totalRejected} đơn</p>
                         </div>
                     </div>
                 </div>
+
                 <div className="lrftftscr4">
                     <table className="table">
                         <thead className="table-head">
@@ -94,32 +151,46 @@ const ListReuqestFindtutorForTutorPage: FC = () => {
                             </tr>
                         </thead>
                         <tbody className="table-body">
-                            {paginatedData?.map((request) => (
-                                <tr className="table-body-row" key={request.id}>
-                                    <td className="table-body-cell">
-                                        {request.studentName}
-                                    </td>
-                                    <td className="table-body-cell">
-                                        {request.subject}
-                                    </td>
-                                    <td className="table-body-cell">
-                                        {request.educationLevel}
-                                    </td>
-                                    <td className="table-body-cell">
-                                        {formatDate(request.createdAt)}
-                                    </td>
-                                    <td className="table-body-cell">
-                                        <button
-                                            className="pr-btn"
-                                            onClick={() =>
-                                                handleViewDetail(request.id)
-                                            }
-                                        >
-                                            Xem chi tiết
-                                        </button>
+                            {paginatedData && paginatedData.length > 0 ? (
+                                paginatedData.map((request) => (
+                                    <tr
+                                        className="table-body-row"
+                                        key={request.id}
+                                    >
+                                        <td className="table-body-cell">
+                                            {request.studentName}
+                                        </td>
+                                        <td className="table-body-cell">
+                                            {request.subject}
+                                        </td>
+                                        <td className="table-body-cell">
+                                            {request.educationLevel}
+                                        </td>
+                                        <td className="table-body-cell">
+                                            {formatDate(request.createdAt)}
+                                        </td>
+                                        <td className="table-body-cell">
+                                            <button
+                                                className="pr-btn"
+                                                onClick={() =>
+                                                    handleViewDetail(request.id)
+                                                }
+                                            >
+                                                Xem chi tiết
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td
+                                        colSpan={5}
+                                        className="table-body-cell no-data"
+                                    >
+                                        Chưa có yêu cầu nào
                                     </td>
                                 </tr>
-                            ))}
+                            )}
                         </tbody>
                     </table>
 

@@ -71,6 +71,11 @@ const WeekCalendarUpdate: React.FC<WeekCalendarUpdateProps> = ({
     const [events, setEvents] = useState<EventType[]>([]);
     const [selectedSlots, setSelectedSlots] = useState<Slot[]>([]);
 
+    const isValidDuration = (start: Date, end: Date) => {
+        const diffMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
+        return diffMinutes >= 60 && diffMinutes <= 120;
+    };
+
     useEffect(() => {
         // Nếu có initialEvents, convert sang Slot và EventType
         if (initialEvents.length > 0) {
@@ -194,6 +199,11 @@ const WeekCalendarUpdate: React.FC<WeekCalendarUpdateProps> = ({
         const startTime = format(start, "HH:mm");
         const endTime = format(end, "HH:mm");
 
+        if (!isValidDuration(start, end)) {
+            toast.error("⏰ Chỉ được chọn khung giờ từ 1 đến 2 tiếng!");
+            return;
+        }
+
         if (checkOverlap(start, end)) {
             toast.error("⛔ Khung giờ bị trùng hoặc bận!");
             return;
@@ -214,6 +224,11 @@ const WeekCalendarUpdate: React.FC<WeekCalendarUpdateProps> = ({
 
     const handleEventDrop = ({ event, start, end }: any) => {
         const dayOfWeek = format(start, "EEEE", { locale: vi });
+
+        if (!isValidDuration(start, end)) {
+            toast.error("⏰ Chỉ được chọn khung giờ từ 1 đến 2 tiếng!");
+            return;
+        }
 
         if (checkOverlap(start, end, event)) {
             toast.error("⛔ Khung giờ bị trùng hoặc bận!");

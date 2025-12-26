@@ -58,3 +58,8 @@ export const completeClassForTutorApi = async (classId: string) => {
     const data = await request.patch(`/classes/${classId}/complete`);
     return data.data;
 };
+
+export const syncLessonStatusForClassApi = async (classId: string) => {
+    const data = await request.post(`/classes/${classId}/sync-lesson-status`);
+    return data.data;
+};

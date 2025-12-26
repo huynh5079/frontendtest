@@ -92,42 +92,61 @@ const StudentManageQuiz: FC<StudentManageQuizProps> = ({ lessonId }) => {
                                 </thead>
 
                                 <tbody className="table-body">
-                                    {paginatedQuizes?.map((quiz) => (
-                                        <tr
-                                            className="table-body-row"
-                                            key={quiz.id}
-                                        >
-                                            <td className="table-body-cell">
-                                                {quiz.title}
-                                            </td>
-                                            <td className="table-body-cell">
-                                                {getQuizTypeText(quiz.quizType)}
-                                            </td>
-                                            <td className="table-body-cell">
-                                                {formatTimeAdd7(quiz.createdAt)}{" "}
-                                                {formatDate(quiz.createdAt)}
-                                            </td>
-                                            <td className="table-body-cell">
-                                                <button
-                                                    className="pr-btn"
-                                                    onClick={() => {
-                                                        handleDoQuiz(quiz.id);
-                                                    }}
-                                                >
-                                                    Làm bài
-                                                </button>
-                                                <button
-                                                    className="sc-btn"
-                                                    onClick={() => {
-                                                        setSection("history");
-                                                        setQuizId(quiz.id);
-                                                    }}
-                                                >
-                                                    Lịch sử làm bài
-                                                </button>
+                                    {paginatedQuizes?.length! > 0 ? (
+                                        paginatedQuizes?.map((quiz) => (
+                                            <tr
+                                                className="table-body-row"
+                                                key={quiz.id}
+                                            >
+                                                <td className="table-body-cell">
+                                                    {quiz.title}
+                                                </td>
+                                                <td className="table-body-cell">
+                                                    {getQuizTypeText(
+                                                        quiz.quizType,
+                                                    )}
+                                                </td>
+                                                <td className="table-body-cell">
+                                                    {formatTimeAdd7(
+                                                        quiz.createdAt,
+                                                    )}{" "}
+                                                    {formatDate(quiz.createdAt)}
+                                                </td>
+                                                <td className="table-body-cell">
+                                                    <button
+                                                        className="pr-btn"
+                                                        onClick={() => {
+                                                            handleDoQuiz(
+                                                                quiz.id,
+                                                            );
+                                                        }}
+                                                    >
+                                                        Làm bài
+                                                    </button>
+                                                    <button
+                                                        className="sc-btn"
+                                                        onClick={() => {
+                                                            setSection(
+                                                                "history",
+                                                            );
+                                                            setQuizId(quiz.id);
+                                                        }}
+                                                    >
+                                                        Lịch sử làm bài
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td
+                                                colSpan={4}
+                                                className="table-body-cell no-data"
+                                            >
+                                                Không có bài tập nào
                                             </td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
 

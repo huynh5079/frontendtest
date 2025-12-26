@@ -5,6 +5,7 @@ import {
     selectMessages,
     selectUserLogin,
     selectOnlineUsers,
+    selectConversations,
 } from "../../app/selector";
 import {
     getMessagesByConversationIdApiThunk,
@@ -14,13 +15,14 @@ import {
     getUnreadCountApiThunk,
     getConversationsApiThunk,
     getOnlineUsersApiThunk,
+    deleteMessageApiThunk,
 } from "../../services/chat/chatThunk";
-import { setCurrentConversation, addMessage } from "../../services/chat/chatSlice";
+import { setCurrentConversation, addMessage, updateConversation } from "../../services/chat/chatSlice";
 import chatConnection from "../../signalR/signalRChat";
 import { toast } from "react-toastify";
 import { formatDate, timeAgo } from "../../utils/helper";
 import type { ConversationDto, MessageDto } from "../../types/chat";
-import { IoClose, IoPaperPlaneOutline, IoSend, IoImageOutline, IoAttachOutline } from "react-icons/io5";
+import { IoClose, IoPaperPlaneOutline, IoSend, IoImageOutline, IoAttachOutline, IoTrashOutline } from "react-icons/io5";
 import { LoadingSpinner } from "../elements";
 
 interface ChatModalProps {
@@ -38,9 +40,27 @@ const ChatModal: FC<ChatModalProps> = ({
 }) => {
     const dispatch = useAppDispatch();
     const currentConversation = useAppSelector(selectCurrentConversation);
-    const messages = useAppSelector(selectMessages);
+    const allMessages = useAppSelector(selectMessages);
     const userLogin = useAppSelector(selectUserLogin);
     const onlineUsers = useAppSelector(selectOnlineUsers);
+    const conversations = useAppSelector(selectConversations);
+
+    // Filter messages by current conversationId
+    const targetConversationId = conversationId || currentConversation?.id;
+    const messages = targetConversationId
+        ? allMessages.filter((msg) => msg.conversationId === targetConversationId)
+        : [];
+
+    // Debug: Log messages for current conversation
+    useEffect(() => {
+        if (isOpen && targetConversationId) {
+            console.log("Current conversationId:", targetConversationId);
+            console.log("All messages count:", allMessages.length);
+            console.log("Filtered messages count:", messages.length);
+            console.log("Filtered messages:", messages);
+            console.log("All messages with conversationIds:", allMessages.map(m => ({ id: m.id, conversationId: m.conversationId })));
+        }
+    }, [isOpen, targetConversationId, allMessages, messages]);
 
     // Check if the other user is online
     const isOtherUserOnline = currentConversation?.otherUserId
@@ -51,6 +71,8 @@ const ChatModal: FC<ChatModalProps> = ({
     const [isSending, setIsSending] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [currentTime, setCurrentTime] = useState(new Date());
+    const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -107,7 +129,11 @@ const ChatModal: FC<ChatModalProps> = ({
                 if (targetUserId) {
                     dispatch(
                         markConversationAsReadApiThunk(targetUserId)
-                    );
+                    ).then(() => {
+                        // Refresh unread count immediately after marking as read
+                        dispatch(getUnreadCountApiThunk());
+                        dispatch(getConversationsApiThunk());
+                    });
                 }
             } catch (error) {
                 console.error("Error loading conversation:", error);
@@ -173,13 +199,39 @@ const ChatModal: FC<ChatModalProps> = ({
 
             // Add message to local state immediately
             if (result?.data) {
+                console.log("Message sent successfully:", result.data);
                 dispatch(addMessage(result.data));
+
+                // Update conversation with new last message immediately
+                const message = result.data;
+                const currentConv = conversations.find((c: ConversationDto) => c.id === targetConversationId) || currentConversation;
+                console.log("Current conversation for update:", currentConv);
+
+                if (currentConv) {
+                    const lastMessageContent = message.content ||
+                        (message.messageType === "Image" ? "Đã gửi một hình ảnh" :
+                            message.messageType === "File" ? "Đã gửi một file" : "");
+
+                    const updatedConv: ConversationDto = {
+                        ...currentConv,
+                        lastMessageContent: lastMessageContent,
+                        lastMessageAt: message.createdAt || new Date().toISOString(),
+                        lastMessageType: message.messageType,
+                    };
+
+                    console.log("Updating conversation:", updatedConv);
+                    dispatch(updateConversation(updatedConv));
+                }
             }
 
-            // Refresh conversations and unread count
-            dispatch(getConversationsApiThunk());
-            dispatch(getUnreadCountApiThunk());
+            // Refresh conversations and unread count (delay to avoid overwriting local update)
+            setTimeout(() => {
+                dispatch(getConversationsApiThunk());
+                dispatch(getUnreadCountApiThunk());
+            }, 500);
 
+            // Don't reload messages immediately - the message is already added via addMessage
+            // SignalR will handle receiving the message from server
             setMessageInput("");
         } catch (error: any) {
             toast.error(error?.errorMessage || "Gửi tin nhắn thất bại");
@@ -192,6 +244,34 @@ const ChatModal: FC<ChatModalProps> = ({
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             handleSendMessage();
+        }
+    };
+
+    const handleDeleteMessage = async (messageId: string, deleteForEveryone: boolean = false) => {
+        if (isDeleting) return;
+
+        setIsDeleting(true);
+        try {
+            await dispatch(
+                deleteMessageApiThunk({
+                    messageId,
+                    dto: { deleteForEveryone },
+                })
+            ).unwrap();
+
+            // Refresh messages after deletion
+            const targetConversationId = conversationId || currentConversation?.id;
+            if (targetConversationId) {
+                await dispatch(getMessagesByConversationIdApiThunk({ conversationId: targetConversationId }));
+            }
+
+            dispatch(getConversationsApiThunk());
+            toast.success(deleteForEveryone ? "Đã xóa tin nhắn cho mọi người" : "Đã xóa tin nhắn");
+        } catch (error: any) {
+            toast.error(error?.errorMessage || "Xóa tin nhắn thất bại");
+        } finally {
+            setIsDeleting(false);
+            setHoveredMessageId(null);
         }
     };
 
@@ -410,7 +490,10 @@ const ChatModal: FC<ChatModalProps> = ({
                                                     ? "flex-end"
                                                     : "flex-start",
                                                 marginBottom: "12px",
+                                                position: "relative",
                                             }}
+                                            onMouseEnter={() => isOwnMessage && setHoveredMessageId(message.id)}
+                                            onMouseLeave={() => setHoveredMessageId(null)}
                                         >
                                             {!isOwnMessage && (
                                                 <img
@@ -433,8 +516,39 @@ const ChatModal: FC<ChatModalProps> = ({
                                                     maxWidth: "70%",
                                                     display: "flex",
                                                     flexDirection: "column",
+                                                    position: "relative",
                                                 }}
                                             >
+                                                {isOwnMessage && hoveredMessageId === message.id && message.status !== "Deleted" && (
+                                                    <button
+                                                        onClick={() => {
+                                                            if (window.confirm("Bạn có muốn xóa tin nhắn này cho mọi người không?")) {
+                                                                handleDeleteMessage(message.id, true);
+                                                            }
+                                                        }}
+                                                        disabled={isDeleting}
+                                                        style={{
+                                                            position: "absolute",
+                                                            top: "-8px",
+                                                            right: "-30px",
+                                                            background: "#ff4444",
+                                                            border: "none",
+                                                            borderRadius: "50%",
+                                                            width: "24px",
+                                                            height: "24px",
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "center",
+                                                            cursor: "pointer",
+                                                            color: "white",
+                                                            fontSize: "12px",
+                                                            zIndex: 10,
+                                                        }}
+                                                        title="Xóa tin nhắn"
+                                                    >
+                                                        <IoTrashOutline />
+                                                    </button>
+                                                )}
                                                 {!isOwnMessage && (
                                                     <div
                                                         style={{

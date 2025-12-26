@@ -78,6 +78,11 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
         onSelectedChange?.(formatted);
     }, [selectedSlots]);
 
+    const isValidDuration = (start: Date, end: Date) => {
+        const diffMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
+        return diffMinutes >= 60 && diffMinutes <= 120;
+    };
+
     // 🔹 Map thứ sang index trong tuần (0 = Chủ nhật, 1 = Thứ 2, ...)
     const dayMap: Record<string, number> = {
         Sunday: 0,
@@ -149,62 +154,69 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
     const handleSelectSlot = (slotInfo: any) => {
         const start = slotInfo.start as Date;
         const end = slotInfo.end as Date;
-        const dayOfWeek = format(start, "EEEE", { locale: vi });
-        const startTime = format(start, "HH:mm");
-        const endTime = format(end, "HH:mm");
+
+        if (!isValidDuration(start, end)) {
+            toast.error("⏰ Chỉ được chọn khung giờ từ 1 đến 2 tiếng!");
+            return;
+        }
 
         if (checkOverlap(start, end)) {
             toast.error("⛔ Khung giờ bị trùng hoặc bận!");
             return;
         }
 
+        const dayOfWeek = format(start, "EEEE", { locale: vi });
+
         const newSlot: Slot = {
             day: dayOfWeek,
-            start: startTime,
-            end: endTime,
+            start: format(start, "HH:mm"),
+            end: format(end, "HH:mm"),
             startDate: start,
             endDate: end,
         };
-        const newEvent: EventType = { title: "", start, end, allDay: false };
+
+        const newEvent: EventType = {
+            title: "",
+            start,
+            end,
+            allDay: false,
+        };
 
         setSelectedSlots((prev) => [...prev, newSlot]);
         setEvents((prev) => [...prev, newEvent]);
     };
 
     const handleEventDrop = ({ event, start, end }: any) => {
-        const dayOfWeek = format(start, "EEEE", { locale: vi });
+        if (!isValidDuration(start, end)) {
+            toast.error("⏰ Khung giờ phải từ 1 đến 2 tiếng!");
+            return;
+        }
 
         if (checkOverlap(start, end, event)) {
             toast.error("⛔ Khung giờ bị trùng hoặc bận!");
             return;
         }
 
-        const updatedEvents = events.map((e) =>
-            e === event
-                ? {
-                      ...e,
-                      start,
-                      end,
-                      title: ``,
-                  }
-                : e
+        const dayOfWeek = format(start, "EEEE", { locale: vi });
+
+        setEvents((prev) =>
+            prev.map((e) => (e === event ? { ...e, start, end } : e))
         );
 
-        const updatedSlots = selectedSlots.map((slot) =>
-            slot.startDate.getTime() === event.start.getTime()
-                ? {
-                      ...slot,
-                      day: dayOfWeek,
-                      start: format(start, "HH:mm"),
-                      end: format(end, "HH:mm"),
-                      startDate: start,
-                      endDate: end,
-                  }
-                : slot
+        setSelectedSlots((prev) =>
+            prev.map((slot) =>
+                slot.startDate.getTime() === event.start.getTime()
+                    ? {
+                          ...slot,
+                          day: dayOfWeek,
+                          start: format(start, "HH:mm"),
+                          end: format(end, "HH:mm"),
+                          startDate: start,
+                          endDate: end,
+                      }
+                    : slot
+            )
         );
-
-        setEvents(updatedEvents);
-        setSelectedSlots(updatedSlots);
     };
 
     // 🔹 Resize event
@@ -220,27 +232,16 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
         setSelectedSlots(updatedSlots);
     };
 
-    // 🔹 Xoá tất cả
-    const handleClearAll = () => {
-        setEvents([]);
-        setSelectedSlots([]);
-    };
-
     return (
         <div className="week-calendar">
             {selectedSlots.length > 0 && (
                 <>
                     {" "}
-                    <button
-                        onClick={handleClearAll}
-                        className="delete-btn delete-all"
-                    >
-                        {" "}
-                        Xoá tất cả{" "}
-                    </button>{" "}
                     <div className="list-event">
                         {" "}
-                        <h6>Danh sách khung giờ</h6>{" "}
+                        <h6 style={{ textAlign: "center" }}>
+                            Danh sách khung giờ
+                        </h6>{" "}
                         {selectedSlots.map((slot, index) => (
                             <div key={index} className="event-item">
                                 {" "}

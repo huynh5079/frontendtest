@@ -46,18 +46,20 @@ const TutorCancelClassModal: FC<TutorCancelClassModalProps> = ({
 
     return (
         <Modal isOpen={isOpen} setIsOpen={setIsOpen} title="Hủy lớp học">
-            <section id="tutor-cancel-class-modal">
-                <div className="tccm-container">
-                    <p className="tccm-warning">
+            <section id="student-assign-class-modal">
+                <div className="sacm-container">
+                    <h3 className="tccm-warning">
                         Bạn có chắc chắn muốn hủy lớp học này không?
-                    </p>
+                    </h3>
                     <p className="tccm-note">
                         Lưu ý: Khi hủy lớp học, tiền cọc sẽ bị mất và tiền học phí sẽ được hoàn lại cho học sinh.
                     </p>
 
-                    <div className="form-field">
+                    <div className="form">
+                        <div className="form-field">
                         <label className="form-label">Lý do hủy (tùy chọn)</label>
-                        <textarea
+                        <div className="form-input-container">
+                            <textarea
                             className="form-input"
                             value={reason}
                             onChange={(e) => setReason(e.target.value)}
@@ -65,6 +67,8 @@ const TutorCancelClassModal: FC<TutorCancelClassModalProps> = ({
                             rows={3}
                             disabled={isSubmitting}
                         />
+                        </div>
+                    </div>
                     </div>
 
                     <div className="group-btn">

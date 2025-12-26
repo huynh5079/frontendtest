@@ -4,6 +4,9 @@
 //about
 @use "./about/about.scss";
 
+//contact
+@use "./contact/contact.scss";
+
 //landing
 @use "./landing/landing.scss";
 //landing_banner
@@ -102,6 +105,10 @@
 @use "./tutor/manage/schedule/tutor_lesson_detail.scss";
 //tutor_quiz
 @use "./tutor/manage/schedule/tutor_quiz.scss";
+//tutor_list_reschedule
+@use "./tutor/manage/reschedule/tutor_list_reschedule.scss";
+//tutor_detail_reschedule
+@use "./tutor/manage/reschedule/tutor_detail_reschedule.scss";
 
 //card
 //tutor_card
@@ -175,6 +182,10 @@
 @use "./student/information/student_result_quiz.scss";
 //student_history_submit_quiz
 @use "./student/information/student_history_submit_quiz.scss";
+//student_reschedule
+@use "./student/information/student_reschedule.scss";
+//student_favorite_tutor
+@use "./student/information/student_favorite_tutor.scss";
 
 //parent
 @use "./parent/parent.scss";
@@ -216,6 +227,12 @@
 @use "./parent/information/parent_request_find_tutor.scss";
 //parent_leson_detail
 @use "./parent/information/parent_leson_detail.scss";
+//parent_favorite_tutor
+@use "./parent/information/parent_favorite_tutor.scss";
+//parent_child_class
+@use "./parent/information/parent_child_class.scss";
+//parent_booking_tutor
+@use "./parent/information/parent_booking_tutor.scss";
 
 //admin
 @use "./admin/admin.scss";
@@ -238,10 +255,14 @@
 @use "./admin/user/tutor/admin_detail_tutor.scss";
 //manage/class
 @use "./admin/manage/class/admin_list_class.scss";
+@use "./admin/manage/class/admin_detail_class.scss";
 //manage/notification
 @use "./admin/manage/notification/admin_list_notification.scss";
 //manage/report
 @use "./admin/manage/report/admin_list_report.scss";
+//commission
+@use "./admin/commission/admin_commission.scss";
+@use "./admin/commission/admin_commission_history.scss";
 //transaction/tutor
 @use "./admin/transaction/tutor/admin_list_tutor_transaction.scss";
 //transaction/student
@@ -267,7 +288,24 @@
 @use "./modal/admin_cancel_student_enrollment_modal.scss";
 //admin_cancel_class_modal
 @use "./modal/admin_cancel_class_modal.scss";
+//admin_ban_unban_user_modal
+@use "./modal/admin_ban_unban_user_modal.scss";
 //tutor_accept_booking
 @use "./modal/tutor_accept_booking.scss";
 //detail_notification_modal
 @use "./modal/detail_notification_modal.scss";
+//create_reschedule_modal
+@use "./modal/create_reschedule_modal.scss";
+//update_question_modal
+@use "./modal/update_question_modal.scss";
+//confirm_payment_modal
+@use "./modal/confirm_payment_modal.scss";
+//tutor_policy_modal
+@use "./modal/tutor_policy_modal.scss";
+//tutor_accept_request_modal
+@use "./modal/tutor_accept_request_modal.scss";
+
+//chat
+@use "./chat/chat.scss";
+//student_report_material_modal
+@use "./modal/student_report_material_modal.scss";

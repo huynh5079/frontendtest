@@ -61,6 +61,9 @@ const VerifyOtpTutorPage: FC = () => {
                         formData.append("TeachingSubjects", subject),
                     );
                     break;
+                case "acceptPolicy":
+                    formData.append("AcceptPolicy", value ? "true" : "false");
+                    break;
                 default:
                     // Map key sang tên backend nếu cần
                     const apiKeyMap: Record<string, string> = {
@@ -77,6 +80,7 @@ const VerifyOtpTutorPage: FC = () => {
                         experienceDetails: "ExperienceDetails",
                         teachingLevel: "TeachingLevel",
                         specialSkills: "SpecialSkills",
+                        acceptPolicy: "AcceptPolicy",
                     };
                     formData.append(apiKeyMap[key] ?? key, value as any);
                     break;

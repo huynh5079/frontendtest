@@ -1,4 +1,4 @@
-import { useEffect, type FC } from "react";
+import { useEffect, useState, type FC } from "react";
 import { FaArrowLeft, FaArrowRight, FaListUl } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../app/store";
@@ -6,18 +6,37 @@ import { selectListTutorsForAdmin } from "../../../../app/selector";
 import { getAllTutorForAdminApiThunk } from "../../../../services/admin/tutor/adminTutorThunk";
 import { formatDate, useDocumentTitle } from "../../../../utils/helper";
 import { routes } from "../../../../routes/routeName";
-import { navigateHook } from "../../../../routes/routeApp";
+import { AdminBanUnbanUserModal } from "../../../../components/modal";
 
 const AdminListTutorPage: FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const tutors = useAppSelector(selectListTutorsForAdmin);
+    const [banModalOpen, setBanModalOpen] = useState(false);
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+    const [selectedUsername, setSelectedUsername] = useState<string>("");
+    const [selectedIsBanned, setSelectedIsBanned] = useState<boolean>(false);
+    const [filterType, setFilterType] = useState<"all" | "approved" | "pending">("all");
 
     const handleToDetail = (tutorId: string) => {
         const url = routes.admin.tutor.detail.replace(":id", tutorId);
-        return navigateHook(url)
+        navigate(url);
     }
+
+    const handleBanUnban = (tutorId: string, username: string, isBanned: boolean) => {
+        setSelectedUserId(tutorId);
+        setSelectedUsername(username);
+        setSelectedIsBanned(isBanned);
+        setBanModalOpen(true);
+    };
+
+    const handleRefresh = () => {
+        const query = new URLSearchParams(location.search);
+        const pageParam = query.get("page");
+        const pageNumber = Number(pageParam) || 1;
+        dispatch(getAllTutorForAdminApiThunk(pageNumber));
+    };
 
     // Lấy giá trị page từ URL
     const query = new URLSearchParams(location.search);
@@ -39,6 +58,25 @@ const AdminListTutorPage: FC = () => {
 
     useDocumentTitle("Danh sách gia sư");
 
+    // Filter tutors based on filterType
+    const filteredTutors = tutors?.filter((tutor) => {
+        if (filterType === "all") return true;
+        if (filterType === "approved") {
+            // Đã phê duyệt: status là "Approved" hoặc "Active"
+            return tutor.status === "Approved" || tutor.status === "Active";
+        }
+        if (filterType === "pending") {
+            // Chờ phê duyệt: status là "PendingApproval"
+            return tutor.status === "PendingApproval";
+        }
+        return true;
+    }) || [];
+
+    // Calculate counts
+    const allCount = tutors?.length || 0;
+    const approvedCount = tutors?.filter((t) => t.status === "Approved" || t.status === "Active").length || 0;
+    const pendingCount = tutors?.filter((t) => t.status === "PendingApproval").length || 0;
+
     return (
         <section id="admin-list-tutor-section">
             <div className="alts-container">
@@ -49,25 +87,34 @@ const AdminListTutorPage: FC = () => {
                     </p>
                 </div>
                 <div className="altscr2">
-                    <div className="altscr2-item active">
+                    <div
+                        className={`altscr2-item ${filterType === "all" ? "active" : ""}`}
+                        onClick={() => setFilterType("all")}
+                    >
                         <FaListUl className="altscr2-item-icon" />
                         <div className="amount">
                             <h5>Tất cả</h5>
-                            <p>3 gia sư</p>
+                            <p>{allCount} gia sư</p>
                         </div>
                     </div>
-                    <div className="altscr2-item">
+                    <div
+                        className={`altscr2-item ${filterType === "approved" ? "active" : ""}`}
+                        onClick={() => setFilterType("approved")}
+                    >
                         <FaListUl className="altscr2-item-icon" />
                         <div className="amount">
                             <h5>Đã phê duyệt</h5>
-                            <p>2 gia sư</p>
+                            <p>{approvedCount} gia sư</p>
                         </div>
                     </div>
-                    <div className="altscr2-item">
+                    <div
+                        className={`altscr2-item ${filterType === "pending" ? "active" : ""}`}
+                        onClick={() => setFilterType("pending")}
+                    >
                         <FaListUl className="altscr2-item-icon" />
                         <div className="amount">
                             <h5>Chờ phê duyệt</h5>
-                            <p>1 gia sư</p>
+                            <p>{pendingCount} gia sư</p>
                         </div>
                     </div>
                 </div>
@@ -85,7 +132,8 @@ const AdminListTutorPage: FC = () => {
                             </tr>
                         </thead>
                         <tbody className="table-body">
-                            {tutors?.map((tutor, index) => (
+                            {filteredTutors.length > 0 ? (
+                                filteredTutors.map((tutor, index) => (
                                 <tr className="table-body-row" key={index}>
                                     <td className="table-body-cell">
                                         {tutor.username}
@@ -108,15 +156,36 @@ const AdminListTutorPage: FC = () => {
                                         {formatDate(tutor.createDate)}
                                     </td>
                                     <td className="table-body-cell">
-                                        <button
-                                            className="pr-btn"
-                                            onClick={() => handleToDetail(tutor.tutorId)}
-                                        >
-                                            Xem chi tiết
-                                        </button>
+                                        <div style={{ display: "flex", gap: "8px" }}>
+                                            <button
+                                                className="pr-btn"
+                                                onClick={() => handleToDetail(tutor.tutorId)}
+                                            >
+                                                Xem chi tiết
+                                            </button>
+                                            <button
+                                                className={tutor.isBanned ? "sc-btn" : "delete-btn"}
+                                                onClick={() =>
+                                                    handleBanUnban(
+                                                        tutor.tutorId,
+                                                        tutor.username,
+                                                        tutor.isBanned || false
+                                                    )
+                                                }
+                                            >
+                                                {tutor.isBanned ? "Mở khóa" : "Khóa"}
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
-                            ))}
+                                ))
+                            ) : (
+                                <tr className="table-body-row">
+                                    <td colSpan={5} className="table-body-cell" style={{ textAlign: "center", padding: "2rem" }}>
+                                        Chưa có gia sư nào
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -130,6 +199,21 @@ const AdminListTutorPage: FC = () => {
                     </div>
                 </div>
             </div>
+            <AdminBanUnbanUserModal
+                isOpen={banModalOpen}
+                setIsOpen={(open) => {
+                    setBanModalOpen(open);
+                    if (!open) {
+                        setSelectedUserId(null);
+                        setSelectedUsername("");
+                        setSelectedIsBanned(false);
+                    }
+                }}
+                userId={selectedUserId || ""}
+                username={selectedUsername}
+                isBanned={selectedIsBanned}
+                onSuccess={handleRefresh}
+            />
         </section>
     );
 };

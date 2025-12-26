@@ -13,7 +13,7 @@ export type RegisterStudent = {
     email: string;
     username: string;
     password: string;
-    birthday: Date | null;
+    dateOfBirth: Date | null;
 };
 
 export type RegisterParent = {
@@ -41,6 +41,7 @@ export type RegisterTutor = {
     specialSkills: string;
     certificatesFiles: File[];
     identityDocuments: File[];
+    acceptPolicy: boolean;
 };
 
 export type ForgotPassword = {

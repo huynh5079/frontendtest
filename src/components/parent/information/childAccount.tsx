@@ -6,11 +6,15 @@ import {
     FaMapMarkerAlt,
     FaUserFriends,
     FaPhoneAlt,
+    FaLink,
+    FaEdit,
+    FaTrash,
+    FaVenusMars,
 } from "react-icons/fa";
-import type { CreateChildAccountParams } from "../../../types/parent";
+import { CiCalendarDate } from "react-icons/ci";
 import * as Yup from "yup";
 import { Formik, Form, Field, ErrorMessage, type FormikHelpers } from "formik";
-import { LoadingSpinner, MultiSelect } from "../../elements";
+import { DatePickerElement, LoadingSpinner, MultiSelect } from "../../elements";
 import type { OptionMultiSelectData } from "../../../types/app";
 import {
     selectDetailChildAccount,
@@ -23,7 +27,15 @@ import {
     createChildAccountApiThunk,
     getAllChildAccountApiThunk,
     getDetailChildAccountApiThunk,
+    linkChildAccountApiThunk,
+    updateChildAccountApiThunk,
+    unlinkChildAccountApiThunk,
 } from "../../../services/parent/childAccount/childAccountThunk";
+import type {
+    CreateChildAccountParams,
+    LinkExistingChildRequest,
+    UpdateChildRequest,
+} from "../../../types/parent";
 import { toast } from "react-toastify";
 import { get } from "lodash";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -100,7 +112,7 @@ const ParentChildAccount: FC = () => {
     const totalPages = Math.ceil((childAccounts?.length || 0) / ITEMS_PER_PAGE);
     const paginatedItems = childAccounts?.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
-        currentPage * ITEMS_PER_PAGE
+        currentPage * ITEMS_PER_PAGE,
     );
 
     const handlePrevPage = () => {
@@ -120,54 +132,182 @@ const ParentChildAccount: FC = () => {
         preferredSubjects: "",
         relationship: "",
         initialPassword: "",
+        gender: "Nam",
+        dateOfBirth: "",
     };
 
     const validationSchema = Yup.object({
         username: Yup.string().required("Vui lòng nhập họ và tên"),
         email: Yup.string().email("Email không hợp lệ"),
         educationLevelId: Yup.string().required(
-            "Vui lòng chọn trình độ học vấn"
+            "Vui lòng chọn trình độ học vấn",
         ),
         preferredSubjects: Yup.string().required(
-            "Vui lòng nhập môn học yêu thích"
+            "Vui lòng nhập môn học yêu thích",
         ),
         relationship: Yup.string().required("Vui lòng nhập mối quan hệ"),
         initialPassword: Yup.string()
             .min(8, "Mật khẩu tối thiểu 8 ký tự")
             .required("Vui lòng nhập mật khẩu"),
+        gender: Yup.string().required("Vui lòng chọn giới tính"),
+        dateOfBirth: Yup.string().required("Vui lòng chọn ngày sinh"),
     });
 
     const handleSubmit = async (
         values: CreateChildAccountParams,
-        helpers: FormikHelpers<CreateChildAccountParams>
+        helpers: FormikHelpers<CreateChildAccountParams>,
     ) => {
         await dispatch(createChildAccountApiThunk(values))
             .unwrap()
-            .then((res) => {
-                const message = get(res, "message", "Tạo tài khoản thành công");
-                toast.success(message);
+            .then(() => {
+                toast.success("Tạo tài khoản thành công");
+                dispatch(getAllChildAccountApiThunk());
+                helpers.resetForm();
+                setIsStep(1);
             })
             .catch((error) => {
-                const errorData = get(error, "message", "Có lỗi xảy ra");
-                toast.error(errorData);
+                toast.error(get(error, "message", "Có lỗi xảy ra"));
             })
             .finally(() => {
                 helpers.setSubmitting(false);
-                helpers.resetForm();
-                setIsStep(1);
             });
+    };
+
+    // --- LINK ACCOUNT LOGIC ---
+    const initialValuesLink: LinkExistingChildRequest = {
+        studentEmail: "",
+        relationship: "",
+    };
+
+    const validationSchemaLink = Yup.object({
+        studentEmail: Yup.string()
+            .email("Email không hợp lệ")
+            .required("Vui lòng nhập email"),
+        relationship: Yup.string().required("Vui lòng nhập mối quan hệ"),
+    });
+
+    const handleLinkSubmit = async (
+        values: LinkExistingChildRequest,
+        helpers: FormikHelpers<LinkExistingChildRequest>,
+    ) => {
+        await dispatch(linkChildAccountApiThunk(values))
+            .unwrap()
+            .then(() => {
+                toast.success("Liên kết tài khoản thành công");
+                dispatch(getAllChildAccountApiThunk()); // Refresh list
+                setIsStep(1);
+            })
+            .catch((error) => {
+                toast.error(get(error, "message", "Có lỗi xảy ra"));
+            })
+            .finally(() => {
+                helpers.setSubmitting(false);
+            });
+    };
+
+    // --- UPDATE ACCOUNT LOGIC ---
+    // State to hold data for the child being updated
+    const [updatingChild, setUpdatingChild] = useState<UpdateChildRequest>({});
+
+    const initialValuesUpdate: UpdateChildRequest = {
+        username: updatingChild.username || "",
+        phone: updatingChild.phone || "",
+        address: updatingChild.address || "",
+        educationLevel: updatingChild.educationLevel || "",
+        preferredSubjects: updatingChild.preferredSubjects || "",
+        gender: updatingChild.gender || "Nam",
+        dateOfBirth: updatingChild.dateOfBirth || "",
+    };
+
+    const validationSchemaUpdate = Yup.object({
+        username: Yup.string().required("Vui lòng nhập họ và tên"),
+        // Phone/Address optional but if entered should be valid if needed
+        educationLevel: Yup.string().required("Vui lòng chọn trình độ"),
+        preferredSubjects: Yup.string().required("Vui lòng nhập môn học"),
+    });
+
+    const handleUpdateSubmit = async (
+        values: UpdateChildRequest,
+        helpers: FormikHelpers<UpdateChildRequest>,
+    ) => {
+        if (!id) return;
+        await dispatch(
+            updateChildAccountApiThunk({ studentId: id, params: values }),
+        )
+            .unwrap()
+            .then((res) => {
+                toast.success(get(res, "message", "Cập nhật thành công"));
+                dispatch(getDetailChildAccountApiThunk(id)); // Refresh detail
+                setIsStep(1); // Go back to detail view
+            })
+            .catch((error) => {
+                toast.error(get(error, "message", "Có lỗi xảy ra"));
+            })
+            .finally(() => {
+                helpers.setSubmitting(false);
+            });
+    };
+
+    // --- UNLINK LOGIC ---
+    const handleUnlink = async () => {
+        if (!id) return;
+        if (
+            window.confirm(
+                "Bạn có chắc chắn muốn gỡ liên kết với tài khoản này không? Hành động này không thể hoàn tác.",
+            )
+        ) {
+            await dispatch(unlinkChildAccountApiThunk(id))
+                .unwrap()
+                .then((res) => {
+                    toast.success(
+                        get(res, "message", "Gỡ liên kết thành công"),
+                    );
+                    navigate(`/parent/information?tab=child-account`); // Go back to list
+                    dispatch(getAllChildAccountApiThunk());
+                })
+                .catch((error) => {
+                    toast.error(get(error, "message", "Có lỗi xảy ra"));
+                });
+        }
+    };
+
+    // Helper to start Update: pre-fill data
+    const handleStartUpdate = () => {
+        if (!childAccount) return;
+        setUpdatingChild({
+            username: childAccount.username,
+            phone: childAccount.phone,
+            address: childAccount.address,
+            educationLevel: childAccount.educationLevel || "",
+            preferredSubjects: childAccount.preferredSubjects,
+            gender: childAccount.gender || "Nam",
+            dateOfBirth: childAccount.dateOfBirth || "",
+        });
+        // Select logic for education level to filter subjects map
+        // (Re-using handleLevelChange logic might be tricky without event,
+        //  so we manually trigger subject filter if needed, or just let user pick)
+        if (childAccount.educationLevel) {
+            const allowedSubjects =
+                levelSubjectsMap[childAccount.educationLevel] || [];
+            const newFiltered = subjectsOptions.filter((s) =>
+                allowedSubjects.includes(s.value),
+            );
+            setFilteredSubjects(newFiltered);
+        }
+        setIsStep(4);
     };
 
     const handleLevelChange = (
         e: React.ChangeEvent<HTMLSelectElement>,
-        setFieldValue: any
+        setFieldValue: any,
+        fieldName: string = "educationLevelId",
     ) => {
         const selectedLevel = e.target.value;
-        setFieldValue("educationLevelId", selectedLevel);
+        setFieldValue(fieldName, selectedLevel);
 
         const allowedSubjects = levelSubjectsMap[selectedLevel] || [];
         const newFiltered = subjectsOptions.filter((s) =>
-            allowedSubjects.includes(s.value)
+            allowedSubjects.includes(s.value),
         );
         setFilteredSubjects(newFiltered);
     };
@@ -186,12 +326,20 @@ const ParentChildAccount: FC = () => {
                         >
                             <div className="pcas1r1">
                                 <h3>Danh sách tài khoản của con</h3>
-                                <button
-                                    className="pr-btn"
-                                    onClick={handleNextStep}
-                                >
-                                    Tạo tài khoản
-                                </button>
+                                <div style={{ display: "flex", gap: "10px" }}>
+                                    <button
+                                        className="pr-btn"
+                                        onClick={() => setIsStep(2)}
+                                    >
+                                        Tạo tài khoản
+                                    </button>
+                                    <button
+                                        className="pr-btn"
+                                        onClick={() => setIsStep(3)}
+                                    >
+                                        Liên kết tài khoản
+                                    </button>
+                                </div>
                             </div>
                             <div className="pcas1r2">
                                 <table className="table">
@@ -209,28 +357,51 @@ const ParentChildAccount: FC = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="table-body">
-                                        {paginatedItems?.map((childAccount) => (
-                                            <tr key={childAccount.studentId}>
-                                                <td className="table-body-cell">
-                                                    {childAccount.username}
-                                                </td>
-                                                <td className="table-body-cell">
-                                                    {childAccount.email}
-                                                </td>
-                                                <td className="table-body-cell">
-                                                    <button
-                                                        onClick={() =>
-                                                            handleViewDetail(
-                                                                childAccount.studentId
-                                                            )
-                                                        }
-                                                        className="pr-btn"
-                                                    >
-                                                        Chi tiết
-                                                    </button>
+                                        {paginatedItems?.length === 0 ? (
+                                            <tr>
+                                                <td
+                                                    colSpan={3}
+                                                    className="table-body-cell no-data"
+                                                >
+                                                    Không có tài khoản con
                                                 </td>
                                             </tr>
-                                        ))}
+                                        ) : (
+                                            <>
+                                                {paginatedItems?.map(
+                                                    (childAccount) => (
+                                                        <tr
+                                                            key={
+                                                                childAccount.studentId
+                                                            }
+                                                        >
+                                                            <td className="table-body-cell">
+                                                                {
+                                                                    childAccount.username
+                                                                }
+                                                            </td>
+                                                            <td className="table-body-cell">
+                                                                {
+                                                                    childAccount.email
+                                                                }
+                                                            </td>
+                                                            <td className="table-body-cell">
+                                                                <button
+                                                                    onClick={() =>
+                                                                        handleViewDetail(
+                                                                            childAccount.studentId,
+                                                                        )
+                                                                    }
+                                                                    className="pr-btn"
+                                                                >
+                                                                    Chi tiết
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ),
+                                                )}
+                                            </>
+                                        )}
                                     </tbody>
                                 </table>
 
@@ -267,9 +438,36 @@ const ParentChildAccount: FC = () => {
                         >
                             <div className="pcas1r1">
                                 <h3>Chi tiết tài khoản của con</h3>
-                                <button className="pr-btn" onClick={handleBack}>
-                                    Quay lại
-                                </button>
+                                <div style={{ display: "flex", gap: "10px" }}>
+                                    <button
+                                        className="pr-btn"
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "5px",
+                                        }}
+                                        onClick={handleStartUpdate}
+                                    >
+                                        <FaEdit /> Cập nhật
+                                    </button>
+                                    <button
+                                        className="pr-btn"
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "5px",
+                                        }}
+                                        onClick={handleUnlink}
+                                    >
+                                        <FaTrash /> Gỡ liên kết
+                                    </button>
+                                    <button
+                                        className="pr-btn"
+                                        onClick={handleBack}
+                                    >
+                                        Quay lại
+                                    </button>
+                                </div>
                             </div>
                             <div className="pcas1r2 pcas1r2-detail">
                                 <div className="pcas1r2dr1">
@@ -298,8 +496,13 @@ const ParentChildAccount: FC = () => {
                                             <div className="detail-item">
                                                 <h4>Giới tính:</h4>
                                                 <p>
-                                                    {childAccount?.gender ||
-                                                        "Chưa cập nhật"}
+                                                    {childAccount?.gender ===
+                                                    "male"
+                                                        ? "Nam"
+                                                        : childAccount?.gender ===
+                                                          "female"
+                                                        ? "Nữ"
+                                                        : "Chưa cập nhật"}
                                                 </p>
                                             </div>
                                             <div className="detail-item">
@@ -346,7 +549,7 @@ const ParentChildAccount: FC = () => {
                         validationSchema={validationSchema}
                         onSubmit={handleSubmit}
                     >
-                        {({ isSubmitting, setFieldValue }) => (
+                        {({ isSubmitting, setFieldValue, values }) => (
                             <Form className="form">
                                 {/* Họ và tên */}
                                 <div className="form-field">
@@ -501,7 +704,7 @@ const ParentChildAccount: FC = () => {
                                             onChange={(e: any) =>
                                                 handleLevelChange(
                                                     e,
-                                                    setFieldValue
+                                                    setFieldValue,
                                                 )
                                             }
                                         >
@@ -537,8 +740,316 @@ const ParentChildAccount: FC = () => {
                                                 "preferredSubjects",
                                                 selected
                                                     .map((s) => s.value)
-                                                    .join(", ")
+                                                    .join(", "),
                                             )
+                                        }
+                                    />
+                                    <ErrorMessage
+                                        name="preferredSubjects"
+                                        component="div"
+                                        className="text-error"
+                                    />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    className="pr-btn"
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? (
+                                        <LoadingSpinner />
+                                    ) : (
+                                        "Tạo tài khoản"
+                                    )}
+                                </button>
+                            </Form>
+                        )}
+                    </Formik>
+                </div>
+            )}
+
+            {isStep === 3 && (
+                <div
+                    className={`pca-step-2 step ${
+                        isStep === 3 ? "step-active" : "step-hidden"
+                    }`}
+                >
+                    <button className="sc-btn" onClick={() => setIsStep(1)}>
+                        Quay lại
+                    </button>
+                    <div style={{ marginTop: "20px" }}>
+                        <h3>Liên kết tài khoản con có sẵn</h3>
+                        <p style={{ marginBottom: "20px", color: "#666" }}>
+                            Nhập email của tài khoản học sinh đã tồn tại để liên
+                            kết.
+                        </p>
+                    </div>
+
+                    <Formik
+                        initialValues={initialValuesLink}
+                        validationSchema={validationSchemaLink}
+                        onSubmit={handleLinkSubmit}
+                    >
+                        {({ isSubmitting }) => (
+                            <Form className="form">
+                                <div className="form-field">
+                                    <label className="form-label">
+                                        Email học sinh
+                                    </label>
+                                    <div className="form-input-container">
+                                        <FaEnvelope className="form-input-icon" />
+                                        <Field
+                                            type="email"
+                                            name="studentEmail"
+                                            className="form-input"
+                                            placeholder="Nhập email học sinh"
+                                        />
+                                    </div>
+                                    <ErrorMessage
+                                        name="studentEmail"
+                                        component="div"
+                                        className="text-error"
+                                    />
+                                </div>
+
+                                <div className="form-field">
+                                    <label className="form-label">
+                                        Mối quan hệ
+                                    </label>
+                                    <div className="form-input-container">
+                                        <FaUserFriends className="form-input-icon" />
+                                        <Field
+                                            as="select"
+                                            name="relationship"
+                                            className="form-input"
+                                        >
+                                            <option value="">
+                                                -- Chọn mối quan hệ --
+                                            </option>
+                                            <option value="Cha/Con">
+                                                Cha/Con
+                                            </option>
+                                            <option value="Mẹ/Con">
+                                                Mẹ/Con
+                                            </option>
+                                            <option value="Anh/Em">
+                                                Anh/Em
+                                            </option>
+                                            <option value="Chị/Em">
+                                                Chị/Em
+                                            </option>
+                                        </Field>
+                                    </div>
+                                    <ErrorMessage
+                                        name="relationship"
+                                        component="div"
+                                        className="text-error"
+                                    />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    className="pr-btn"
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? (
+                                        <LoadingSpinner />
+                                    ) : (
+                                        "Liên kết tài khoản"
+                                    )}
+                                </button>
+                            </Form>
+                        )}
+                    </Formik>
+                </div>
+            )}
+
+            {isStep === 4 && (
+                <div
+                    className={`pca-step-2 step ${
+                        isStep === 4 ? "step-active" : "step-hidden"
+                    }`}
+                >
+                    <button className="sc-btn" onClick={() => setIsStep(1)}>
+                        Quay lại
+                    </button>
+                    <div style={{ marginTop: "20px" }}>
+                        <h3>Cập nhật thông tin con</h3>
+                    </div>
+
+                    <Formik
+                        initialValues={initialValuesUpdate}
+                        validationSchema={validationSchemaUpdate}
+                        onSubmit={handleUpdateSubmit}
+                        enableReinitialize
+                    >
+                        {({ isSubmitting, setFieldValue, values }) => (
+                            <Form className="form">
+                                {/* Họ và tên */}
+                                <div className="form-field">
+                                    <label className="form-label">
+                                        Họ và tên
+                                    </label>
+                                    <div className="form-input-container">
+                                        <FaUser className="form-input-icon" />
+                                        <Field
+                                            type="text"
+                                            name="username"
+                                            className="form-input"
+                                            placeholder="Nhập họ và tên"
+                                        />
+                                    </div>
+                                    <ErrorMessage
+                                        name="username"
+                                        component="div"
+                                        className="text-error"
+                                    />
+                                </div>
+
+                                {/* Address */}
+                                <div className="form-field">
+                                    <label className="form-label">
+                                        Địa chỉ
+                                    </label>
+                                    <div className="form-input-container">
+                                        <FaMapMarkerAlt className="form-input-icon" />
+                                        <Field
+                                            type="text"
+                                            name="address"
+                                            className="form-input"
+                                            placeholder="Nhập địa chỉ"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Phone */}
+                                <div className="form-field">
+                                    <label className="form-label">
+                                        Số điện thoại
+                                    </label>
+                                    <div className="form-input-container">
+                                        <FaPhoneAlt className="form-input-icon" />
+                                        <Field
+                                            type="text"
+                                            name="phone"
+                                            className="form-input"
+                                            placeholder="Nhập số điện thoại"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Giới tính */}
+                                <div className="form-field">
+                                    <label className="form-label">
+                                        Giới tính
+                                    </label>
+                                    <div className="form-input-container">
+                                        <FaVenusMars className="form-input-icon" />
+                                        <Field
+                                            as="select"
+                                            name="gender"
+                                            className="form-input"
+                                        >
+                                            <option value="Nam">Nam</option>
+                                            <option value="Nữ">Nữ</option>
+                                        </Field>
+                                    </div>
+                                    <ErrorMessage
+                                        name="gender"
+                                        component="div"
+                                        className="text-error"
+                                    />
+                                </div>
+
+                                {/* Ngày sinh */}
+                                <div className="form-field">
+                                    <label className="form-label">
+                                        Ngày sinh
+                                    </label>
+                                    <div className="form-input-container">
+                                        <CiCalendarDate className="form-input-icon" />
+                                        <DatePickerElement
+                                            value={
+                                                values.dateOfBirth
+                                                    ? new Date(
+                                                          values.dateOfBirth,
+                                                      )
+                                                    : null
+                                            }
+                                            onChange={(date) =>
+                                                setFieldValue(
+                                                    "dateOfBirth",
+                                                    date?.toISOString() || "",
+                                                )
+                                            }
+                                            maxDate={new Date()}
+                                        />
+                                    </div>
+                                    <ErrorMessage
+                                        name="dateOfBirth"
+                                        component="div"
+                                        className="text-error"
+                                    />
+                                </div>
+
+                                {/* Cấp bậc học */}
+                                <div className="form-field">
+                                    <label className="form-label">
+                                        Cấp bậc học
+                                    </label>
+                                    <div className="form-input-container">
+                                        <MdOutlineLeaderboard className="form-input-icon" />
+                                        <Field
+                                            as="select"
+                                            name="educationLevel"
+                                            className="form-input"
+                                            onChange={(e: any) =>
+                                                handleLevelChange(
+                                                    e,
+                                                    setFieldValue,
+                                                    "educationLevel",
+                                                )
+                                            }
+                                        >
+                                            <option value="">
+                                                -- Chọn cấp độ --
+                                            </option>
+                                            <option value="Tiểu học">
+                                                Tiểu học
+                                            </option>
+                                            <option value="Trung học cơ sở">
+                                                Trung học cơ sở
+                                            </option>
+                                            <option value="Trung học phổ thông">
+                                                Trung học phổ thông
+                                            </option>
+                                        </Field>
+                                    </div>
+                                </div>
+
+                                {/* Môn học yêu thích */}
+                                <div className="form-field">
+                                    <MultiSelect
+                                        label="Môn học yêu thích"
+                                        placeholder="Chọn môn học yêu thích"
+                                        options={filteredSubjects}
+                                        onChange={(selected) =>
+                                            setFieldValue(
+                                                "preferredSubjects",
+                                                selected
+                                                    .map((s) => s.value)
+                                                    .join(", "),
+                                            )
+                                        }
+                                        value={
+                                            updatingChild.preferredSubjects
+                                                ? updatingChild.preferredSubjects
+                                                      .split(", ")
+                                                      .map((s) => ({
+                                                          label: s,
+                                                          value: s,
+                                                      }))
+                                                : []
                                         }
                                     />
                                     <ErrorMessage
@@ -556,7 +1067,7 @@ const ParentChildAccount: FC = () => {
                                     {isSubmitting ? (
                                         <LoadingSpinner />
                                     ) : (
-                                        "Tạo tài khoản"
+                                        "Cập nhật"
                                     )}
                                 </button>
                             </Form>

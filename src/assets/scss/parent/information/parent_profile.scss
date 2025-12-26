@@ -4,10 +4,11 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        margin-bottom: 2rem;
 
         h5 {
             font-size: 1.25rem;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--main-color);
             margin-bottom: 1rem;
         }
@@ -21,22 +22,16 @@
             border: 5px solid var(--main-color);
         }
 
-        .group-btn {
-            width: 300px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-bottom: 1rem;
-
             .pr-btn,
-            .sc-btn {
+            .sc-btn,
+            .delete-btn,
+            .disable-btn {
                 flex: 1;
                 padding: 0.5rem 1.25rem;
                 font-size: 1.25rem;
                 text-align: center;
             }
-        }
+        
     }
 
     .form {

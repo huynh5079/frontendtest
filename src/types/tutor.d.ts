@@ -1,3 +1,5 @@
+import { PublicClass } from "./public";
+
 interface Tutor {
     id: number;
     name: string;
@@ -12,12 +14,14 @@ interface RatingStarsProps {
 }
 
 interface TutorCardProps {
-    tutor: Tutor;
+    tutor: PublicTutors;
 }
 
 export type PublicTutorState = {
     listTutors: ResponsePublicTutors | null;
+    list3Tutors: PublicTutors[] | null;
     tutor: PublicTutor | null;
+    listTutorClasses: PublicClass[] | null;
 };
 
 export type ResponsePublicTutors<T> = {
@@ -35,6 +39,9 @@ export type PublicTutors = {
     teachingLevel: string;
     createDate: string;
     avatarUrl: string;
+    address?: string | null; // Địa chỉ gia sư
+    rating: number | null;
+    feedbackCount: number;
 };
 
 export type PublicTutor = {
@@ -45,6 +52,7 @@ export type PublicTutor = {
     avatarUrl: string;
     gender: "male" | "female" | "other" | null;
     dateOfBirth: string | null;
+    address: string | null; // Địa chỉ gia sư để học sinh xem khi đặt
     educationLevel: string;
     university: string;
     major: string;
@@ -128,7 +136,6 @@ export type BookingForTutorState = {
 };
 
 export type AcceptBookingForTutorParams = {
-    status: string;
     meetingLink: string;
 };
 
@@ -215,8 +222,10 @@ export type DetailScheduleLessonForTutor = {
 
 //request
 export type ResponseGetRequestFindTutorForTutor<T> = {
-    data: T;
+    items: T;
     totalCount: number;
+    page: number;
+    pageSize: number;
 };
 
 export type RequestFindTutorForTutorState = {
@@ -316,6 +325,7 @@ export type TutorClass = {
 
 export type StudentEnrolledClassForTutor = {
     studentId: string;
+    studentUserId?: string | null; // UserId của học sinh (để nhắn tin)
     studentName: string;
     studentEmail: string;
     StudentAvatarUrl: string;
@@ -350,7 +360,7 @@ export type MarkAttendance11Params = {
 
 export type MarkAttendanceManyStudentsParams = {
     notes: string;
-    studentStatusMap: {
+    studentStatus: {
         [studentId: string]: "Present" | "Late" | "Absent";
     };
 };
@@ -408,4 +418,53 @@ export type GetDetailQuizForTutor = {
     totalQuestions: number;
     questions: QuizQuestion[];
     createdAt: string;
+};
+
+export type UpdateQuizQuesstionForTutor = {
+    questionText: string;
+    optionA: string;
+    optionB: string;
+    optionC: string;
+    optionD: string;
+    correctAnswer: "A" | "B" | "C" | "D";
+    explanation: string;
+};
+
+//
+export type TutorDashboardState = {
+    totalStatistics: TutorTotalStatistics | null;
+    monthlyIncome: TutorMonthlyIncome | null;
+    monthlyLessons: TutorMonthlyLessons | null;
+};
+
+export type TutorTotalStatistics = {
+    totalActiveClasses: number;
+    totalStudents: number;
+    monthlyIncome: number;
+    lessonsThisWeek: number;
+    lessonsThisMonth: number;
+    activeStudents: number;
+    newStudentsThisMonth: number;
+};
+
+export type MonthlyIncomeData = {
+    month: number;
+    amount: number;
+};
+
+export type MonthlyLessonsData = {
+    month: number;
+    lessonCount: number;
+};
+
+export type TutorMonthlyIncome = {
+    year: string; // Định dạng "YYYY-MM"
+    totalIncome: number;
+    monthlyData: MonthlyIncomeData[];
+};
+
+export type TutorMonthlyLessons = {
+    year: string; // Định dạng "YYYY-MM"
+    totalLessons: number;
+    monthlyData: MonthlyLessonsData[];
 };

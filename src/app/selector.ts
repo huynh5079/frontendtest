@@ -8,10 +8,14 @@ import type {
 } from "../types/admin";
 import type { Selector } from "../types/app";
 import type { TutorSchedules } from "../types/booking";
-import type { CheckFavoriteTutorRessponse } from "../types/favorite-tutor";
+import type {
+    CheckFavoriteTutorRessponse,
+    GetAllFavoriteTutor,
+} from "../types/favorite-tutor";
 import type { FeedbackInTutorProfileResponse } from "../types/feedback";
 import type { NotificationResponseItem } from "../types/notification";
 import type {
+    AssignedClassForParent,
     ChildAccount,
     ChildAccounts,
     ChildSchedule,
@@ -43,7 +47,10 @@ import type {
     ScheduleForTutor,
     StudentEnrolledClassForTutor,
     TutorClass,
+    TutorMonthlyIncome,
+    TutorMonthlyLessons,
     TutorProfile,
+    TutorTotalStatistics,
 } from "../types/tutor";
 import type { AvailabilityBlocksForTutor } from "../types/tutorAvailabilityBlock";
 import type {
@@ -54,9 +61,18 @@ import type {
 import type {
     WalletBalance,
     WalletTransactionHistoryResponse,
+    WithdrawalRequestResponse,
+    WithdrawalRequestDto,
 } from "../types/wallet";
 import type { ChatState, ConversationDto, MessageDto } from "../types/chat";
 import type { RootState } from "./reducer";
+import { GetAllReschedule } from "../types/reschedule";
+import {
+    LessonAttendanceDetailForTutor,
+    StudentAttendance,
+    StudentAttendanceDetailForTutor,
+    TutorAttendanceOverview,
+} from "../types/attendance";
 
 //auth
 export const selectUserLogin: Selector<UserInfoLogin | null> = (
@@ -208,6 +224,25 @@ export const selectDetailQuizForTutor: Selector<
     return state.tutorQuiz.detail;
 };
 
+//Dashboard
+export const selectTutorTotalStatistics: Selector<
+    TutorTotalStatistics | null
+> = (state: RootState) => {
+    return state.tutorDashboard.totalStatistics;
+};
+
+export const selectTutorMonthlyIncome: Selector<TutorMonthlyIncome | null> = (
+    state: RootState,
+) => {
+    return state.tutorDashboard.monthlyIncome;
+};
+
+export const selectTutorMonthlyLessons: Selector<TutorMonthlyLessons | null> = (
+    state: RootState,
+) => {
+    return state.tutorDashboard.monthlyLessons;
+};
+
 //public
 //tutor
 export const selectListPublicTutors: Selector<
@@ -216,10 +251,22 @@ export const selectListPublicTutors: Selector<
     return state.publicTutor.listTutors;
 };
 
+export const select3PublicTutors: Selector<PublicTutors[] | null> = (
+    state: RootState,
+) => {
+    return state.publicTutor.list3Tutors;
+};
+
 export const selectPublicTutor: Selector<PublicTutor | null> = (
     state: RootState,
 ) => {
     return state.publicTutor.tutor;
+};
+
+export const selectPublicTutorClasses: Selector<PublicClass[] | null> = (
+    state: RootState,
+) => {
+    return state.publicTutor.listTutorClasses;
 };
 
 //class
@@ -287,6 +334,26 @@ export const selectDetailChildScheduleForParent: Selector<
     DetailChildScheduleLessonForParent | null
 > = (state: RootState) => {
     return state.childSchedule.detail;
+};
+
+//class
+export const selectIsEnrolledClassForParent: Selector<boolean> = (
+    state: RootState,
+) => {
+    return state.parentClass.isEnrolled;
+};
+
+export const selectListAssignedClassForParent: Selector<
+    AssignedClassForParent[] | null
+> = (state: RootState) => {
+    return state.parentClass.assignedClasses;
+};
+
+//class requet
+export const selectListClassRequetForParent: Selector<
+    ClassRequests[] | null
+> = (state: RootState) => {
+    return state.bookingTutorStudent.lists;
 };
 
 //student
@@ -387,6 +454,30 @@ export const selectListTransactionHistory: Selector<
     return state.wallet.transactionHistory;
 };
 
+export const selectMyWithdrawalRequests: Selector<
+    WithdrawalRequestResponse | null
+> = (state: RootState) => {
+    return state.wallet.myWithdrawalRequests;
+};
+
+export const selectMyWithdrawalRequestDetail: Selector<
+    WithdrawalRequestDto | null
+> = (state: RootState) => {
+    return state.wallet.myWithdrawalRequestDetail;
+};
+
+export const selectAllWithdrawalRequests: Selector<
+    WithdrawalRequestResponse | null
+> = (state: RootState) => {
+    return state.wallet.allWithdrawalRequests;
+};
+
+export const selectWithdrawalRequestDetail: Selector<
+    WithdrawalRequestDto | null
+> = (state: RootState) => {
+    return state.wallet.withdrawalRequestDetail;
+};
+
 //feedback
 export const selectListFeedbackInTutorProfile: Selector<
     FeedbackInTutorProfileResponse | null
@@ -399,6 +490,12 @@ export const selectCheckFavoriteTutor: Selector<
     CheckFavoriteTutorRessponse | null
 > = (state: RootState) => {
     return state.favoriteTutor.isFavorited;
+};
+
+export const selectListFavoriteTutor: Selector<GetAllFavoriteTutor[] | null> = (
+    state: RootState,
+) => {
+    return state.favoriteTutor.list;
 };
 
 //chat
@@ -474,4 +571,149 @@ export const selectVideoAnalysisAsking: Selector<boolean> = (
     state: RootState,
 ) => {
     return state.videoAnalysis?.isAsking || false;
+};
+
+//Reschedule
+export const selectListReschedule: Selector<GetAllReschedule[]> = (
+    state: RootState,
+) => {
+    return state.reschedule.list;
+};
+
+//Commission
+export const selectCommission: Selector<any | null> = (state: RootState) => {
+    return state.commission.commission;
+};
+
+export const selectCommissionLoading: Selector<boolean> = (
+    state: RootState,
+) => {
+    return state.commission.loading;
+};
+
+//Admin Report
+export const selectAdminReports: Selector<any[]> = (state: RootState) => {
+    return state.adminReport.reports;
+};
+
+export const selectAdminReportDetail: Selector<any | null> = (
+    state: RootState,
+) => {
+    return state.adminReport.reportDetail;
+};
+
+export const selectAdminReportsTotal: Selector<number> = (state: RootState) => {
+    return state.adminReport.total;
+};
+
+// Admin Dashboard Selectors
+export const selectDashboardStatistics: Selector<any | null> = (
+    state: RootState,
+) => {
+    return state.adminDashboard?.statistics || null;
+};
+
+export const selectDashboardLoading: Selector<boolean> = (state: RootState) => {
+    return state.adminDashboard?.loading || false;
+};
+
+export const selectDashboardError: Selector<string | null> = (
+    state: RootState,
+) => {
+    return state.adminDashboard?.error || null;
+};
+
+// Admin Class Selectors
+export const selectAdminClassDetail: Selector<any | null> = (
+    state: RootState,
+) => {
+    return state.adminClass?.classDetail || null;
+};
+
+export const selectAdminClassLoading: Selector<boolean> = (
+    state: RootState,
+) => {
+    return state.adminClass?.loading || false;
+};
+
+export const selectAdminClassError: Selector<string | null> = (
+    state: RootState,
+) => {
+    return state.adminClass?.error || null;
+};
+
+export const selectAdminClassStudents: Selector<any[]> = (state: RootState) => {
+    return state.adminClass?.studentsInClass || [];
+};
+
+export const selectAdminClassStudentsLoading: Selector<boolean> = (
+    state: RootState,
+) => {
+    return state.adminClass?.studentsLoading || false;
+};
+
+export const selectAdminReportsLoading: Selector<boolean> = (
+    state: RootState,
+) => {
+    return state.adminReport.loading;
+};
+
+// Admin Transaction Selectors
+export const selectAdminTransactions: Selector<any[]> = (state: RootState) => {
+    return state.adminTransaction?.transactions || [];
+};
+
+export const selectAdminTransactionDetail: Selector<any | null> = (
+    state: RootState,
+) => {
+    return state.adminTransaction?.transactionDetail || null;
+};
+
+export const selectAdminTransactionsTotal: Selector<number> = (
+    state: RootState,
+) => {
+    return state.adminTransaction?.total || 0;
+};
+
+export const selectAdminTransactionsLoading: Selector<boolean> = (
+    state: RootState,
+) => {
+    return state.adminTransaction?.loading || false;
+};
+
+export const selectAdminTransactionDetailLoading: Selector<boolean> = (
+    state: RootState,
+) => {
+    return state.adminTransaction?.detailLoading || false;
+};
+
+//attendance
+export const selectAttendanceForStudent: Selector<StudentAttendance | null> = (
+    state: RootState,
+) => {
+    return state.attendance.studentAttendances;
+};
+
+export const selectAttendanceForParent: Selector<StudentAttendance | null> = (
+    state: RootState,
+) => {
+    return state.attendance.parentAttendances;
+};
+
+export const selectAttendanceOverviewForTutor: Selector<
+    TutorAttendanceOverview | null
+> = (state: RootState) => {
+    return state.attendance.tutorAttendanceOverview;
+};
+
+export const selectStudentAttendanceDetailForTutor: Selector<
+    StudentAttendanceDetailForTutor | null
+> = (state: RootState) => {
+    return state.attendance.studentAttendanceDetailForTutor;
+};
+
+export const selectLessonAttendanceDetailForTutor: Selector<
+    LessonAttendanceDetailForTutor | null
+> = (state: RootState) => {
+    return state.attendance.lessonAttendanceDetailForTutor;
 };

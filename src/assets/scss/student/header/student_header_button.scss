@@ -271,8 +271,12 @@
                         padding: 0;
 
                         h5 {
+                            max-width: 300px;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
                             font-size: 1.25rem;
-                            font-weight: 600;
+                            font-weight: 700;
                             color: var(--main-color);
                             margin-bottom: 0.5rem;
                         }

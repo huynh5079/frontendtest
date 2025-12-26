@@ -17,14 +17,53 @@
             }
         }
 
-        .sc-btn {
-            padding: 0.75rem 1.25rem;
-            font-size: 1.25rem;
-            transition: all 0.3s ease;
+        .group-btn {
+            display: flex;
+            gap: 1rem;
 
-            &:hover {
-                background-color: var(--main-color);
+            .sc-btn,
+            .pr-btn {
+                padding: 0.75rem 1.25rem;
+                font-size: 1.25rem;
+            }
+        }
+    }
+
+    .tabs {
+        max-width: 500px;
+        margin: 0 auto;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        padding: 0.5rem;
+        background: #fff;
+        border-radius: 1.5rem;
+        border: 1px solid var(--main-color);
+        gap: 0.5rem;
+
+        .tab {
+            position: relative;
+            flex: 1;
+            padding: 0.75rem 0 0.5rem;
+            font-size: 1.25rem;
+            font-weight: 500;
+            text-align: center;
+            color: var(--main-color);
+            cursor: pointer;
+            transition: color 0.3s ease;
+
+            &.active {
+                background: var(--main-color);
+                border-radius: 1rem;
                 color: #fff;
+                font-weight: 700;
+                font-size: 1.25rem;
+            }
+
+            &:hover:not(.active) {
+                background: var(--main-color-10);
+                color: var(--main-color);
+                border-radius: 1rem;
             }
         }
     }

@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import { FaBook, FaUsers } from "react-icons/fa";
+import { FaBook, FaUsers, FaMapMarkerAlt } from "react-icons/fa";
 import { format } from "date-fns";
 import type { PublicClass } from "../../types/public";
 import { routes } from "../../routes/routeName";
@@ -97,7 +97,9 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
                             formatBadgeColor[course.mode]
                         }`}
                     >
-                        {course.mode}
+                        {course.mode === "Online"
+                            ? "Trực tuyến"
+                            : "Tại lớp học"}
                     </span>
                 </div>
 
@@ -107,6 +109,13 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
                         {course.subject} {course.educationLevel}
                     </span>
                 </div>
+
+                {course.mode === "Offline" && course.location && (
+                    <div className="course-card__location">
+                        <FaMapMarkerAlt className="icon" />
+                        <span>{course.location}</span>
+                    </div>
+                )}
 
                 {/* <div className="course-card__rating">
                     {renderStars(course.rating)}

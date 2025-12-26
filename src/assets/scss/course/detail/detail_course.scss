@@ -52,7 +52,7 @@
                         background: var(--main-color);
                         border-radius: 1rem;
                         color: #fff;
-                        font-weight: 600;
+                        font-weight: 700;
                         font-size: 1.25rem;
                     }
 
@@ -74,7 +74,7 @@
 
                 h4 {
                     font-size: 1.5rem;
-                    font-weight: 600;
+                    font-weight: 700;
                     color: var(--main-color);
                     padding-bottom: 1rem;
                     margin-bottom: 1rem;
@@ -90,7 +90,7 @@
 
                     span {
                         font-size: 1.45rem;
-                        font-weight: 600;
+                        font-weight: 700;
                         color: var(--main-black);
                     }
                 }
@@ -232,8 +232,23 @@
                     color: var(--main-black);
                     margin-bottom: 1rem;
 
+                    .address-text {
+                        max-width: 300px;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        font-size: 1.25rem;
+                        font-weight: 500;
+                        color: var(--main-black);
+
+                        span {
+                            font-weight: 500;
+                            color: var(--main-black);
+                        }
+                    }
+
                     span {
-                        font-weight: 600;
+                        font-weight: 700;
                         color: var(--main-black);
                     }
 
@@ -241,6 +256,34 @@
                         font-size: 2rem;
                         color: var(--main-color);
                         margin-right: 0.5rem;
+                    }
+                }
+
+                .price-text {
+                    display: flex;
+                    align-items: start;
+                    flex-direction: column !important;
+                    margin-bottom: 1rem;
+
+                    h6 {
+                        display: flex;
+                        align-items: center;
+                        justify-content: start;
+                        font-size: 1.25rem;
+                        font-weight: 700;
+                        color: var(--main-black);
+                        margin: 0;
+
+                        span {
+                            font-weight: 500;
+                            color: var(--main-black);
+                        }
+
+                        .icon {
+                            font-size: 2rem;
+                            color: var(--main-color);
+                            margin-right: 0.5rem;
+                        }
                     }
                 }
             }

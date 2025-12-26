@@ -1,0 +1,36 @@
+.parent-favorite-tutor {
+    .pftr1 {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+
+        .pr-btn,
+        .sc-btn {
+            padding: 0.75rem 1.25rem;
+            font-size: 1.25rem;
+        }
+
+        h3 {
+            font-size: 2rem;
+            font-weight: 800;
+            text-align: center;
+            color: var(--main-color);
+            margin: 0;
+        }
+    }
+
+    .table {
+        img {
+            max-width: 50px;
+            height: 50px;
+        }
+
+        .pr-btn,
+        .delete-btn {
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            margin: 0 0.2rem;
+        }
+    }
+}

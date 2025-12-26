@@ -1,6 +1,7 @@
 import type {
     ProvideTutor,
     RejectTutor,
+    ResponseGetUsersForAdmin,
     TutorForAdmin,
     TutorsForAdmin,
 } from "../../../types/admin";
@@ -21,7 +22,7 @@ const REJECT_TUTOR = "REJECT_TUTOR";
 const PROVIDE_TUTOR = "PROVIDE_TUTOR";
 
 export const getAllTutorForAdminApiThunk = createAsyncThunk<
-    ResponseFromServer<TutorsForAdmin[]>,
+    ResponseFromServer<ResponseGetUsersForAdmin<TutorsForAdmin[]>>,
     number
 >(GET_ALL_TUTOR_FOR_ADMIN, async (payload, { rejectWithValue }) => {
     try {

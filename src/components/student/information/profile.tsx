@@ -1,4 +1,4 @@
-import { useEffect, type FC } from "react";
+import { useEffect, useRef, useState, type FC } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { get } from "lodash";
@@ -23,6 +23,7 @@ import { selectProfileStudent } from "../../../app/selector";
 // API Thunks
 import {
     getProfileStudentApiThunk,
+    updateAvatarApiThunk,
     updateProfileStudentApiThunk,
 } from "../../../services/user/userThunk";
 
@@ -31,6 +32,7 @@ import type {
     ProfileStudent,
     UpdateStudentProfileParams,
 } from "../../../types/user";
+import { SystemLogo } from "../../../assets/images";
 
 // -------------------- Constants --------------------
 type LevelType = "Tiểu học" | "Trung học cơ sở" | "Trung học phổ thông";
@@ -61,6 +63,9 @@ const subjectsByLevel: Record<LevelType, string[]> = {
 const StudentProfile: FC = () => {
     const dispatch = useAppDispatch();
     const profile: ProfileStudent | null = useAppSelector(selectProfileStudent);
+
+    const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
         dispatch(getProfileStudentApiThunk());
@@ -96,12 +101,69 @@ const StudentProfile: FC = () => {
             .required(),
     });
 
+    const handleUpdateAvatar = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("avatar", file);
+
+        setIsUploadingAvatar(true);
+
+        dispatch(updateAvatarApiThunk(formData))
+            .unwrap()
+            .then(() => {
+                toast.success("Cập nhật ảnh đại diện thành công");
+                dispatch(getProfileStudentApiThunk());
+            })
+            .catch((err) => {
+                toast.error(
+                    get(err, "data.message", "Cập nhật ảnh đại diện thất bại"),
+                );
+            })
+            .finally(() => {
+                setIsUploadingAvatar(false);
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                }
+            });
+    };
+
     // =====================================================
     return (
         <div className="student-profile">
             {/* Avatar */}
             <div className="avatar-container">
-                <img src={profile?.avatarUrl} className="avatar" />
+                <img
+                    src={profile?.avatarUrl || SystemLogo}
+                    className="avatar"
+                    onError={(e) => {
+                        (e.target as HTMLImageElement).src = SystemLogo;
+                    }}
+                />
+
+                {/* Input ẩn */}
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={handleUpdateAvatar}
+                />
+
+                {/* Button thay thế */}
+                <button
+                    type="button"
+                    className={isUploadingAvatar ? "disable-btn" : "pr-btn"}
+                    disabled={isUploadingAvatar}
+                    onClick={() => fileInputRef.current?.click()}
+                >
+                    {isUploadingAvatar ? (
+                        <LoadingSpinner />
+                    ) : (
+                        "Thay đổi ảnh đại diện"
+                    )}
+                </button>
             </div>
 
             {/* ================= Formik Form ================= */}

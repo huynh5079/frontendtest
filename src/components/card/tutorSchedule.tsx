@@ -32,7 +32,7 @@ const TutorScheduleCard: FC<TutorScheduleCardProps> = ({
     return (
         <div className="tutor-schedule-card">
             <h4>
-                Buổi học ngày –{" "}
+                Buổi dạy ngày –{" "}
                 {format(
                     getDateOfSpecificWeekday(firstDay, day.key),
                     "dd/MM/yyyy"

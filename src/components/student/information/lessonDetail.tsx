@@ -12,6 +12,7 @@ import { routes } from "../../../routes/routeName";
 import { publicGetDetailTutorApiThunk } from "../../../services/public/tutor/tutorThunk";
 import LessonMaterialsView from "../../lessonMaterials/LessonMaterialsView";
 import StudentManageQuiz from "./studentQuiz";
+import { CreateRescheduleModal } from "../../modal";
 
 const StudentLessonDetail: FC = () => {
     const [searchParams] = useSearchParams();
@@ -24,6 +25,7 @@ const StudentLessonDetail: FC = () => {
     const tutorDetail = useAppSelector(selectPublicTutor);
 
     const [tabSubActive, setTabSubActive] = useState("lesson");
+    const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
 
     useEffect(() => {
         dispatch(getDetailScheduleLessonForStudentApiThunk(lessonId!));
@@ -56,7 +58,7 @@ const StudentLessonDetail: FC = () => {
                     className="sc-btn"
                     onClick={() =>
                         navigateHook(
-                            routes.student.information + `?tab=schedule`,
+                            routes.student.information + `?tab=schedule`
                         )
                     }
                 >
@@ -99,6 +101,12 @@ const StudentLessonDetail: FC = () => {
                                 <p>{formatTime(lesson?.endTime!)}</p>
                             </div>
                         </div>
+                        <button
+                            className="pr-btn"
+                            onClick={() => setIsRescheduleOpen(true)}
+                        >
+                            Dời lịch học
+                        </button>
                     </div>
                     <div className="detail-group">
                         <h3 className="group-title">Thông tin lớp</h3>
@@ -163,6 +171,7 @@ const StudentLessonDetail: FC = () => {
                     {lesson?.mode === "Online" && (
                         <button
                             className="pr-btn"
+                            style={{padding: "1rem"}}
                             onClick={() =>
                                 handleTeach(lesson?.onlineStudyLink!)
                             }
@@ -186,6 +195,12 @@ const StudentLessonDetail: FC = () => {
                     <StudentManageQuiz lessonId={lessonId} />
                 </div>
             )}
+
+            <CreateRescheduleModal
+                isOpen={isRescheduleOpen}
+                setIsOpen={setIsRescheduleOpen}
+                lessonId={lessonId}
+            />
         </div>
     );
 };

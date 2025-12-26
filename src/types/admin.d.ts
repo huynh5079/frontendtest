@@ -112,3 +112,10 @@ export interface ParentForAdmin {
     linkedStudentEmail: string | null;
     avatarUrl: string;
 }
+
+export type ResponseGetUsersForAdmin<T> = {
+    items: T;
+    size: number;
+    total: number;
+    totalPages: number;
+} 

@@ -47,6 +47,12 @@ const ParentInformtionSidebar: FC<Props> = ({ activeTab }) => {
                     Lịch học của con
                 </li>
                 <li
+                    className={activeTab === "class" ? "actived" : ""}
+                    onClick={() => handleClick("class")}
+                >
+                    Lớp học của con
+                </li>
+                <li
                     className={activeTab === "booking_tutor" ? "actived" : ""}
                     onClick={() => handleClick("booking_tutor")}
                 >
@@ -63,6 +69,18 @@ const ParentInformtionSidebar: FC<Props> = ({ activeTab }) => {
                     onClick={() => handleClick("request")}
                 >
                     Yêu cầu tìm gia sư
+                </li>
+                <li
+                    className={activeTab === "favorite" ? "actived" : ""}
+                    onClick={() => handleClick("favorite")}
+                >
+                    Gia sư yêu thích
+                </li>
+                <li
+                    className={activeTab === "chat" ? "actived" : ""}
+                    onClick={() => handleClick("chat")}
+                >
+                    Tin nhắn
                 </li>
                 <li onClick={logout}>Đăng xuất</li>
             </ul>

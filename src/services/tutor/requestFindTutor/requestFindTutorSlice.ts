@@ -29,12 +29,11 @@ export const requestFindTutorForTutorSlice = createSlice({
                 (
                     state,
                     action: PayloadAction<
-                        ResponseGetRequestFindTutorForTutor<
-                            RequestFindTutorForTutor[]
-                        >
+                        ResponseGetRequestFindTutorForTutor<RequestFindTutorForTutor[]>
                     >,
                 ) => {
-                    state.list = action.payload.data;
+                    console.log(action.payload);
+                    state.list = action.payload.items;
                 },
             )
             .addCase(

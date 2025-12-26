@@ -32,6 +32,8 @@ import {
 } from "../pages/system/verifyOtp";
 import { PrivateAuthRoot } from "../components/private";
 import { UnauthorizedPage } from "../pages/system/unauthorized";
+import PaymentReturn from "../pages/payment/PaymentReturn";
+import { ContactPage } from "../pages/system/contact";
 
 export default function () {
     return (
@@ -60,6 +62,10 @@ export const routerRoot = createBrowserRouter([
                     {
                         path: "/about",
                         element: <AboutPage />,
+                    },
+                    {
+                        path: "contact",
+                        element: <ContactPage />,
                     },
                     {
                         path: "/login",
@@ -124,6 +130,24 @@ export const routerRoot = createBrowserRouter([
     {
         path: "unauthorized",
         element: <UnauthorizedPage />,
+    },
+    // Payment return routes (for PayOS redirects)
+    {
+        path: "payments/payos/return",
+        element: <PaymentReturn />,
+    },
+    {
+        path: "payments/payos/cancel",
+        element: <PaymentReturn />,
+    },
+    // Payment return routes (for MoMo redirects)
+    {
+        path: "payments/momo/return",
+        element: <PaymentReturn />,
+    },
+    {
+        path: "payments/momo/cancel",
+        element: <PaymentReturn />,
     },
     ...routeStudent,
     ...routeParent,

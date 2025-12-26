@@ -29,15 +29,29 @@ const WITHDRAW_APPLY_REQUEST_FIND_TUTOR_FOR_TUTOR =
     "WITHDRAW_APPLY_REQUEST_FIND_TUTOR_FOR_TUTOR";
 
 export const getAllRequestFindTutorForTutorApiThunk = createAsyncThunk<
-    ResponseGetRequestFindTutorForTutor<RequestFindTutorForTutor[]>
+    ResponseGetRequestFindTutorForTutor<RequestFindTutorForTutor[]>,
+    void,
+    { rejectValue: { errorMessage: string; data: any } }
 >(GET_ALL_REQUEST_FIND_TUTOR_FOR_TUTOR, async (_, { rejectWithValue }) => {
     try {
+        console.log("[Frontend] Calling getAllRequestFindTutorForTutorApi...");
         const response = await getAllRequestFindTutorForTutorApi();
-        return response;
+        console.log("[Frontend] Response received:", response);
+        console.log("[Frontend] Response items:", response?.items);
+        console.log("[Frontend] Response totalCount:", response?.totalCount);
+        // Wrap response to match ResponseGetRequestFindTutorForTutor type
+        return {
+            items: response.items || [],
+            totalCount: response.totalCount || 0,
+            page: 1,
+            pageSize: 10,
+        };
     } catch (err: any) {
+        console.error("[Frontend] Error in getAllRequestFindTutorForTutorApi:", err);
+        console.error("[Frontend] Error response:", err.response?.data);
         return rejectWithValue({
             errorMessage: err.message,
-            data: err.response.data,
+            data: err.response?.data,
         });
     }
 });

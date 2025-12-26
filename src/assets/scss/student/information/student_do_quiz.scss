@@ -15,7 +15,7 @@
 
         h3 {
             font-size: 1.125rem;
-            font-weight: 600;
+            font-weight: 700;
             margin-bottom: 0.5rem;
         }
 
@@ -41,7 +41,7 @@
                 &.active {
                     background: var(--main-color);
                     color: #fff;
-                    font-weight: 600;
+                    font-weight: 700;
                 }
 
                 &.answered {
@@ -86,7 +86,7 @@
 
         h3 {
             font-size: 1.25rem;
-            font-weight: 600;
+            font-weight: 700;
         }
 
         .options {
@@ -113,7 +113,7 @@
                 &.selected {
                     background: var(--main-color);
                     color: #fff;
-                    font-weight: 600;
+                    font-weight: 700;
                     transform: translateY(-0.0625rem);
                 }
 

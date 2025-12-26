@@ -2,7 +2,7 @@ import { useState, useEffect, type FC } from "react";
 import type { AdminSelectStudentToCancelModalProps } from "../../types/modal";
 import Modal from "./modal";
 import { useAppDispatch } from "../../app/store";
-import { publicGetDetailClassApiThunk } from "../../services/public/class/classthunk";
+import { adminGetStudentsInClassApiThunk } from "../../services/admin/class/adminClassThunk";
 import { get } from "lodash";
 
 const AdminSelectStudentToCancelModal: FC<AdminSelectStudentToCancelModalProps> = ({
@@ -15,32 +15,50 @@ const AdminSelectStudentToCancelModal: FC<AdminSelectStudentToCancelModalProps> 
     const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
     const [students, setStudents] = useState<Array<{ id: string; name: string }>>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (isOpen && classId) {
             setIsLoading(true);
-            // Tạm thời: Lấy thông tin lớp để có danh sách học sinh
-            // TODO: Cần API admin để lấy danh sách học sinh trong lớp
-            dispatch(publicGetDetailClassApiThunk(classId))
+            setError(null);
+            // Gọi API để lấy danh sách học sinh thực tế
+            dispatch(adminGetStudentsInClassApiThunk(classId))
                 .unwrap()
                 .then((res) => {
-                    // Tạm thời: Mock data vì API chưa có danh sách học sinh
-                    // Trong thực tế cần API admin/classes/{classId}/students
-                    setStudents([
-                        { id: "student1", name: "Trần Văn B" },
-                        { id: "student2", name: "Lê Thị C" },
-                    ]);
+                    const studentsData = get(res, "data", []) as Array<{
+                        studentId: string;
+                        studentName: string;
+                        paymentStatus?: string;
+                        approvalStatus?: string;
+                    }>;
+
+                    // Chỉ hiển thị học sinh đã thanh toán (PaymentStatus = Paid) và chưa bị hủy
+                    const activeStudents = studentsData
+                        .filter((s) => s.paymentStatus === "Paid" && s.approvalStatus === "Approved")
+                        .map((s) => ({
+                            id: s.studentId,
+                            name: s.studentName || "N/A",
+                        }));
+
+                    setStudents(activeStudents);
+
+                    if (activeStudents.length === 0) {
+                        setError("Không có học sinh nào trong lớp học này.");
+                    }
                 })
-                .catch(() => {
-                    // Fallback: Mock data
-                    setStudents([
-                        { id: "student1", name: "Trần Văn B" },
-                        { id: "student2", name: "Lê Thị C" },
-                    ]);
+                .catch((err) => {
+                    const errorMessage = get(err, "data.message", "Không thể tải danh sách học sinh");
+                    setError(errorMessage);
+                    setStudents([]);
                 })
                 .finally(() => {
                     setIsLoading(false);
                 });
+        } else {
+            // Reset khi đóng modal
+            setStudents([]);
+            setSelectedStudents([]);
+            setError(null);
         }
     }, [isOpen, classId, dispatch]);
 
@@ -73,6 +91,14 @@ const AdminSelectStudentToCancelModal: FC<AdminSelectStudentToCancelModalProps> 
                     {isLoading ? (
                         <div style={{ padding: "2rem", textAlign: "center" }}>
                             Đang tải danh sách học sinh...
+                        </div>
+                    ) : error ? (
+                        <div style={{ padding: "2rem", textAlign: "center", color: "red" }}>
+                            {error}
+                        </div>
+                    ) : students.length === 0 ? (
+                        <div style={{ padding: "2rem", textAlign: "center" }}>
+                            Không có học sinh nào trong lớp học này.
                         </div>
                     ) : (
                         <div className="asstcm-student-list">

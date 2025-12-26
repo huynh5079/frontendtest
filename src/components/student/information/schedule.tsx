@@ -5,7 +5,7 @@ import {
     selectListLearningScheduleForStudent,
     selectListOneOnOneTutorForStudent,
 } from "../../../app/selector";
-import { useDocumentTitle } from "../../../utils/helper";
+import { getAttendanceText, useDocumentTitle } from "../../../utils/helper";
 import { format, startOfWeek, addDays, getDay, parseISO } from "date-fns";
 import {
     getAllLearingScheduleForStudentApiThunk,
@@ -65,6 +65,30 @@ export const scheduleByDay = (schedules: any[], dayKey: number) => {
         const d = getDay(parseISO(s.startTime)); // vẫn giữ local timezone
         return d === dayKey;
     });
+};
+
+const EventComponent = ({ event }: any) => {
+    return (
+        <div className="event-component">
+            <div className="event-title">Buổi học</div>
+            {/* <p className="event-mode">
+                {event.classMode === "Online"
+                    ? "Online"
+                    : "Offline"}{" "}
+            </p> */}
+            <div
+                className={`event-attendance ${
+                    event.attendanceStatus === null
+                        ? "not-marked"
+                        : event.attendanceStatus === "Present"
+                        ? "present"
+                        : "absent"
+                }`}
+            >
+                {getAttendanceText(event.attendanceStatus)}
+            </div>
+        </div>
+    );
 };
 
 const StudentSchedule: FC = () => {
@@ -155,20 +179,29 @@ const StudentSchedule: FC = () => {
     }, [classId, currentDate, tabActive, startStr, endStr, dispatch]);
 
     // ------------------- Convert schedule => Events -------------------
-    const events: RBCEvent[] = schedules.map((s) => ({
-        id: s.id,
-        lessonId: s.lessonId,
-        title: "Buổi học",
-        start: parseISO(s.startTime),
-        end: new Date(s.endTime),
-        allDay: false,
-        resource: s,
-    }));
+    const events: RBCEvent[] = schedules.map((s) => {
+        // Dùng parseISO() cho cả start và end để đảm bảo timezone nhất quán
+        const startDate = parseISO(s.startTime);
+        const endDate = parseISO(s.endTime);
+
+        return {
+            id: s.id,
+            lessonId: s.lessonId,
+            title: `Buổi học`,
+            attendanceStatus: s.attendanceStatus,
+            classMode: s.classMode,
+            start: startDate,
+            end: endDate,
+            allDay: false,
+            resource: s,
+        };
+    });
 
     const eventStyleGetter = () => ({
         style: {
-            backgroundColor: "var(--main-color)",
-            color: "white",
+            backgroundColor: "#fff",
+            border: "1px solid var(--main-color)",
+            color: "var(--main-color)",
             borderRadius: "6px",
             padding: "4px 6px",
         },
@@ -300,6 +333,9 @@ const StudentSchedule: FC = () => {
                         <Calendar
                             localizer={localizer}
                             events={events}
+                            components={{
+                                event: EventComponent,
+                            }}
                             startAccessor="start"
                             endAccessor="end"
                             defaultView={Views.WEEK}
@@ -307,6 +343,7 @@ const StudentSchedule: FC = () => {
                             date={currentDate}
                             eventPropGetter={eventStyleGetter}
                             culture="vi"
+                            step={15}
                             style={{
                                 height: "100%",
                                 borderRadius: "8px",
@@ -399,6 +436,7 @@ const StudentSchedule: FC = () => {
                                 <CiTextAlignLeft className="form-input-icon" />
                                 <select
                                     className="form-input"
+                                    aria-label="Chọn gia sư"
                                     value={tutorId}
                                     onChange={(e) => setTutorId(e.target.value)}
                                 >
@@ -440,11 +478,15 @@ const StudentSchedule: FC = () => {
                                 <Calendar
                                     localizer={localizer}
                                     events={events}
+                                    components={{
+                                        event: EventComponent,
+                                    }}
                                     startAccessor="start"
                                     endAccessor="end"
                                     defaultView={Views.WEEK}
                                     views={[Views.WEEK, Views.DAY, Views.MONTH]}
                                     date={currentDate}
+                                    step={15}
                                     eventPropGetter={eventStyleGetter}
                                     culture="vi"
                                     style={{
@@ -548,6 +590,7 @@ const StudentSchedule: FC = () => {
                                 <CiTextAlignLeft className="form-input-icon" />
                                 <select
                                     className="form-input"
+                                    aria-label="Chọn gia sư"
                                     value={classId}
                                     onChange={(e) => setClassId(e.target.value)}
                                 >
@@ -588,6 +631,10 @@ const StudentSchedule: FC = () => {
                                 <Calendar
                                     localizer={localizer}
                                     events={events}
+                                    components={{
+                                        event: EventComponent,
+                                    }}
+                                    step={15}
                                     startAccessor="start"
                                     endAccessor="end"
                                     defaultView={Views.WEEK}

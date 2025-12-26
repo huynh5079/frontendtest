@@ -8,6 +8,8 @@ import ParentChildAccount from "./childAccount";
 import ParentRequestFindTutor from "./requestFindTutor";
 import ParentBookingTutor from "./bookingTutor";
 import ParentLessonDetail from "./lessonDetail";
+import ParentFavoriteTutor from "./favoriteTutor";
+import ParentChildClass from "./childClass";
 
 export {
     ParentProfile,
@@ -19,5 +21,7 @@ export {
     ParentChildAccount,
     ParentRequestFindTutor,
     ParentBookingTutor,
-    ParentLessonDetail
+    ParentLessonDetail,
+    ParentFavoriteTutor,
+    ParentChildClass
 };

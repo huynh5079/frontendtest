@@ -13,7 +13,14 @@ import AdminCancelStudentEnrollmentModal from "./adminCancelStudentEnrollmentMod
 import AdminSelectStudentToCancelModal from "./adminSelectStudentToCancelModal";
 import TutorCancelClassModal from "./tutorCancelClassModal";
 import TutorCompleteClassModal from "./tutorCompleteClassModal";
+import CreateRescheduleModal from "./createRescheduleModal";
+import UpdateQuestionModal from "./updateQuestionModal";
+import AdminBanUnbanUserModal from "./adminBanUnbanUserModal";
+import StudentReportMaterialModal from "./studentReportMaterialModal";
+import StudentReportUserModal from "./studentReportUserModal";
 import StudentWithdrawClassModal from "./studentWithdrawClassModal";
+import ConfirmPaymentModal from "./confirmPaymentModal";
+import TutorPolicyModal from "./tutorPolicyModal";
 
 export {
     Modal,
@@ -31,5 +38,12 @@ export {
     AdminSelectStudentToCancelModal,
     TutorCancelClassModal,
     TutorCompleteClassModal,
+    CreateRescheduleModal,
+    UpdateQuestionModal,
+    AdminBanUnbanUserModal,
+    StudentReportMaterialModal,
+    StudentReportUserModal,
     StudentWithdrawClassModal,
+    ConfirmPaymentModal,
+    TutorPolicyModal,
 };

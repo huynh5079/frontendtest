@@ -1,92 +1,48 @@
-//Quick-sand
-@font-face {
-    font-family: "Quicksand";
-    src: url("../fonts/quicksand/Quicksand-Light.ttf") format("truetype");
-    font-weight: 300;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: "Quicksand";
-    src: url("../fonts/quicksand/Quicksand-Regular.ttf") format("truetype");
-    font-weight: 400;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: "Quicksand";
-    src: url("../fonts/quicksand/Quicksand-Medium.ttf") format("truetype");
-    font-weight: 500;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: "Quicksand";
-    src: url("../fonts/quicksand/Quicksand-SemiBold.ttf") format("truetype");
-    font-weight: 600;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: "Quicksand";
-    src: url("../fonts/quicksand/Quicksand-Bold.ttf") format("truetype");
-    font-weight: 700;
-    font-style: normal;
-}
-
-//Rebond_Grotesque
+/* Rebond Grotesque */
 @font-face {
     font-family: "Rebond Grotesque";
-    src: url("../fonts/rebond_grotesque/Rebond-Grotesque-Extralight.otf")
-        format("truetype");
+    src: url("/fonts/rebond_grotesque/Rebond-Grotesque-Extralight.otf")
+        format("opentype");
     font-weight: 200;
     font-style: normal;
 }
 
 @font-face {
     font-family: "Rebond Grotesque";
-    src: url("../fonts/rebond_grotesque/Rebond-Grotesque-Light.otf")
-        format("truetype");
+    src: url("/fonts/rebond_grotesque/Rebond-Grotesque-Light.otf")
+        format("opentype");
     font-weight: 300;
     font-style: normal;
 }
 
 @font-face {
     font-family: "Rebond Grotesque";
-    src: url("../fonts/rebond_grotesque/Rebond-Grotesque-Regular.otf")
-        format("truetype");
+    src: url("/fonts/rebond_grotesque/Rebond-Grotesque-Regular.otf")
+        format("opentype");
     font-weight: 400;
     font-style: normal;
 }
 
 @font-face {
     font-family: "Rebond Grotesque";
-    src: url("../fonts/rebond_grotesque/Rebond-Grotesque-Medium.otf")
-        format("truetype");
+    src: url("/fonts/rebond_grotesque/Rebond-Grotesque-Medium.otf")
+        format("opentype");
     font-weight: 500;
     font-style: normal;
 }
 
 @font-face {
     font-family: "Rebond Grotesque";
-    src: url("../fonts/rebond_grotesque/Rebond-Grotesque-SemiBold.otf")
-        format("truetype");
-    font-weight: 600;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: "Rebond Grotesque";
-    src: url("../fonts/rebond_grotesque/Rebond-Grotesque-Bold.otf")
-        format("truetype");
+    src: url("/fonts/rebond_grotesque/Rebond-Grotesque-Bold.otf")
+        format("opentype");
     font-weight: 700;
     font-style: normal;
 }
 
 @font-face {
     font-family: "Rebond Grotesque";
-    src: url("../fonts/rebond_grotesque/Rebond-Grotesque-Extrabold.otf")
-        format("truetype");
+    src: url("/fonts/rebond_grotesque/Rebond-Grotesque-Extrabold.otf")
+        format("opentype");
     font-weight: 800;
     font-style: normal;
 }
@@ -173,8 +129,7 @@ select {
 .pr-btn,
 .sc-btn,
 .disable-btn,
-.delete-btn
-{
+.delete-btn {
     position: relative;
     overflow: hidden;
     border: none;
@@ -268,6 +223,15 @@ select {
             font-weight: 500;
             color: var(--main-black);
             margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: start;
+            gap: 0.5rem;
+
+            span {
+                font-size: 1.5rem;
+                color: red;
+            }
         }
 
         .form-input-container {
@@ -359,9 +323,9 @@ select {
 }
 
 .text-error {
-    color: red;
-    font-size: 1rem;
-    font-weight: 500;
+    color: red !important;
+    font-size: 1rem !important;
+    font-weight: 500 !important;
 }
 
 .css-b62m3t-container {
@@ -374,7 +338,7 @@ select {
 }
 
 .rbc-today {
-  background-color: transparent !important;
+    background-color: transparent !important;
 }
 
 .pagination {
@@ -391,8 +355,99 @@ select {
         font-weight: 500;
     }
 
-    .sc-btn, .disable-btn {
+    .sc-btn,
+    .disable-btn {
         padding: 0.5rem 1.25rem;
-        font-size: 1.25rem
+        font-size: 1.25rem;
+    }
+}
+
+.no-data {
+    text-align: center !important;
+    padding: 2rem !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    color: var(--main-black) !important;
+}
+
+.event-component {
+    .event-title {
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 0.5rem 0;
+    }
+
+    .event-mode {
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .event-attendance {
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+
+        &.not-marked {
+            color: gray;
+        }
+
+        &.present {
+            color: green;
+        }
+
+        &.absent {
+            color: red;
+        }
+    }
+}
+
+.payment-methods {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+
+    .payment-method {
+        width: 200px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        .payment-method-figure {
+            width: 100%;
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--main-black);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+
+            &.active {
+                border-width: 3px;
+                border-color: var(--main-color);
+            }
+
+            &:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 4px 8px var(--main-color-10);
+            }
+        }
+
+        .payment-method-img {
+            width: 100px;
+            height: auto;
+            object-fit: contain;
+        }
+
+        span {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: var(--main-black);
+            text-align: center;
+        }
     }
 }

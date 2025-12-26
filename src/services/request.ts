@@ -14,9 +14,8 @@ const request = axios.create({
 request.interceptors.request.use(
     (config) => {
         if (store.getState().auth.token) {
-            config.headers.Authorization = `Bearer ${
-                store.getState().auth.token
-            }`;
+            config.headers.Authorization = `Bearer ${store.getState().auth.token
+                }`;
         }
 
         // Xóa Content-Type nếu là FormData để browser tự set boundary

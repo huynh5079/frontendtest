@@ -12,8 +12,8 @@ const PriceRangeFilter: FC<PriceRangeFilterProps> = ({
     onChange,
 }) => {
     const minLimit = 50000;
-    const maxLimit = 1000000;
-    const step = 5000;
+const maxLimit = 2000000;
+const step = 10000;
 
     const handleMinChange = (e: ChangeEvent<HTMLInputElement>) => {
         const value = Math.min(Number(e.target.value), maxValue - step);

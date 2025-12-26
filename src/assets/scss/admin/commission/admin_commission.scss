@@ -1,0 +1,193 @@
+#admin-commission-section {
+    .ac-container {
+        .ac-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+
+            .ac-header-icon {
+                width: 60px;
+                height: 60px;
+                border-radius: 12px;
+                background: linear-gradient(135deg, var(--main-color), var(--main-color-dark));
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 1.5rem;
+            }
+
+            .ac-header-content {
+                h4 {
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    color: #333;
+                    margin: 0 0 0.25rem 0;
+                }
+
+                p {
+                    font-size: 0.95rem;
+                    color: #666;
+                    margin: 0;
+
+                    span {
+                        color: var(--main-color);
+                        font-weight: 700;
+                    }
+                }
+            }
+        }
+
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            gap: 1rem;
+
+            p {
+                color: #666;
+                font-size: 1rem;
+            }
+        }
+
+        .ac-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+            .ac-form {
+                .ac-form-section {
+                    margin-bottom: 2rem;
+
+                    .ac-form-section-title {
+                        display: flex;
+                        align-items: center;
+                        gap: 0.75rem;
+                        font-size: 1.25rem;
+                        font-weight: 700;
+                        color: #333;
+                        margin: 0 0 0.5rem 0;
+
+                        .ac-form-section-icon {
+                            color: var(--main-color);
+                            font-size: 1.5rem;
+                        }
+                    }
+
+                    .ac-form-section-description {
+                        font-size: 0.95rem;
+                        color: #666;
+                        margin: 0 0 1.5rem 0;
+                        line-height: 1.6;
+                    }
+
+                    .ac-form-grid {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                        gap: 1.5rem;
+
+                        .ac-form-field {
+                            .ac-form-label {
+                                display: block;
+                                font-size: 0.95rem;
+                                font-weight: 700;
+                                color: #333;
+                                margin-bottom: 0.5rem;
+                            }
+
+                            .ac-form-input-wrapper {
+                                position: relative;
+                                display: flex;
+                                align-items: center;
+                                gap: 0.5rem;
+
+                                .ac-form-input {
+                                    flex: 1;
+                                    padding: 0.75rem 1rem;
+                                    border: 2px solid #e0e0e0;
+                                    border-radius: 8px;
+                                    font-size: 1rem;
+                                    color: #333;
+                                    transition: all 0.3s ease;
+
+                                    &:focus {
+                                        outline: none;
+                                        border-color: var(--main-color);
+                                        box-shadow: 0 0 0 3px rgba(var(--main-color-rgb), 0.1);
+                                    }
+
+                                    &.error {
+                                        border-color: #e74c3c;
+                                    }
+
+                                    &::-webkit-inner-spin-button,
+                                    &::-webkit-outer-spin-button {
+                                        -webkit-appearance: none;
+                                        margin: 0;
+                                    }
+                                }
+
+                                .ac-form-percent {
+                                    min-width: 60px;
+                                    padding: 0.75rem 1rem;
+                                    background: var(--main-color-10);
+                                    border-radius: 8px;
+                                    font-size: 0.95rem;
+                                    font-weight: 700;
+                                    color: var(--main-color);
+                                    text-align: center;
+                                }
+                            }
+
+                            .ac-form-error {
+                                display: block;
+                                font-size: 0.85rem;
+                                color: #e74c3c;
+                                margin-top: 0.25rem;
+                            }
+                        }
+                    }
+                }
+
+                .ac-form-actions {
+                    display: flex;
+                    justify-content: flex-end;
+                    margin-top: 2rem;
+                    padding-top: 2rem;
+                    border-top: 2px solid #f0f0f0;
+
+                    .ac-form-submit {
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                        padding: 0.875rem 2rem;
+                        background: var(--main-color);
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        font-size: 1rem;
+                        font-weight: 700;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+
+                        &:hover:not(.disabled) {
+                            background: var(--main-color-dark);
+                            transform: translateY(-2px);
+                            box-shadow: 0 4px 12px rgba(var(--main-color-rgb), 0.3);
+                        }
+
+                        &.disabled {
+                            opacity: 0.6;
+                            cursor: not-allowed;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+

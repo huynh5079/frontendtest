@@ -6,6 +6,11 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        margin-bottom: 2rem;
+
+        .pr-btn, .sc-btn, .delete-btn, .disable-btn {
+            width: max-content;
+        }
     }
 
     .avatar {

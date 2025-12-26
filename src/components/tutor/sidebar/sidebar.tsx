@@ -70,6 +70,11 @@ const SidebarTutor: FC = () => {
                     label: "Đơn tìm gia sư",
                 },
                 {
+                    to: routes.tutor.reschedule.list,
+                    icon: AiFillSchedule,
+                    label: "Đơn dời lịch dạy",
+                },
+                {
                     to: routes.tutor.class.list,
                     icon: MdClass,
                     label: "Lớp học",
@@ -78,6 +83,11 @@ const SidebarTutor: FC = () => {
                     to: routes.tutor.notification.list,
                     icon: MdClass,
                     label: "Thông báo",
+                },
+                {
+                    to: routes.tutor.chat,
+                    icon: MdClass,
+                    label: "Tin nhắn",
                 },
             ],
         },

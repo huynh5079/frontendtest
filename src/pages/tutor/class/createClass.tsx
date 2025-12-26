@@ -32,6 +32,7 @@ import * as Yup from "yup";
 import type { WalletBalance } from "../../../types/wallet";
 import {
     checkBalanceApiThunk,
+    tranferToAdminApiThunk,
     transferWalletApiThunk,
 } from "../../../services/wallet/walletThunk";
 import { toast } from "react-toastify";
@@ -43,6 +44,10 @@ import {
     LoadingSpinner,
     WeekCalendar,
 } from "../../../components/elements";
+import {
+    ConfirmPaymentModal,
+    RemindWalletModal,
+} from "../../../components/modal";
 
 const TutorCreateClassPage: FC = () => {
     const dispatch = useAppDispatch();
@@ -53,12 +58,17 @@ const TutorCreateClassPage: FC = () => {
     const tutorSchedules = useAppSelector(selectListTutorSchedule);
 
     const busySchedules = groupSchedulesByWeek(
-        Array.isArray(tutorSchedules) ? tutorSchedules : []
+        Array.isArray(tutorSchedules) ? tutorSchedules : [],
     );
 
     const tutorSubjects = csvToArray(tutorInfo?.teachingSubjects || "");
 
     const [classOptions, setClassOptions] = useState<string[]>([]);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [pendingValues, setPendingValues] =
+        useState<CreateClassParams | null>(null);
+    const [isConfirmLoading, setIsConfirmLoading] = useState(false);
+    const [isRemindWalletOpen, setIsRemindWalletOpen] = useState(false);
 
     useEffect(() => {
         dispatch(checkBalanceApiThunk());
@@ -85,10 +95,22 @@ const TutorCreateClassPage: FC = () => {
         educationLevel: Yup.string().required("Vui lòng chọn lớp"),
         description: Yup.string().required("Vui lòng nhập mô tả"),
         title: Yup.string().required("Vui lòng nhập chủ đề"),
+        studentLimit: Yup.number()
+            .min(2, "Số lượng học sinh tối đa phải lớn hơn hoặc bằng 2")
+            .max(8, "Số lượng học sinh tối đa không được vượt quá 8")
+            .required("Vui lòng nhập số lượng học sinh tối đa"),
+        price: Yup.number()
+            .required("Vui lòng nhập học phí")
+            .min(200000, "Học phí phải từ 200,000 VNĐ trở lên"),
         onlineStudyLink: Yup.string().when("mode", {
             is: "Online",
             then: (schema) =>
-                schema.required("Vui lòng nhập đường liên kết lớp học"),
+                schema
+                    .required("Vui lòng nhập đường liên kết lớp học")
+                    .matches(
+                        /^(https?:\/\/)?(www\.)?(meet\.google\.com|zoom\.us|teams\.microsoft\.com)\/.+$/i,
+                        "Chỉ chấp nhận link Google Meet, Zoom hoặc Microsoft Teams",
+                    ),
         }),
         location: Yup.string().when("mode", {
             is: "Offline",
@@ -97,18 +119,84 @@ const TutorCreateClassPage: FC = () => {
         mode: Yup.string()
             .oneOf(["Offline", "Online"])
             .required("Vui lòng chọn hình thức học"),
-        classStartDate: Yup.string().required("Vui lòng chọn ngày bắt đầu"),
-        price: Yup.number().min(0, "Học phí phải >= 0"),
+        classStartDate: Yup.string()
+            .required("Vui lòng chọn ngày bắt đầu")
+            .test(
+                "min-4-days",
+                "Ngày bắt đầu học phải sau hôm nay ít nhất 4 ngày",
+                (value) => {
+                    if (!value) return false;
+
+                    const selectedDate = new Date(value);
+                    const today = new Date();
+
+                    // reset giờ để so sánh chính xác theo ngày
+                    today.setHours(0, 0, 0, 0);
+
+                    const minDate = new Date(today);
+                    minDate.setDate(minDate.getDate() + 4);
+
+                    return selectedDate >= minDate;
+                },
+            ),
         scheduleRules: Yup.array()
             .of(
-                Yup.object().shape({
+                Yup.object({
                     dayOfWeek: Yup.number().required(),
                     startTime: Yup.string().required(),
                     endTime: Yup.string().required(),
-                })
+                }),
             )
-            .min(1, "Vui lòng chọn lịch đúng số buổi"),
+            .min(1, "Vui lòng chọn ít nhất 1 buổi học"),
     });
+
+    const handleConfirmPayment = () => {
+        if (!pendingValues || isConfirmLoading) return;
+
+        setIsConfirmLoading(true);
+
+        // Transform schedules: convert "HH:mm" to "HH:mm:ss" format
+        const transformedValues = {
+            ...pendingValues,
+            scheduleRules: pendingValues.scheduleRules.map((s) => ({
+                ...s,
+                startTime:
+                    s.startTime.includes(":") &&
+                    s.startTime.split(":").length === 2
+                        ? `${s.startTime}:00`
+                        : s.startTime,
+                endTime:
+                    s.endTime.includes(":") && s.endTime.split(":").length === 2
+                        ? `${s.endTime}:00`
+                        : s.endTime,
+            })),
+        };
+
+        dispatch(
+            tranferToAdminApiThunk({
+                Amount: createClassFee,
+                Note: "Phí tạo lớp học",
+            }),
+        )
+            .unwrap()
+            .then(() => {
+                return dispatch(
+                    createClassApiThunk(transformedValues),
+                ).unwrap();
+            })
+            .then((res) => {
+                toast.success(get(res, "data.message", "Tạo lớp thành công"));
+                navigateHook(routes.tutor.class.list);
+            })
+            .catch((err) => {
+                toast.error(get(err, "data.message", "Có lỗi xảy ra"));
+            })
+            .finally(() => {
+                setIsConfirmLoading(false);
+                setIsConfirmOpen(false);
+                setPendingValues(null);
+            });
+    };
 
     return (
         <section id="tutor-create-class-section">
@@ -133,53 +221,16 @@ const TutorCreateClassPage: FC = () => {
                     <Formik
                         initialValues={initialValues}
                         validationSchema={validationSchema}
-                        onSubmit={(values, { setSubmitting, resetForm }) => {
-                            setSubmitting(true);
+                        onSubmit={(values, { setSubmitting }) => {
+                            setSubmitting(false);
 
-                            if (
-                                balance?.balance &&
-                                balance.balance < createClassFee
-                            ) {
-                                toast.error(
-                                    "Số dư ví của bạn không đủ, vui lòng nạp thêm tiền."
-                                );
-                                setSubmitting(false);
+                            if (balance?.balance! < createClassFee) {
+                                setIsRemindWalletOpen(true);
                                 return;
                             }
 
-                            dispatch(createClassApiThunk(values))
-                                .unwrap()
-                                .then(() => {
-                                    dispatch(
-                                        transferWalletApiThunk({
-                                            toUserId:
-                                                "0E85EF35-39C1-418A-9A8C-0F83AC9520A6",
-                                            amount: createClassFee,
-                                            note: "Phí tạo lớp học",
-                                        })
-                                    )
-                                        .unwrap()
-                                        .then((res) => {
-                                            const message = get(
-                                                res,
-                                                "data.message",
-                                                "Tạo thành công"
-                                            );
-                                            toast.success(message);
-                                        });
-                                })
-                                .catch((error) => {
-                                    const errorData = get(
-                                        error,
-                                        "data.message",
-                                        "Có lỗi xảy ra"
-                                    );
-                                    toast.error(errorData);
-                                })
-                                .finally(() => {
-                                    setSubmitting(false);
-                                    resetForm();
-                                });
+                            setPendingValues(values);
+                            setIsConfirmOpen(true);
                         }}
                     >
                         {({ values, setFieldValue, isSubmitting }) => {
@@ -190,10 +241,10 @@ const TutorCreateClassPage: FC = () => {
                                     values.classStartDate
                                 ) {
                                     const start = formatDateToYMD(
-                                        new Date(values.classStartDate)
+                                        new Date(values.classStartDate),
                                     );
                                     const endDate = new Date(
-                                        values.classStartDate
+                                        values.classStartDate,
                                     );
                                     endDate.setDate(endDate.getDate() + 30);
                                     const end = formatDateToYMD(endDate);
@@ -201,11 +252,11 @@ const TutorCreateClassPage: FC = () => {
                                     dispatch(
                                         getAllTutorScheduleApiThunk({
                                             tutorProfileId: String(
-                                                tutorInfo?.tutorProfileId
+                                                tutorInfo?.tutorProfileId,
                                             ),
                                             startDate: start,
                                             endDate: end,
-                                        })
+                                        }),
                                     );
                                 }
                             }, [
@@ -228,22 +279,22 @@ const TutorCreateClassPage: FC = () => {
                                     options.push(
                                         ...Array.from(
                                             { length: 5 },
-                                            (_, i) => `Lớp ${i + 1}`
-                                        )
+                                            (_, i) => `Lớp ${i + 1}`,
+                                        ),
                                     );
                                 if (level.includes("trung học cơ sở"))
                                     options.push(
                                         ...Array.from(
                                             { length: 4 },
-                                            (_, i) => `Lớp ${i + 6}`
-                                        )
+                                            (_, i) => `Lớp ${i + 6}`,
+                                        ),
                                     );
                                 if (level.includes("trung học phổ thông"))
                                     options.push(
                                         ...Array.from(
                                             { length: 3 },
-                                            (_, i) => `Lớp ${i + 10}`
-                                        )
+                                            (_, i) => `Lớp ${i + 10}`,
+                                        ),
                                     );
 
                                 setClassOptions(options);
@@ -291,7 +342,6 @@ const TutorCreateClassPage: FC = () => {
                                             className="text-error"
                                         />
                                     </div>
-                                    
                                     {/* Môn học */}
                                     <div className="form-field">
                                         <label className="form-label">
@@ -305,7 +355,7 @@ const TutorCreateClassPage: FC = () => {
                                                 className="form-input"
                                                 onChange={(e: any) =>
                                                     handleSubjectChange(
-                                                        e.target.value
+                                                        e.target.value,
                                                     )
                                                 }
                                             >
@@ -364,12 +414,15 @@ const TutorCreateClassPage: FC = () => {
                                             <MdPersonAdd className="form-input-icon" />
                                             <Field
                                                 type="number"
-                                                min="1"
                                                 name="studentLimit"
                                                 className="form-input"
                                                 placeholder="Nhập số lượng học sinh tối đa"
                                             />
                                         </div>
+                                        <p className="note">
+                                            Số lượng học sinh tối đa chỉ từ 2
+                                            đến 8.
+                                        </p>
                                         <ErrorMessage
                                             name="studentLimit"
                                             component="div"
@@ -387,17 +440,33 @@ const TutorCreateClassPage: FC = () => {
                                                 name="price"
                                                 className="form-input"
                                                 placeholder="Nhập giá học phí"
-                                                onChange={(e: any) => {
-                                                    const val = Number(
-                                                        e.target.value
-                                                    );
+                                                onChange={(
+                                                    e: React.ChangeEvent<HTMLInputElement>,
+                                                ) => {
+                                                    const value =
+                                                        e.target.value;
+
+                                                    if (value === "") {
+                                                        setFieldValue(
+                                                            "price",
+                                                            "",
+                                                        );
+                                                        return;
+                                                    }
+
+                                                    const val = Number(value);
                                                     setFieldValue(
                                                         "price",
-                                                        val >= 0 ? val : 0
+                                                        val >= 0 ? val : 0,
                                                     );
                                                 }}
                                             />
                                         </div>
+                                        <ErrorMessage
+                                            name="price"
+                                            component="div"
+                                            className="text-error"
+                                        />
                                     </div>
                                     {/* Hình thức học */}
                                     <div className="form-field">
@@ -412,7 +481,7 @@ const TutorCreateClassPage: FC = () => {
                                                 className="form-input"
                                             >
                                                 <option value="Offline">
-                                                    Học tại nhà
+                                                    Học tại lớp
                                                 </option>
                                                 <option value="Online">
                                                     Học trực tuyến
@@ -462,6 +531,11 @@ const TutorCreateClassPage: FC = () => {
                                                     placeholder="Nhập đường liên kết lớp học"
                                                 />
                                             </div>
+                                            <p className="note">
+                                                Vui lòng nhập link học của
+                                                Google Meet, Zoom hoặc Microsoft
+                                                Teams.
+                                            </p>
                                             <ErrorMessage
                                                 name="onlineStudyLink"
                                                 component="div"
@@ -481,23 +555,27 @@ const TutorCreateClassPage: FC = () => {
                                                 value={
                                                     values.classStartDate
                                                         ? new Date(
-                                                              values.classStartDate
+                                                              values.classStartDate,
                                                           )
                                                         : null
                                                 }
                                                 onChange={(date: any) =>
                                                     setFieldValue(
                                                         "classStartDate",
-                                                        date?.toISOString() ||
-                                                            ""
+                                                        date
+                                                            ? formatDateToYMD(
+                                                                  date,
+                                                              )
+                                                            : "",
                                                     )
                                                 }
                                             />
                                         </div>
                                         <p className="note">
-                                            Sau khi bạn chọn ngày bắt đầu học,
-                                            lịch học trong tuần sẽ hiện ra để
-                                            bạn lựa chọn buổi học phù hợp.
+                                            Ngày bắt đầu học cần cách hôm nay ít
+                                            nhất 4 ngày. Sau khi chọn ngày, các
+                                            khung giờ học phù hợp sẽ được hiển
+                                            thị.
                                         </p>
                                         <ErrorMessage
                                             name="classStartDate"
@@ -511,19 +589,24 @@ const TutorCreateClassPage: FC = () => {
                                             <WeekCalendar
                                                 busySchedules={busySchedules}
                                                 onSelectedChange={(
-                                                    scheduleRules: Schedule[]
+                                                    scheduleRules: Schedule[],
                                                 ) =>
                                                     setFieldValue(
                                                         "scheduleRules",
-                                                        scheduleRules
+                                                        scheduleRules,
                                                     )
                                                 }
+                                            />
+                                            <ErrorMessage
+                                                name="scheduleRules"
+                                                component="div"
+                                                className="text-error"
                                             />
                                         </div>
                                     )}
                                     <div className="price-container">
                                         <div className="price-container-col">
-                                            <h4>Phí đặt lịch</h4>
+                                            <h4>Phí tạo lớp học</h4>
                                         </div>
                                         <div className="price-container-col">
                                             <p>
@@ -555,6 +638,18 @@ const TutorCreateClassPage: FC = () => {
                     </Formik>
                 </div>
             </div>
+            <RemindWalletModal
+                isOpen={isRemindWalletOpen}
+                setIsOpen={setIsRemindWalletOpen}
+                routes={routes.tutor.wallet}
+            />
+            <ConfirmPaymentModal
+                isOpen={isConfirmOpen}
+                totalAmount={createClassFee}
+                setIsOpen={setIsConfirmOpen}
+                onConfirm={handleConfirmPayment}
+                loading={isConfirmLoading}
+            />
         </section>
     );
 };

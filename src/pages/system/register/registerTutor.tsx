@@ -1,6 +1,7 @@
 import { useEffect, useState, type FC } from "react";
 import { Formik, Form, Field, ErrorMessage, type FormikHelpers } from "formik";
 import * as Yup from "yup";
+import { TutorPolicyModal } from "../../../components/modal";
 import {
     MdOutlineDriveFileRenameOutline,
     MdOutlineEmail,
@@ -36,6 +37,7 @@ import { routes } from "../../../routes/routeName";
 import { toast } from "react-toastify";
 import { get } from "lodash";
 import { setRegisterTutorData } from "../../../services/auth/registerTutorSlice";
+import { formatDateToYMD } from "../../../utils/helper";
 
 // --- Subject options ---
 export const subjectsOptions: OptionMultiSelectData[] = [
@@ -104,6 +106,8 @@ const FormField: FC<FormFieldProps> = ({
                     type="file"
                     multiple={multiple}
                     className="form-input"
+                    aria-label={label}
+                    title={label}
                     onChange={(e) =>
                         onChangeFile &&
                         onChangeFile(Array.from(e.target.files || []))
@@ -163,7 +167,12 @@ const Step1: FC<any> = ({ values, setFieldValue }) => (
                 <CiCalendarDate className="form-input-icon" />
                 <DatePickerElement
                     value={values.DateOfBirth}
-                    onChange={(date) => setFieldValue("DateOfBirth", date)}
+                    onChange={(date) =>
+                        setFieldValue(
+                            "DateOfBirth",
+                            date ? formatDateToYMD(date) : "",
+                        )
+                    }
                 />
             </div>
             <ErrorMessage
@@ -273,6 +282,8 @@ const Step2: FC<any> = ({ values, setFieldValue }) => {
                         className="form-input"
                         value={values.teachingLevel}
                         onChange={handleLevelChange}
+                        aria-label="Cấp độ giảng dạy"
+                        title="Cấp độ giảng dạy"
                     >
                         <option value="">-- Chọn cấp độ --</option>
                         <option value="Tiểu học">Tiểu học</option>
@@ -314,35 +325,79 @@ const Step2: FC<any> = ({ values, setFieldValue }) => {
     );
 };
 
-const Step3: FC<any> = ({ setFieldValue }) => (
-    <div className="form">
-        <FormField
-            name="teachingExperienceYears"
-            label="Số năm kinh nghiệm"
-            placeholder="Nhập số năm kinh nghiệm"
-            icon={TbBriefcase2}
-        />
-        <FormField
-            name="experienceDetails"
-            label="Chi tiết kinh nghiệm"
-            placeholder="Nhập chi tiết kinh nghiệm"
-            icon={FaChalkboardTeacher}
-        />
-        <FormField
-            name="certificatesFiles"
-            label="Chứng chỉ / Bằng cấp"
-            icon={FaCertificate}
-            onChangeFile={(files) => setFieldValue("certificatesFiles", files)}
-            multiple
-        />
-        <FormField
-            name="specialSkills"
-            label="Kỹ năng đặc biệt"
-            placeholder="Nhập kỹ năng đặc biệt"
-            icon={GiSkills}
-        />
-    </div>
-);
+const Step3: FC<any> = ({ setFieldValue, values }) => {
+    const [showPolicyModal, setShowPolicyModal] = useState(false);
+
+    return (
+        <>
+            <div className="form">
+                <FormField
+                    name="teachingExperienceYears"
+                    label="Số năm kinh nghiệm"
+                    placeholder="Nhập số năm kinh nghiệm"
+                    icon={TbBriefcase2}
+                />
+                <FormField
+                    name="experienceDetails"
+                    label="Chi tiết kinh nghiệm"
+                    placeholder="Nhập chi tiết kinh nghiệm"
+                    icon={FaChalkboardTeacher}
+                />
+                <FormField
+                    name="certificatesFiles"
+                    label="Chứng chỉ / Bằng cấp"
+                    icon={FaCertificate}
+                    onChangeFile={(files) => setFieldValue("certificatesFiles", files)}
+                    multiple
+                />
+                <FormField
+                    name="specialSkills"
+                    label="Kỹ năng đặc biệt"
+                    placeholder="Nhập kỹ năng đặc biệt"
+                    icon={GiSkills}
+                />
+
+                {/* Chính sách và điều khoản */}
+                <div className="form-field">
+                    <div className="form-checkbox-container">
+                        <Field
+                            type="checkbox"
+                            name="acceptPolicy"
+                            id="acceptPolicy"
+                            className="form-checkbox"
+                        />
+                        <label htmlFor="acceptPolicy" className="form-checkbox-label">
+                            Tôi đồng ý với{" "}
+                            <button
+                                type="button"
+                                className="policy-link"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setShowPolicyModal(true);
+                                }}
+                            >
+                                chính sách và điều khoản
+                            </button>
+                            {" "}của nền tảng
+                        </label>
+                    </div>
+                    <ErrorMessage
+                        name="acceptPolicy"
+                        component="p"
+                        className="text-error"
+                    />
+                </div>
+            </div>
+
+            {/* Modal chính sách */}
+            <TutorPolicyModal
+                isOpen={showPolicyModal}
+                setIsOpen={setShowPolicyModal}
+                onAccept={() => setFieldValue("acceptPolicy", true)}
+            />
+        </>
+    );
+};
 
 // --- Main RegisterTutorPage ---
 const RegisterTutorPage: FC = () => {
@@ -368,6 +423,7 @@ const RegisterTutorPage: FC = () => {
         specialSkills: "",
         certificatesFiles: [],
         identityDocuments: [],
+        acceptPolicy: false,
     };
 
     const RegisterTutorSchema = Yup.object({
@@ -412,6 +468,8 @@ const RegisterTutorPage: FC = () => {
             1,
             "Vui lòng tải lên giấy tờ tùy thân",
         ),
+        acceptPolicy: Yup.boolean()
+            .oneOf([true], "Bạn phải đồng ý với chính sách và điều khoản để đăng ký"),
     });
 
     const handleNextStep = () => setIsStep(isStep + 1);
@@ -461,11 +519,10 @@ const RegisterTutorPage: FC = () => {
                                 ].map((title, idx) => (
                                     <div
                                         key={idx}
-                                        className={`rtscr1-step ${
-                                            isStep === idx + 1
-                                                ? "rtscr1-step-active"
-                                                : ""
-                                        }`}
+                                        className={`rtscr1-step ${isStep === idx + 1
+                                            ? "rtscr1-step-active"
+                                            : ""
+                                            }`}
                                         onClick={() => setIsStep(idx + 1)}
                                     >
                                         <span>{idx + 1}</span>
@@ -489,7 +546,7 @@ const RegisterTutorPage: FC = () => {
                                     />
                                 )}
                                 {isStep === 3 && (
-                                    <Step3 setFieldValue={setFieldValue} />
+                                    <Step3 setFieldValue={setFieldValue} values={values} />
                                 )}
 
                                 <div className="group-btn">

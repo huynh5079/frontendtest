@@ -9,6 +9,8 @@ import ParentLayout from "../layouts/parent/parentlayout";
 import { ParentBookTutor } from "../pages/parent/book";
 import ParentInformationPage from "../pages/parent/profile/information";
 import { PrivateAuthParent } from "../components/private";
+import { AboutPage } from "../pages/system/about";
+import { ContactPage } from "../pages/system/contact";
 
 const routeParent: RouteObject[] = [
     {
@@ -45,6 +47,14 @@ const routeParent: RouteObject[] = [
                     {
                         path: "course/:id/detail",
                         element: <DetailCoursePage />,
+                    },
+                    {
+                        path: "about",
+                        element: <AboutPage />,
+                    },
+                    {
+                        path: "contact",
+                        element: <ContactPage />,
                     },
                     {
                         path: "information",

@@ -1,4 +1,4 @@
-import type { StudentForAdmin, StudentsForAdmin } from "../../../types/admin";
+import type { ResponseGetUsersForAdmin, StudentForAdmin, StudentsForAdmin } from "../../../types/admin";
 import type { ResponseFromServer } from "../../../types/app";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { getAllStudentForAdminApi, getDetailStudentForAdminApi } from "./adminStudentApi";
@@ -7,7 +7,7 @@ const GET_ALL_STUDENT_FOR_ADMIN = "GET_ALL_STUDENT_FOR_ADMIN";
 const GET_DETAIL_STUDENT_FOR_ADMIN = "GET_DETAIL_STUDENT_FOR_ADMIN";
 
 export const getAllStudentForAdminApiThunk = createAsyncThunk<
-    ResponseFromServer<StudentsForAdmin[]>,
+    ResponseFromServer<ResponseGetUsersForAdmin<StudentsForAdmin[]>>,
     number
 >(GET_ALL_STUDENT_FOR_ADMIN, async (payload, { rejectWithValue }) => {
     try {

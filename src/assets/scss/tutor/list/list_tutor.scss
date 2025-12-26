@@ -30,11 +30,14 @@
 
             .ltscr2c2 {
                 flex: 3;
-                display: flex;
-                flex-wrap: wrap;
-                justify-content: center;
-                align-items: start;
-                gap: 2rem;
+
+                .ltscr2c2-tutors {
+                    display: flex;
+                    flex-wrap: wrap;
+                    justify-content: center;
+                    align-items: start;
+                    gap: 2rem;
+                }
             }
         }
     }

@@ -9,6 +9,8 @@ import StudentBookingTutor from "./bookingTutor";
 import StudentAssignedClass from "./assignedClass";
 import StudentNotifilcation from "./notifilcation";
 import StudentLessonDetail from "./lessonDetail";
+import StudentListReschedule from "./reschedule";
+import StudentFavoriteTutor from "./favoriteTutor";
 
 export {
     StudentInformtionSidebar,
@@ -21,5 +23,7 @@ export {
     StudentBookingTutor,
     StudentAssignedClass,
     StudentNotifilcation,
-    StudentLessonDetail
+    StudentLessonDetail,
+    StudentListReschedule,
+    StudentFavoriteTutor,
 };

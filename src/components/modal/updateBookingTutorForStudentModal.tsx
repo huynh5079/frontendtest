@@ -40,23 +40,26 @@ const UpdateBookingTutorForStudentModal: FC<
     }, [selectedBooking]);
 
     useEffect(() => {
-        if (selectedBooking?.tutorId && selectedBooking.classStartDate) {
+        if (
+            isOpen &&
+            selectedBooking?.tutorId &&
+            selectedBooking.classStartDate
+        ) {
             const start = formatDateToYMD(
                 new Date(selectedBooking.classStartDate)
             );
             const endDate = new Date(selectedBooking.classStartDate);
             endDate.setDate(endDate.getDate() + 30);
-            const end = formatDateToYMD(endDate);
 
             dispatch(
                 getAllTutorScheduleApiThunk({
-                    tutorProfileId: String(selectedBooking?.tutorId),
+                    tutorProfileId: String(selectedBooking.tutorId),
                     startDate: start,
-                    endDate: end,
+                    endDate: formatDateToYMD(endDate),
                 })
             );
         }
-    }, [dispatch, selectedBooking]);
+    }, [isOpen, selectedBooking, dispatch]);
 
     const initialValues: UpdateInfoClassRequestParams = {
         description: selectedBooking?.description || "",
@@ -85,6 +88,7 @@ const UpdateBookingTutorForStudentModal: FC<
                 <Formik
                     initialValues={initialValues}
                     validationSchema={validationSchema}
+                    enableReinitialize
                     onSubmit={(values) => {
                         Promise.all([
                             dispatch(

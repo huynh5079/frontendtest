@@ -12,25 +12,32 @@ import {
     StudentAssignedClass,
     StudentNotifilcation,
     StudentLessonDetail,
+    StudentListReschedule,
+    StudentFavoriteTutor,
 } from "../../../components/student/information";
 import VideoPlayerWithAnalysis from "../../../components/videoAnalysis/VideoPlayerWithAnalysis";
 import { useAppSelector, useAppDispatch } from "../../../app/store";
 import { getLessonMaterialsApiThunk } from "../../../services/lessonMaterials/lessonMaterialsThunk";
 import { LoadingSpinner } from "../../../components/elements";
 import { navigateHook } from "../../../routes/routeApp";
+import { ChatPage } from "../../system/chat";
 
 const StudentInformationPage: FC = () => {
     const [searchParams] = useSearchParams();
     const tab = searchParams.get("tab") || "profile";
     const dispatch = useAppDispatch();
-    const lessonMaterialsState = useAppSelector((state: any) => state.lessonMaterials);
+    const lessonMaterialsState = useAppSelector(
+        (state: any) => state.lessonMaterials
+    );
     const materials = lessonMaterialsState?.materials || [];
     const isLoadingMaterials = lessonMaterialsState?.isLoading || false;
     const materialsError = lessonMaterialsState?.error || null;
 
     // Load materials khi có video route
     useEffect(() => {
-        const videoMatch = tab.match(/schedule\/lesson_detail\/([^/]+)\/video\/([^/]+)/);
+        const videoMatch = tab.match(
+            /schedule\/lesson_detail\/([^/]+)\/video\/([^/]+)/
+        );
         if (videoMatch) {
             const [, lessonId] = videoMatch;
             if (lessonId) {
@@ -41,7 +48,9 @@ const StudentInformationPage: FC = () => {
 
     const renderContent = () => {
         // Xử lý route video analysis: schedule/lesson_detail/{lessonId}/video/{videoId}
-        const videoMatch = tab.match(/schedule\/lesson_detail\/([^/]+)\/video\/([^/]+)/);
+        const videoMatch = tab.match(
+            /schedule\/lesson_detail\/([^/]+)\/video\/([^/]+)/
+        );
         if (videoMatch) {
             const [, lessonId, videoId] = videoMatch;
 
@@ -49,10 +58,19 @@ const StudentInformationPage: FC = () => {
             if (isLoadingMaterials) {
                 return (
                     <div>
-                        <div style={{ marginBottom: "20px", display: "flex", alignItems: "center", gap: "15px" }}>
+                        <div
+                            style={{
+                                marginBottom: "20px",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "15px",
+                            }}
+                        >
                             <button
                                 onClick={() => {
-                                    navigateHook(`/student/information?tab=schedule/lesson_detail/${lessonId}`);
+                                    navigateHook(
+                                        `/student/information?tab=schedule/lesson_detail/${lessonId}`
+                                    );
                                 }}
                                 style={{
                                     padding: "10px 20px",
@@ -79,10 +97,19 @@ const StudentInformationPage: FC = () => {
             if (video && video.url) {
                 return (
                     <div>
-                        <div style={{ marginBottom: "20px", display: "flex", alignItems: "center", gap: "15px" }}>
+                        <div
+                            style={{
+                                marginBottom: "20px",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "15px",
+                            }}
+                        >
                             <button
                                 onClick={() => {
-                                    navigateHook(`/student/information?tab=schedule/lesson_detail/${lessonId}`);
+                                    navigateHook(
+                                        `/student/information?tab=schedule/lesson_detail/${lessonId}`
+                                    );
                                 }}
                                 style={{
                                     padding: "10px 20px",
@@ -112,10 +139,19 @@ const StudentInformationPage: FC = () => {
             if (materialsError) {
                 return (
                     <div>
-                        <div style={{ marginBottom: "20px", display: "flex", alignItems: "center", gap: "15px" }}>
+                        <div
+                            style={{
+                                marginBottom: "20px",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "15px",
+                            }}
+                        >
                             <button
                                 onClick={() => {
-                                    navigateHook(`/student/information?tab=schedule/lesson_detail/${lessonId}`);
+                                    navigateHook(
+                                        `/student/information?tab=schedule/lesson_detail/${lessonId}`
+                                    );
                                 }}
                                 style={{
                                     padding: "10px 20px",
@@ -131,19 +167,30 @@ const StudentInformationPage: FC = () => {
                             <h2>Phân tích video bài giảng</h2>
                         </div>
                         <div style={{ padding: "20px", textAlign: "center" }}>
-                            <p style={{ color: "red" }}>Lỗi khi tải tài liệu: {materialsError}</p>
+                            <p style={{ color: "red" }}>
+                                Lỗi khi tải tài liệu: {materialsError}
+                            </p>
                             <button
                                 className="pr-btn"
                                 onClick={() => {
-                                    const videoMatch = tab.match(/schedule\/lesson_detail\/([^/]+)\/video\/([^/]+)/);
+                                    const videoMatch = tab.match(
+                                        /schedule\/lesson_detail\/([^/]+)\/video\/([^/]+)/
+                                    );
                                     if (videoMatch) {
                                         const [, lessonId] = videoMatch;
                                         if (lessonId) {
-                                            dispatch(getLessonMaterialsApiThunk(lessonId));
+                                            dispatch(
+                                                getLessonMaterialsApiThunk(
+                                                    lessonId
+                                                )
+                                            );
                                         }
                                     }
                                 }}
-                                style={{ marginTop: "10px", padding: "0.5rem 1rem" }}
+                                style={{
+                                    marginTop: "10px",
+                                    padding: "0.5rem 1rem",
+                                }}
                             >
                                 Thử lại
                             </button>
@@ -155,10 +202,19 @@ const StudentInformationPage: FC = () => {
             // Nếu không tìm thấy video hoặc không có URL
             return (
                 <div>
-                    <div style={{ marginBottom: "20px", display: "flex", alignItems: "center", gap: "15px" }}>
+                    <div
+                        style={{
+                            marginBottom: "20px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "15px",
+                        }}
+                    >
                         <button
                             onClick={() => {
-                                navigateHook(`/student/information?tab=schedule/lesson_detail/${lessonId}`);
+                                navigateHook(
+                                    `/student/information?tab=schedule/lesson_detail/${lessonId}`
+                                );
                             }}
                             style={{
                                 padding: "10px 20px",
@@ -174,9 +230,18 @@ const StudentInformationPage: FC = () => {
                         <h2>Phân tích video bài giảng</h2>
                     </div>
                     <div style={{ padding: "20px", textAlign: "center" }}>
-                        <p style={{ color: "#666" }}>Không tìm thấy video hoặc video chưa được tải lên.</p>
-                        <p style={{ color: "#999", fontSize: "14px", marginTop: "10px" }}>
-                            Vui lòng đảm bảo bạn đã tham gia lớp học này và video đã được gia sư tải lên.
+                        <p style={{ color: "#666" }}>
+                            Không tìm thấy video hoặc video chưa được tải lên.
+                        </p>
+                        <p
+                            style={{
+                                color: "#999",
+                                fontSize: "14px",
+                                marginTop: "10px",
+                            }}
+                        >
+                            Vui lòng đảm bảo bạn đã tham gia lớp học này và
+                            video đã được gia sư tải lên.
                         </p>
                     </div>
                 </div>
@@ -204,6 +269,12 @@ const StudentInformationPage: FC = () => {
                 return <StudentAssignedClass />;
             case "notification":
                 return <StudentNotifilcation />;
+            case "reschedule":
+                return <StudentListReschedule />;
+            case "favorite":
+                return <StudentFavoriteTutor />;
+            case "chat":
+                return <ChatPage />;
             case "profile":
             default:
                 return <StudentProfile />;

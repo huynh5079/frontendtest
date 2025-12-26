@@ -50,6 +50,7 @@ export type ClassRequests = {
     createdAt: string; // ISO date string
     studentName: string;
     tutorId: string;
+    tutorUserId: string;
     tutorName: string;
     subject: string;
     educationLevel: string;
@@ -78,6 +79,7 @@ export type learningScheduleForStudent = {
     classId: string;
     title: string | null;
     attendanceStatus: string | null;
+    classMode: string;
 };
 
 export type OneOnOneTutorForStudent = {
@@ -131,6 +133,12 @@ export type ApplyRequestFindTutorForStudent = {
     tutorAvatarUrl: string;
 };
 
+export type AcceptApplyRequestFindTutorForStudent = {
+    classId: string;
+    message: string;
+    paymentRequired: boolean;
+};
+
 //class
 export type StudentClassState = {
     isEnrolled: boolean;
@@ -139,6 +147,7 @@ export type StudentClassState = {
 
 export type AssignClassParamsForStudent = {
     classId: string;
+    studentId: string;
 };
 
 export type CheckAssignClassResponse = {

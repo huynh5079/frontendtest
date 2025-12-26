@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../app/store";
 import {
     getLessonMaterialsApiThunk,
@@ -8,10 +9,11 @@ import {
 import { clearMaterials } from "../../services/lessonMaterials/lessonMaterialsSlice";
 import type { MaterialItemDto } from "../../types/lesson-materials";
 import LoadingSpinner from "../elements/LoadingSpinner";
-import { navigateHook } from "../../routes/routeApp";
 import { routes } from "../../routes/routeName";
 import { selectUserLogin } from "../../app/selector";
 import { USER_TUTOR, USER_STUDENT, USER_PARENT } from "../../utils/helper";
+import { StudentReportMaterialModal } from "../modal";
+import { MdReport } from "react-icons/md";
 
 interface LessonMaterialsViewProps {
     lessonId: string;
@@ -22,6 +24,7 @@ const LessonMaterialsView: React.FC<LessonMaterialsViewProps> = ({
     lessonId,
     isTutor = false,
 }) => {
+    const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const user = useAppSelector(selectUserLogin);
     const lessonMaterialsState = useAppSelector(
@@ -54,6 +57,11 @@ const LessonMaterialsView: React.FC<LessonMaterialsViewProps> = ({
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
+    const [reportModalOpen, setReportModalOpen] = useState(false);
+    const [selectedMaterial, setSelectedMaterial] = useState<{
+        id: string;
+        name: string;
+    } | null>(null);
 
     useEffect(() => {
         if (lessonId) {
@@ -105,8 +113,6 @@ const LessonMaterialsView: React.FC<LessonMaterialsViewProps> = ({
                 }),
             ).unwrap();
 
-            console.log("✅ Upload thành công - Response:", result);
-            console.log("✅ Materials sau upload:", result);
 
             // Nếu upload trả về data, không cần refresh lại ngay
             // Chỉ refresh nếu response rỗng
@@ -199,8 +205,6 @@ const LessonMaterialsView: React.FC<LessonMaterialsViewProps> = ({
                 </div>
             )}
 
-            {isLoading && !materials.length && <LoadingSpinner />}
-
             {!isLoading && materials.length === 0 && !uploading && (
                 <p>Chưa có tài liệu nào.</p>
             )}
@@ -267,7 +271,7 @@ const LessonMaterialsView: React.FC<LessonMaterialsViewProps> = ({
                                                 lessonId,
                                                 material.id,
                                             );
-                                            navigateHook(url);
+                                            navigate(url);
                                         }}
                                     >
                                         <video
@@ -360,25 +364,48 @@ const LessonMaterialsView: React.FC<LessonMaterialsViewProps> = ({
                                             }}
                                         >
                                             {!isTutor && (
-                                                <button
-                                                    className="pr-btn"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        const url =
-                                                            getVideoAnalysisRoute(
-                                                                lessonId,
-                                                                material.id,
-                                                            );
-                                                        navigateHook(url);
-                                                    }}
-                                                    style={{
-                                                        padding: "0.5rem 1rem",
-                                                        fontSize: "0.875rem",
-                                                        flex: 1,
-                                                    }}
-                                                >
-                                                    Phân tích
-                                                </button>
+                                                <>
+                                                    <button
+                                                        className="pr-btn"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            const url =
+                                                                getVideoAnalysisRoute(
+                                                                    lessonId,
+                                                                    material.id,
+                                                                );
+                                                            navigate(url);
+                                                        }}
+                                                        style={{
+                                                            padding: "0.5rem 1rem",
+                                                            fontSize: "0.875rem",
+                                                            flex: 1,
+                                                        }}
+                                                    >
+                                                        Phân tích
+                                                    </button>
+                                                    <button
+                                                        className="sc-btn"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedMaterial({
+                                                                id: material.id,
+                                                                name: material.fileName,
+                                                            });
+                                                            setReportModalOpen(true);
+                                                        }}
+                                                        style={{
+                                                            padding: "0.5rem 1rem",
+                                                            fontSize: "0.875rem",
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            gap: "0.5rem",
+                                                        }}
+                                                    >
+                                                        <MdReport />
+                                                        Báo cáo
+                                                    </button>
+                                                </>
                                             )}
 
                                             {isTutor && (
@@ -446,6 +473,29 @@ const LessonMaterialsView: React.FC<LessonMaterialsViewProps> = ({
                                             >
                                                 Tải xuống
                                             </a>
+                                            {!isTutor && (
+                                                <button
+                                                    className="sc-btn"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedMaterial({
+                                                            id: material.id,
+                                                            name: material.fileName,
+                                                        });
+                                                        setReportModalOpen(true);
+                                                    }}
+                                                    style={{
+                                                        padding: "0.5rem 1rem",
+                                                        fontSize: "0.875rem",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        gap: "0.5rem",
+                                                    }}
+                                                >
+                                                    <MdReport />
+                                                    Báo cáo
+                                                </button>
+                                            )}
                                             {isTutor && (
                                                 <button
                                                     className="delete-btn"
@@ -467,22 +517,33 @@ const LessonMaterialsView: React.FC<LessonMaterialsViewProps> = ({
                                     {material.mediaType?.startsWith(
                                         "image/",
                                     ) && (
-                                        <img
-                                            src={material.url}
-                                            alt={material.fileName}
-                                            style={{
-                                                maxWidth: "100%",
-                                                marginTop: "10px",
-                                                borderRadius: "5px",
-                                            }}
-                                        />
-                                    )}
+                                            <img
+                                                src={material.url}
+                                                alt={material.fileName}
+                                                style={{
+                                                    maxWidth: "100%",
+                                                    marginTop: "10px",
+                                                    borderRadius: "5px",
+                                                }}
+                                            />
+                                        )}
                                 </div>
                             )}
                         </div>
                     );
                 })}
             </div>
+
+            {/* Report Material Modal */}
+            {selectedMaterial && (
+                <StudentReportMaterialModal
+                    isOpen={reportModalOpen}
+                    setIsOpen={setReportModalOpen}
+                    lessonId={lessonId}
+                    mediaId={selectedMaterial.id}
+                    materialName={selectedMaterial.name}
+                />
+            )}
         </div>
     );
 };

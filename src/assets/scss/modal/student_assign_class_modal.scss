@@ -5,6 +5,12 @@
         justify-content: start;
         align-items: center;
 
+        .form {
+            width: 400px;
+            margin: 0 auto;
+            margin-bottom: 2rem;
+        }
+
         img {
             margin-bottom: 24px;
         }
@@ -18,18 +24,20 @@
 
         h4 {
             font-size: 1.25rem;
-            font-weight: 600;
+            font-weight: 700;
             color: #393939;
             margin-bottom: 2rem;
         }
 
         .sc-btn,
         .disable-btn,
-        .delete-btn {
+        .delete-btn,
+        .pr-btn {
             padding: 0.75rem 1.5rem;
             font-size: 1.25rem;
             font-weight: 700;
             border-radius: 1rem;
+            margin: 0rem 1rem;
             margin-bottom: 1rem;
         }
 

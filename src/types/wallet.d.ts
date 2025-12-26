@@ -1,6 +1,10 @@
 export type WalletState = {
     balance: WalletBalance | null;
     transactionHistory: WalletTransactionHistoryResponse | null;
+    myWithdrawalRequests: WithdrawalRequestResponse | null;
+    myWithdrawalRequestDetail: WithdrawalRequestDto | null;
+    allWithdrawalRequests: WithdrawalRequestResponse | null;
+    withdrawalRequestDetail: WithdrawalRequestDto | null;
 };
 
 export type WalletBalance = {
@@ -26,6 +30,9 @@ export type WalletTransactionHistory = {
     amount: number;
     type: string;
     status: string;
+    note?: string;
+    counterpartyUserId?: string;
+    counterpartyUsername?: string;
     createdAt: string;
 };
 
@@ -42,6 +49,18 @@ export type DepositWalletResponse = {
     payUrl: string;
     deepLink: string;
     provider: string;
+    // PayOS specific fields
+    checkoutUrl?: string;
+    qrCode?: string;
+    data?: {
+        checkoutUrl?: string;
+        qrCode?: string;
+        accountNumber?: string;
+        accountName?: string;
+        amount?: number;
+        description?: string;
+        status?: string;
+    };
 };
 
 export type TranferWalletParams = {
@@ -53,4 +72,58 @@ export type TranferWalletParams = {
 export type TranferToAdminParams = {
     Amount: number;
     Note: string;
+};
+
+export type WithdrawWalletParams = {
+    Amount: number;
+    Note: string;
+};
+
+// ===== Withdrawal Request Types =====
+export type WithdrawalMethod = "MoMo" | "BankTransfer" | "PayPal";
+export type WithdrawalStatus = "Pending" | "Approved" | "Processing" | "Completed" | "Failed" | "Rejected" | "Cancelled";
+
+export type CreateWithdrawalRequestParams = {
+    amount: number;
+    method: WithdrawalMethod;
+    recipientInfo: string;
+    recipientName?: string;
+    note?: string;
+};
+
+export type WithdrawalRequestDto = {
+    id: string;
+    userId: string;
+    userName?: string;
+    amount: number;
+    method: string;
+    status: string;
+    recipientInfo: string;
+    recipientName?: string;
+    note?: string;
+    adminNote?: string;
+    processedByUserId?: string;
+    processedByUserName?: string;
+    processedAt?: string;
+    paymentId?: string;
+    transactionId?: string;
+    failureReason?: string;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type WithdrawalRequestResponse = {
+    items: WithdrawalRequestDto[];
+    total: number;
+    page: number;
+    size: number;
+};
+
+export type ApproveWithdrawalRequestParams = {
+    adminNote?: string;
+};
+
+export type RejectWithdrawalRequestParams = {
+    reason: string;
+    adminNote?: string;
 };

@@ -1,5 +1,5 @@
 import type { ClassRequests } from "./student";
-import type { ScheduleForTutor, TutorClass } from "./tutor";
+import type { QuizQuestion, ScheduleForTutor, TutorClass } from "./tutor";
 import type { AvailabilityBlocksForTutor } from "./tutorAvailabilityBlock";
 
 export type ModalProps = {
@@ -27,9 +27,9 @@ export interface DeleteAvailabilityBlockForTutorModalProps
     endDateProps: string;
 }
 
-export interface RemindLoginModalProps extends ModalCommonProps { }
+export interface RemindLoginModalProps extends ModalCommonProps {}
 export interface RemindWalletModalProps extends ModalCommonProps {
-    routes: string
+    routes: string;
 }
 export interface UpdateBookingTutorForStudentModalProps
     extends ModalCommonProps {
@@ -49,7 +49,8 @@ export interface CancelBookingTutorForStudentProps extends ModalCommonProps {
     requestId: string | null;
 }
 
-export interface CancelRequestFindTutorForStudentProps extends ModalCommonProps {
+export interface CancelRequestFindTutorForStudentProps
+    extends ModalCommonProps {
     requestId: string | null;
 }
 
@@ -58,7 +59,8 @@ export interface AdminCancelClassModalProps extends ModalCommonProps {
     onSuccess?: () => void;
 }
 
-export interface AdminCancelStudentEnrollmentModalProps extends ModalCommonProps {
+export interface AdminCancelStudentEnrollmentModalProps
+    extends ModalCommonProps {
     classId: string | null;
     studentId: string | null;
     studentName?: string | null;
@@ -75,9 +77,19 @@ export interface TutorCompleteClassModalProps extends ModalCommonProps {
 
 export interface StudentWithdrawClassModalProps extends ModalCommonProps {
     classId: string | null;
+    onSuccess?: () => void;
 }
 
 export interface AdminSelectStudentToCancelModalProps extends ModalCommonProps {
     classId: string | null;
     onSelectStudent?: (studentId: string, studentName?: string) => void;
+}
+
+export interface CreateRescheduleModalProps extends ModalCommonProps {
+    lessonId: string | null;
+}
+
+export interface UpdateQuestionModalProps extends ModalCommonProps {
+    quizId: string | null;
+    question: QuizQuestion;
 }

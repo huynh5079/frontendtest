@@ -9,12 +9,15 @@ import {
 } from "recharts";
 import type { PieChartData } from "../../types/app";
 
-
 interface PieChartStatProps {
     data: PieChartData[];
 }
 
-const COLORS = ["#4CAF50", "#F44336", "#FFC107"];
+const COLORS = [
+    "#4CAF50", // Có mặt
+    "#FFC107", // Đi muộn
+    "#F44336", // Vắng
+];
 
 const PieChartStat: FC<PieChartStatProps> = ({ data }) => {
     return (

@@ -15,6 +15,8 @@ interface FilterParams {
     name?: string;
     level?: string;
     subjects?: string[]; // danh sách các môn được chọn
+    address?: string; // địa chỉ để filter
+    ratingSort?: "asc" | "desc";
 }
 
 interface FilterTutorProps {
@@ -22,6 +24,8 @@ interface FilterTutorProps {
         name: string;
         level: string;
         subjects: string[];
+        address: string;
+        ratingSort?: "asc" | "desc";
     }) => void;
 }
 
@@ -29,44 +33,60 @@ export const filterTutors = (tutors: PublicTutors[], filters: FilterParams) => {
     const nameFilter = filters.name?.toLowerCase() || "";
     const levelFilter = filters.level || "";
     const subjectsFilter = filters.subjects || [];
+    const addressFilter = filters.address?.toLowerCase() || "";
+    const ratingSort = filters.ratingSort;
 
-    return tutors.filter((tutor) => {
+    let result = tutors.filter((tutor) => {
         if (!tutor) return false;
 
-        // 1️⃣ Lọc theo tên
-        if (nameFilter && !tutor.username?.toLowerCase().includes(nameFilter)) {
+        // 1️⃣ Tên
+        if (nameFilter && !tutor.username?.toLowerCase().includes(nameFilter))
             return false;
-        }
 
-        // 2️⃣ Lọc theo trình độ
+        // 2️⃣ Trình độ
         const levels = (tutor.teachingLevel || "")
             .split(",")
-            .map((l) => l.trim())
-            .filter(Boolean);
-        if (levelFilter && !levels.includes(levelFilter)) {
-            return false;
-        }
+            .map((l) => l.trim());
+        if (levelFilter && !levels.includes(levelFilter)) return false;
 
-        // 3️⃣ Lọc theo môn học
+        // 3️⃣ Môn học
         const tutorSubjects = (tutor.teachingSubjects || "")
             .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean);
-        if (subjectsFilter.length > 0) {
-            const match = subjectsFilter.some((sub) =>
-                tutorSubjects.includes(sub),
-            );
-            if (!match) return false;
-        }
+            .map((s) => s.trim());
+        if (
+            subjectsFilter.length &&
+            !subjectsFilter.some((s) => tutorSubjects.includes(s))
+        )
+            return false;
+
+        // 4️⃣ Địa chỉ
+        if (
+            addressFilter &&
+            !tutor.address?.toLowerCase().includes(addressFilter)
+        )
+            return false;
 
         return true;
     });
+
+    // ⭐ 5️⃣ Sort theo đánh giá
+    if (ratingSort) {
+        result = [...result].sort((a, b) => {
+            const ra = a.rating ?? 0;
+            const rb = b.rating ?? 0;
+            return ratingSort === "asc" ? ra - rb : rb - ra;
+        });
+    }
+
+    return result;
 };
 
 const FilterTutor: FC<FilterTutorProps> = ({ onFilterChange }) => {
     const [name, setName] = useState("");
     const [level, setLevel] = useState("");
     const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+    const [address, setAddress] = useState("");
+    const [ratingSort, setRatingSort] = useState<"" | "asc" | "desc">("");
 
     // Xử lý đổi level
     const handleLevelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -97,14 +117,15 @@ const FilterTutor: FC<FilterTutorProps> = ({ onFilterChange }) => {
 
     const subjectsToShow = [...subjectsByLevel.common, ...levelSubjects];
 
-    // Gửi filter lên parent
     useEffect(() => {
         onFilterChange({
             name,
             level,
             subjects: selectedSubjects,
+            address,
+            ratingSort: ratingSort || undefined,
         });
-    }, [name, level, selectedSubjects]);
+    }, [name, level, selectedSubjects, address, ratingSort]);
 
     return (
         <div className="filter-tutor-container">
@@ -160,13 +181,18 @@ const FilterTutor: FC<FilterTutorProps> = ({ onFilterChange }) => {
             </div>
 
             {/* Địa điểm */}
-            {/* <div className="ftcr3">
+            <div className="ftcr3">
                 <h4>
                     <FaMapMarkerAlt className="icon" />
-                    Địa điểm
+                    Địa chỉ
                 </h4>
-                <TutorLocationSelector />
-            </div> */}
+                <input
+                    type="text"
+                    placeholder="Tìm kiếm theo địa chỉ"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                />
+            </div>
 
             {/* Đánh giá */}
             <div className="ftcr7">
@@ -174,7 +200,12 @@ const FilterTutor: FC<FilterTutorProps> = ({ onFilterChange }) => {
                     <FaGraduationCap className="icon" />
                     Đánh giá
                 </h4>
-                <select>
+                <select
+                    value={ratingSort}
+                    onChange={(e) =>
+                        setRatingSort(e.target.value as "asc" | "desc" | "")
+                    }
+                >
                     <option value="">-- Chọn mức đánh giá --</option>
                     <option value="asc">Từ thấp đến cao</option>
                     <option value="desc">Từ cao đến thấp</option>
@@ -187,6 +218,8 @@ const FilterTutor: FC<FilterTutorProps> = ({ onFilterChange }) => {
                     setName("");
                     setLevel("");
                     setSelectedSubjects([]);
+                    setAddress("");
+                    setRatingSort("");
                 }}
             >
                 Làm mới

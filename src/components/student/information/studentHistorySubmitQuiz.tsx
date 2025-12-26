@@ -69,36 +69,49 @@ const StudentHistorySubmitQuiz: FC<StudentHistorySubmitQuizProps> = ({
                         </thead>
 
                         <tbody className="table-body">
-                            {paginatedQuizes?.map((quiz) => (
-                                <tr
-                                    className="table-body-row"
-                                    key={quiz.attemptId}
-                                >
-                                    <td className="table-body-cell">
-                                        {quiz.correctAnswers}
-                                    </td>
-                                    <td className="table-body-cell">
-                                        {quiz.scorePercentage}
-                                    </td>
-                                    <td className="table-body-cell">
-                                        {quiz.isPassed ? "Đạt" : "Không đạt"}
-                                    </td>
-                                    <td className="table-body-cell">
-                                        {formatTimeAdd7(quiz.submittedAt)}{" "}
-                                        {formatDate(quiz.submittedAt)}
-                                    </td>
-                                    <td className="table-body-cell">
-                                        <button
-                                            className="pr-btn"
-                                            onClick={() => {
-                                                setSelectedQuiz(quiz);
-                                            }}
-                                        >
-                                            Xem chi tiết
-                                        </button>
+                            {paginatedQuizes?.length! > 0 ? (
+                                paginatedQuizes?.map((quiz) => (
+                                    <tr
+                                        className="table-body-row"
+                                        key={quiz.attemptId}
+                                    >
+                                        <td className="table-body-cell">
+                                            {quiz.correctAnswers}
+                                        </td>
+                                        <td className="table-body-cell">
+                                            {quiz.scorePercentage}
+                                        </td>
+                                        <td className="table-body-cell">
+                                            {quiz.isPassed
+                                                ? "Đạt"
+                                                : "Không đạt"}
+                                        </td>
+                                        <td className="table-body-cell">
+                                            {formatTimeAdd7(quiz.submittedAt)}{" "}
+                                            {formatDate(quiz.submittedAt)}
+                                        </td>
+                                        <td className="table-body-cell">
+                                            <button
+                                                className="pr-btn"
+                                                onClick={() => {
+                                                    setSelectedQuiz(quiz);
+                                                }}
+                                            >
+                                                Xem chi tiết
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td
+                                        colSpan={5}
+                                        className="table-body-cell no-data"
+                                    >
+                                        Chưa có lịch sử làm bài nào
                                     </td>
                                 </tr>
-                            ))}
+                            )}
                         </tbody>
                     </table>
 
@@ -165,9 +178,7 @@ const StudentHistorySubmitQuiz: FC<StudentHistorySubmitQuizProps> = ({
                             </p>
                             <p>
                                 Điểm:{" "}
-                                <strong>
-                                    {selectedQuiz?.scorePercentage}
-                                </strong>
+                                <strong>{selectedQuiz?.scorePercentage}</strong>
                             </p>
                             <p>
                                 Trạng thái:{" "}

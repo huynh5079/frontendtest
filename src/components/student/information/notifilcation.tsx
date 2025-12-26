@@ -1,7 +1,11 @@
 import { FC, useMemo, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../app/store";
 import { selectNotifications } from "../../../app/selector";
-import { getStatusText, timeAgo } from "../../../utils/helper";
+import {
+    getStatusText,
+    timeAgo,
+    useDocumentTitle,
+} from "../../../utils/helper";
 import { Modal } from "../../modal";
 import { NotificationResponseItem } from "../../../types/notification";
 import {
@@ -48,6 +52,8 @@ const StudentNotifilcation: FC = () => {
         handleReadNotification(notification.id);
     };
 
+    useDocumentTitle("Danh sách thông báo");
+
     return (
         <div className="student-notification">
             <h3>Danh sách thông báo</h3>
@@ -64,7 +70,7 @@ const StudentNotifilcation: FC = () => {
                 <tbody className="table-body">
                     {paginatedNotifications.length === 0 && (
                         <tr>
-                            <td colSpan={4} className="empty">
+                            <td colSpan={4} className="no-data">
                                 Không có thông báo
                             </td>
                         </tr>

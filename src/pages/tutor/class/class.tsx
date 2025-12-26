@@ -5,7 +5,11 @@ import { routes } from "../../../routes/routeName";
 import { useAppDispatch, useAppSelector } from "../../../app/store";
 import { selectListTutorClass } from "../../../app/selector";
 import { getAllClassApiThunk } from "../../../services/tutor/class/classThunk";
-import { formatDate, useDocumentTitle } from "../../../utils/helper";
+import {
+    formatDate,
+    getStatusText,
+    useDocumentTitle,
+} from "../../../utils/helper";
 import { MdListAlt } from "react-icons/md";
 
 const TutorClassPage: FC = () => {
@@ -148,32 +152,46 @@ const TutorClassPage: FC = () => {
                             </tr>
                         </thead>
                         <tbody className="table-body">
-                            {paginatedData?.map((item) => (
-                                <tr className="table-body-row" key={item.id}>
-                                    <td className="table-body-cell">
-                                        {item.subject}
-                                    </td>
-                                    <td className="table-body-cell">
-                                        {item.educationLevel}
-                                    </td>
-                                    <td className="table-body-cell">
-                                        {item.status}
-                                    </td>
-                                    <td className="table-body-cell">
-                                        {formatDate(item.classStartDate)}
-                                    </td>
-                                    <td className="table-body-cell">
-                                        <button
-                                            className="pr-btn"
-                                            onClick={() => {
-                                                handleViewDetail(item.id);
-                                            }}
-                                        >
-                                            Chi tiết
-                                        </button>
+                            {paginatedData && paginatedData.length > 0 ? (
+                                paginatedData.map((item) => (
+                                    <tr
+                                        className="table-body-row"
+                                        key={item.id}
+                                    >
+                                        <td className="table-body-cell">
+                                            {item.subject}
+                                        </td>
+                                        <td className="table-body-cell">
+                                            {item.educationLevel}
+                                        </td>
+                                        <td className="table-body-cell">
+                                            {getStatusText(item.status)}
+                                        </td>
+                                        <td className="table-body-cell">
+                                            {formatDate(item.classStartDate)}
+                                        </td>
+                                        <td className="table-body-cell">
+                                            <button
+                                                className="pr-btn"
+                                                onClick={() =>
+                                                    handleViewDetail(item.id)
+                                                }
+                                            >
+                                                Chi tiết
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td
+                                        colSpan={5}
+                                        className="table-body-cell no-data"
+                                    >
+                                        Chưa có lớp học nào
                                     </td>
                                 </tr>
-                            ))}
+                            )}
                         </tbody>
                     </table>
 

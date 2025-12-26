@@ -98,6 +98,7 @@ const TutorStudySchedulePage: FC = () => {
     const startStr = format(firstDay, "yyyy-MM-dd");
     const endStr = format(lastDay, "yyyy-MM-dd");
 
+
     // Gom lịch theo từng ngày trong tuần
     const groupSchedulesByWeekDays = (studySchedules: any[]) => {
         return weekDays.map((d) => {
@@ -164,26 +165,27 @@ const TutorStudySchedulePage: FC = () => {
     ]);
 
     // Chuyển schedule sang Event
+    // Dùng parseISO() cho cả start và end để đảm bảo timezone nhất quán
     const events: RBCEvent[] = studySchedules.map((s) => ({
         id: s.id,
         lessonId: s.lessonId,
         title: "Buổi dạy",
         start: parseISO(s.startTime),
-        end: new Date(s.endTime),
+        end: parseISO(s.endTime),
         allDay: false,
         resource: s,
     }));
 
+
     // Style cho event
     const eventStyleGetter = () => {
-        let backgroundColor = "var(--main-color)";
         return {
             style: {
-                backgroundColor,
-                color: "white",
+                backgroundColor: "#fff",
+                border: "1px solid var(--main-color)",
+                color: "var(--main-color)",
                 borderRadius: "6px",
                 padding: "4px 6px",
-                border: "none",
             },
         };
     };
@@ -299,9 +301,8 @@ const TutorStudySchedulePage: FC = () => {
                     {tabs.map((t) => (
                         <div
                             key={t.key}
-                            className={`tsscr2-item ${
-                                tabActive === t.key ? "active" : ""
-                            }`}
+                            className={`tsscr2-item ${tabActive === t.key ? "active" : ""
+                                }`}
                             onClick={() => {
                                 setClassId("");
                                 setTabSubActive("schedule");
@@ -323,11 +324,10 @@ const TutorStudySchedulePage: FC = () => {
                                 {subTabs.map((t) => (
                                     <div
                                         key={t.key}
-                                        className={`sub-tab ${
-                                            tabSubActive === t.key
-                                                ? "active"
-                                                : ""
-                                        }`}
+                                        className={`sub-tab ${tabSubActive === t.key
+                                            ? "active"
+                                            : ""
+                                            }`}
                                         onClick={() => {
                                             setTabSubActive(t.key);
                                         }}
@@ -420,7 +420,7 @@ const TutorStudySchedulePage: FC = () => {
                                                         ))
                                                     ) : (
                                                         <p className="no-session">
-                                                            Không có buổi học
+                                                            Không có buổi dạy
                                                         </p>
                                                     )}
                                                 </div>
@@ -443,6 +443,7 @@ const TutorStudySchedulePage: FC = () => {
                                         <select
                                             className="form-input"
                                             value={classId || ""}
+                                            aria-label="Chọn lớp học"
                                             onChange={(e) =>
                                                 setClassId(e.target.value)
                                             }
@@ -479,11 +480,10 @@ const TutorStudySchedulePage: FC = () => {
                                         {subTabs.map((t) => (
                                             <div
                                                 key={t.key}
-                                                className={`sub-tab ${
-                                                    tabSubActive === t.key
-                                                        ? "active"
-                                                        : ""
-                                                }`}
+                                                className={`sub-tab ${tabSubActive === t.key
+                                                    ? "active"
+                                                    : ""
+                                                    }`}
                                                 onClick={() => {
                                                     setTabSubActive(t.key);
                                                 }}
@@ -573,7 +573,7 @@ const TutorStudySchedulePage: FC = () => {
 
                                                         <div className="group-content">
                                                             {d.sessions.length >
-                                                            0 ? (
+                                                                0 ? (
                                                                 d.sessions.map(
                                                                     (s) => (
                                                                         <TutorScheduleCard
@@ -620,6 +620,7 @@ const TutorStudySchedulePage: FC = () => {
                                         <select
                                             className="form-input"
                                             value={classId || ""}
+                                            aria-label="Chọn lớp học"
                                             onChange={(e) =>
                                                 setClassId(e.target.value)
                                             }
@@ -656,11 +657,10 @@ const TutorStudySchedulePage: FC = () => {
                                         {subTabs.map((t) => (
                                             <div
                                                 key={t.key}
-                                                className={`sub-tab ${
-                                                    tabSubActive === t.key
-                                                        ? "active"
-                                                        : ""
-                                                }`}
+                                                className={`sub-tab ${tabSubActive === t.key
+                                                    ? "active"
+                                                    : ""
+                                                    }`}
                                                 onClick={() => {
                                                     setTabSubActive(t.key);
                                                 }}
@@ -750,7 +750,7 @@ const TutorStudySchedulePage: FC = () => {
 
                                                         <div className="group-content">
                                                             {d.sessions.length >
-                                                            0 ? (
+                                                                0 ? (
                                                                 d.sessions.map(
                                                                     (s) => (
                                                                         <TutorScheduleCard

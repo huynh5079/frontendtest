@@ -1,6 +1,7 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { ResponseFromServer } from "../../../types/app";
 import type {
+    ResponseGetUsersForAdmin,
     StudentForAdmin,
     StudentForAdminState,
     StudentsForAdmin,
@@ -26,10 +27,10 @@ export const studentForAdminSlice = createSlice({
                 (
                     state,
                     action: PayloadAction<
-                        ResponseFromServer<StudentsForAdmin[]>
+                        ResponseFromServer<ResponseGetUsersForAdmin<StudentsForAdmin[]>>
                     >
                 ) => {
-                    state.listStudents = action.payload.data;
+                    state.listStudents = action.payload.data.items;
                 }
             )
             .addCase(

@@ -22,6 +22,23 @@ export type CreateChildAccountParams = {
     preferredSubjects: string;
     relationship: string;
     initialPassword: string;
+    gender: string;
+    dateOfBirth: string;
+};
+
+export type LinkExistingChildRequest = {
+    studentEmail: string;
+    relationship: string;
+};
+
+export type UpdateChildRequest = {
+    username?: string;
+    phone?: string;
+    address?: string;
+    educationLevel?: string;
+    preferredSubjects?: string;
+    gender?: string;
+    dateOfBirth?: string;
 };
 
 export type ChildAccounts = {
@@ -90,4 +107,30 @@ export type DetailChildScheduleLessonForParent = {
     location: string | null;
     onlineStudyLink: string | null;
     tutorUserId: string;
+};
+
+//class
+export type ParentClassState = {
+    isEnrolled: boolean;
+    assignedClasses: AssignedClassForParent[] | null;
+};
+
+export type AssignClassParamsForParent = {
+    studentId: string;
+    classId: string;
+};
+
+export type AssignedClassForParent = {
+    classId: string;
+    classTitle: string;
+    subject: string;
+    educationLevel: string;
+    tutorName: string;
+    price: number;
+    classStatus: string;
+    paymentStatus: string;
+    enrolledAt: string;
+    location: string;
+    mode: string;
+    classStartDate: string;
 };

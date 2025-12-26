@@ -23,18 +23,37 @@ const ListTutorPage: FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
-    const tutors = useAppSelector(selectListPublicTutors)?.items || [];
     const isAuthenticated = useAppSelector(selectIsAuthenticated);
     const user = useAppSelector(selectUserLogin);
+
+    const tutorsResponse = useAppSelector(selectListPublicTutors);
+
+    const tutors = tutorsResponse?.items || [];
+    const currentPage = tutorsResponse?.page || 1;
+    const pageSize = tutorsResponse?.size || 6;
+    const totalItems = tutorsResponse?.total || 0;
+
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
 
     const [filters, setFilters] = useState({
         name: "",
         level: "",
         subjects: [] as string[],
+        address: "",
     });
 
-    // Lọc FE
-    const filteredTutors = filterTutors(tutors, filters);
+    const filteredTutors = filterTutors(tutors, filters)
+        .slice()
+        .sort((a, b) => {
+            const aHasRating = a.rating !== null;
+            const bHasRating = b.rating !== null;
+
+            // cả 2 cùng có hoặc cùng không → giữ nguyên thứ tự
+            if (aHasRating === bHasRating) return 0;
+
+            // tutor có đánh giá → lên trước
+            return aHasRating ? -1 : 1;
+        });
 
     // Điều hướng vào trang detail
     const handleToDetail = (tutorId: string) => {
@@ -75,6 +94,17 @@ const ListTutorPage: FC = () => {
         dispatch(publicGetAllTutorsApiThunk(pageNumber));
     }, [pageParam, pageNumber, isAuthenticated, user, dispatch, navigate]);
 
+    const handleChangePage = (page: number) => {
+        let basePath = "/tutor";
+
+        if (isAuthenticated && user?.role === USER_STUDENT)
+            basePath = "/student/tutor";
+        else if (isAuthenticated && user?.role === USER_PARENT)
+            basePath = "/parent/tutor";
+
+        navigate(`${basePath}?page=${page}`);
+    };
+
     useDocumentTitle("Danh sách gia sư");
 
     return (
@@ -90,19 +120,53 @@ const ListTutorPage: FC = () => {
                     </div>
 
                     <div className="ltscr2c2">
-                        {filteredTutors.length > 0 ? (
-                            filteredTutors.map((tutor) => (
-                                <TutorCard
-                                    key={tutor.tutorId}
-                                    tutor={tutor}
-                                    handeleToDetailTutor={() =>
-                                        handleToDetail(tutor.tutorId)
-                                    }
-                                />
-                            ))
-                        ) : (
-                            <p>Không tìm thấy gia sư phù hợp.</p>
-                        )}
+                        <div className="ltscr2c2-tutors">
+                            {filteredTutors.length > 0 ? (
+                                filteredTutors.map((tutor) => (
+                                    <TutorCard
+                                        key={tutor.tutorId}
+                                        tutor={tutor}
+                                        handeleToDetailTutor={() =>
+                                            handleToDetail(tutor.tutorId)
+                                        }
+                                    />
+                                ))
+                            ) : (
+                                <p>Không tìm thấy gia sư phù hợp.</p>
+                            )}
+                        </div>
+
+                        <div className="pagination">
+                            <button
+                                disabled={currentPage === 1}
+                                className={
+                                    currentPage === 1 ? "disable-btn" : "sc-btn"
+                                }
+                                onClick={() =>
+                                    handleChangePage(currentPage - 1)
+                                }
+                            >
+                                Trang trước
+                            </button>
+
+                            <span>
+                                {currentPage} / {totalPages}
+                            </span>
+
+                            <button
+                                disabled={currentPage === totalPages}
+                                className={
+                                    currentPage === totalPages
+                                        ? "disable-btn"
+                                        : "sc-btn"
+                                }
+                                onClick={() =>
+                                    handleChangePage(currentPage + 1)
+                                }
+                            >
+                                Trang sau
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

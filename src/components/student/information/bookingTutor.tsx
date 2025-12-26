@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from "../../../app/store";
 import {
     selectDetailClassRequestForStudent,
     selectListClassRequestForStudent,
+    selectPublicTutor,
 } from "../../../app/selector";
 
 import {
@@ -23,6 +24,7 @@ import {
 } from "../../modal";
 import { routes } from "../../../routes/routeName";
 import { navigateHook } from "../../../routes/routeApp";
+import { publicGetDetailTutorApiThunk } from "../../../services/public/tutor/tutorThunk";
 
 /* ================================
    Constant
@@ -54,6 +56,7 @@ const StudentBookingTutor: FC = () => {
     ).filter((b) => b?.tutorName);
 
     const bookingTutor = useAppSelector(selectDetailClassRequestForStudent);
+    const tutorDetail = useAppSelector(selectPublicTutor);
 
     /* Local UI state */
     const [isUpdateBookingTutorModalOpen, setIsUpdateBookingTutorModalOpen] =
@@ -83,6 +86,12 @@ const StudentBookingTutor: FC = () => {
         }
     }, [dispatch, id]);
 
+    useEffect(() => {
+        if (bookingTutor) {
+            dispatch(publicGetDetailTutorApiThunk(bookingTutor.tutorUserId!));
+        }
+    }, [dispatch, bookingTutor]);
+
     /* ================================
        Handlers
     ================================= */
@@ -102,7 +111,7 @@ const StudentBookingTutor: FC = () => {
     const totalPages = Math.ceil((bookingTutors?.length || 0) / ITEMS_PER_PAGE);
     const paginatedItems = bookingTutors?.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
-        currentPage * ITEMS_PER_PAGE
+        currentPage * ITEMS_PER_PAGE,
     );
 
     const handlePrevPage = () => {
@@ -119,12 +128,12 @@ const StudentBookingTutor: FC = () => {
     const renderBookingList = () => (
         <>
             <div className="sbtr1">
-                <h3>Lớp học đăng ký</h3>
+                <h3>Danh sách lịch đặt</h3>
                 <button
                     className="pr-btn"
                     onClick={() => navigateHook(routes.student.tutor.list)}
                 >
-                    Đi tìm lớp học
+                    Đi tìm gia sư
                 </button>
             </div>
 
@@ -134,32 +143,42 @@ const StudentBookingTutor: FC = () => {
                         <th className="table-head-cell">Tên gia sư</th>
                         <th className="table-head-cell">Môn học</th>
                         <th className="table-head-cell">Trạng thái</th>
-                        <th className="table-head-cell">Thời gian đặt lịch</th>
+                        <th className="table-head-cell">Thời gian học</th>
                         <th className="table-head-cell">Thao tác</th>
                     </tr>
                 </thead>
 
                 <tbody className="table-body">
-                    {paginatedItems?.map((b) => (
-                        <tr key={b.id}>
-                            <td className="table-body-cell">{b.tutorName}</td>
-                            <td className="table-body-cell">{b.subject}</td>
-                            <td className="table-body-cell">
-                                {getStatusText(b.status)}
-                            </td>
-                            <td className="table-body-cell">
-                                {formatDate(b.createdAt)}
-                            </td>
-                            <td className="table-body-cell">
-                                <button
-                                    className="pr-btn"
-                                    onClick={() => handleViewDetail(b.id)}
-                                >
-                                    Chi tiết
-                                </button>
+                    {paginatedItems && paginatedItems.length > 0 ? (
+                        paginatedItems.map((b) => (
+                            <tr key={b.id}>
+                                <td className="table-body-cell">
+                                    {b.tutorName}
+                                </td>
+                                <td className="table-body-cell">{b.subject}</td>
+                                <td className="table-body-cell">
+                                    {getStatusText(b.status)}
+                                </td>
+                                <td className="table-body-cell">
+                                    {formatDate(b.classStartDate)}
+                                </td>
+                                <td className="table-body-cell">
+                                    <button
+                                        className="pr-btn"
+                                        onClick={() => handleViewDetail(b.id)}
+                                    >
+                                        Chi tiết
+                                    </button>
+                                </td>
+                            </tr>
+                        ))
+                    ) : (
+                        <tr>
+                            <td colSpan={5} className="table-body-cell no-data">
+                                Chưa có lịch đặt
                             </td>
                         </tr>
-                    ))}
+                    )}
                 </tbody>
             </table>
 
@@ -210,9 +229,21 @@ const StudentBookingTutor: FC = () => {
                             <p>{bookingTutor?.description}</p>
                         </div>
 
+                        {bookingTutor?.specialRequirements && (
+                            <div className="detail-item">
+                                <h4>Yêu cầu đặc biệt</h4>
+                                <p>{bookingTutor?.specialRequirements}</p>
+                            </div>
+                        )}
+
                         <div className="detail-item">
-                            <h4>Yêu cầu đặc biệt</h4>
-                            <p>{bookingTutor?.specialRequirements}</p>
+                            <h4>Môn học</h4>
+                            <p>{bookingTutor?.subject}</p>
+                        </div>
+
+                        <div className="detail-item">
+                            <h4>Cấp bậc học</h4>
+                            <p>{bookingTutor?.educationLevel}</p>
                         </div>
                     </div>
                 </div>
@@ -225,15 +256,14 @@ const StudentBookingTutor: FC = () => {
                             <h4>Gia sư</h4>
                             <p>{bookingTutor?.tutorName}</p>
                         </div>
-
                         <div className="detail-item">
-                            <h4>Môn học</h4>
-                            <p>{bookingTutor?.subject}</p>
+                            <h4>Môn dạy</h4>
+                            <p>{tutorDetail?.teachingSubjects}</p>
                         </div>
 
                         <div className="detail-item">
-                            <h4>Cấp bậc học</h4>
-                            <p>{bookingTutor?.educationLevel}</p>
+                            <h4>Cấp bậc giảng dạy</h4>
+                            <p>{tutorDetail?.teachingLevel}</p>
                         </div>
                     </div>
                     <div
@@ -252,7 +282,7 @@ const StudentBookingTutor: FC = () => {
                     <div className="group-content">
                         <div className="detail-item">
                             <h4>Hình thức học</h4>
-                            <p>{bookingTutor?.mode}</p>
+                            <p>{bookingTutor?.mode === "Online" ? "Học trực tuyến" : "Học trực tiếp"}</p>
                         </div>
 
                         {bookingTutor?.mode === "Offline" && (
@@ -282,7 +312,7 @@ const StudentBookingTutor: FC = () => {
                             <h4>Ngày bắt đầu</h4>
                             <p>
                                 {formatDate(
-                                    String(bookingTutor?.classStartDate)
+                                    String(bookingTutor?.classStartDate),
                                 )}
                             </p>
                         </div>
@@ -306,7 +336,7 @@ const StudentBookingTutor: FC = () => {
                                 .sort(
                                     (a, b) =>
                                         sortOrder.indexOf(a.dayOfWeek) -
-                                        sortOrder.indexOf(b.dayOfWeek)
+                                        sortOrder.indexOf(b.dayOfWeek),
                                 )
                                 .map((s, index) => (
                                     <div key={index} className="schedule-item">

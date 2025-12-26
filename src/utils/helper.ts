@@ -322,10 +322,12 @@ export const formatTimeAdd7 = (isoString?: string | null): string => {
     const date = new Date(isoString);
     if (isNaN(date.getTime())) return "--:--";
 
-    // Cộng thêm 7 giờ (UTC+7)
-    const localDate = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+    // Backend đã serialize DateTime với +07:00 timezone offset
+    // JavaScript's new Date() tự động convert sang local time (UTC+7)
+    // KHÔNG CẦN cộng thêm 7 giờ nữa
+    // Nếu cộng thêm sẽ bị sai 14 giờ (7 + 7 = 14)
 
-    return localDate.toLocaleTimeString("vi-VN", {
+    return date.toLocaleTimeString("vi-VN", {
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,

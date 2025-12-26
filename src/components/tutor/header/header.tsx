@@ -22,14 +22,18 @@ import {
     getConversationsApiThunk,
     markConversationAsReadApiThunk,
     getOnlineUsersApiThunk,
+    getConversationByIdApiThunk,
+    deleteConversationApiThunk,
 } from "../../../services/chat/chatThunk";
-import { selectConversations, selectOnlineUsers } from "../../../app/selector";
+import { selectConversations, selectOnlineUsers, selectCurrentConversation } from "../../../app/selector";
 import chatConnection, {
     startChatConnection,
 } from "../../../signalR/signalRChat";
 import {
     addMessage,
     setCurrentConversation,
+    updateConversation,
+    incrementUnreadCount,
 } from "../../../services/chat/chatSlice";
 import type { MessageDto, ConversationDto } from "../../../types/chat";
 import { ChatModal } from "../../chat";
@@ -153,6 +157,7 @@ const HeaderTutor: FC = () => {
     const chatUnreadCount = useAppSelector(selectChatUnreadCount);
     const conversations = useAppSelector(selectConversations);
     const onlineUsers = useAppSelector(selectOnlineUsers);
+    const currentConversation = useAppSelector(selectCurrentConversation);
     const unreadNotifications = notifications.filter(
         (n) => n.status !== "Read"
     );
@@ -189,10 +194,116 @@ const HeaderTutor: FC = () => {
         dispatch(getOnlineUsersApiThunk());
     };
 
+    const handleDeleteConversation = async (e: React.MouseEvent, conversationId: string) => {
+        e.stopPropagation(); // Ngăn chặn click vào conversation item
+        if (window.confirm("Bạn có chắc chắn muốn xóa cuộc trò chuyện này không?")) {
+            try {
+                await dispatch(deleteConversationApiThunk(conversationId)).unwrap();
+                toast.success("Đã xóa cuộc trò chuyện");
+                // Refresh conversations list
+                dispatch(getConversationsApiThunk());
+            } catch (error: any) {
+                toast.error(error?.errorMessage || "Xóa cuộc trò chuyện thất bại");
+            }
+        }
+    };
+
     const handleNewMessage = (message: MessageDto) => {
+        console.log("=== handleNewMessage called ===", message);
+        console.log("Current chatUnreadCount before:", chatUnreadCount);
+        console.log("Message senderId:", message.senderId, "UserLogin id:", userLogin?.id);
+
         dispatch(addMessage(message));
-        dispatch(getConversationsApiThunk());
-        toast.info(`💬 Tin nhắn mới từ ${message.senderName}`);
+
+        // Update conversation with new last message immediately
+        if (message.conversationId) {
+            // Find the conversation in current state
+            const currentConv = conversations.find(c => c.id === message.conversationId);
+            console.log("Current conversation found:", currentConv);
+
+            if (currentConv) {
+                const lastMessageContent = message.content ||
+                    (message.messageType === "Image" ? "Đã gửi một hình ảnh" :
+                        message.messageType === "File" ? "Đã gửi một file" : "");
+
+                // Check if user is currently viewing this conversation in ChatModal
+                const isViewingConversation = currentConversation?.id === message.conversationId;
+
+                const updatedConv: ConversationDto = {
+                    ...currentConv,
+                    lastMessageContent: lastMessageContent,
+                    lastMessageAt: message.createdAt || new Date().toISOString(),
+                    lastMessageType: message.messageType,
+                    // Don't update unreadCount here - server already updated it, and we'll sync from server
+                    // Only update lastMessage info for immediate UI update
+                };
+
+                console.log("Updating conversation:", updatedConv);
+                dispatch(updateConversation(updatedConv));
+            } else {
+                // Conversation not in state, fetch it from server
+                console.log("Conversation not in state, fetching from server...");
+                dispatch(getConversationByIdApiThunk(message.conversationId)).then((result) => {
+                    if (getConversationByIdApiThunk.fulfilled.match(result)) {
+                        const fetchedConv = result.payload.data;
+                        console.log("Fetched conversation from server:", fetchedConv);
+
+                        // Update with last message info
+                        const lastMessageContent = message.content ||
+                            (message.messageType === "Image" ? "Đã gửi một hình ảnh" :
+                                message.messageType === "File" ? "Đã gửi một file" : "");
+
+                        // Check if user is currently viewing this conversation in ChatModal
+                        const isViewingConversation = currentConversation?.id === message.conversationId;
+
+                        const updatedConv: ConversationDto = {
+                            ...fetchedConv,
+                            lastMessageContent: lastMessageContent,
+                            lastMessageAt: message.createdAt || new Date().toISOString(),
+                            lastMessageType: message.messageType,
+                            // Don't update unreadCount here - server already updated it
+                            // Only update lastMessage info for immediate UI update
+                        };
+
+                        console.log("Updating fetched conversation:", updatedConv);
+                        dispatch(updateConversation(updatedConv));
+                    }
+                }).catch((error) => {
+                    console.error("Error fetching conversation:", error);
+                });
+            }
+        }
+
+        // Update global unread count immediately (only if not viewing the conversation)
+        const isViewingConversation = currentConversation?.id === message.conversationId;
+        console.log("isViewingConversation:", isViewingConversation, "currentConversation?.id:", currentConversation?.id, "message.conversationId:", message.conversationId);
+        console.log("message.senderId:", message.senderId, "userLogin?.id:", userLogin?.id, "areEqual:", message.senderId === userLogin?.id);
+
+        if (message.senderId !== userLogin?.id && !isViewingConversation) {
+            // Increment global unread count immediately for instant UI update
+            console.log("Dispatching incrementUnreadCount...");
+            dispatch(incrementUnreadCount());
+            console.log("Incremented unread count for message from:", message.senderName);
+        } else {
+            console.log("Message is from current user or viewing conversation, skipping unread count increment", {
+                isFromCurrentUser: message.senderId === userLogin?.id,
+                isViewing: isViewingConversation
+            });
+        }
+
+        // Refresh unread count from server to sync (but keep local increment if higher)
+        // Delay to give server time to update
+        setTimeout(() => {
+            console.log("Refreshing unread count from server...");
+            dispatch(getUnreadCountApiThunk());
+        }, 500);
+
+        // Refresh conversations to get latest data (including unread counts)
+        setTimeout(() => {
+            console.log("Refreshing conversations from server...");
+            dispatch(getConversationsApiThunk());
+        }, 1000);
+
     };
 
     // Notification SignalR
@@ -222,7 +333,7 @@ const HeaderTutor: FC = () => {
             connection.off("ReceiveNotification", handleNewNotification);
             chatConnection.off("ReceiveMessage", handleNewMessage);
         };
-    }, [isAuthenticated]);
+    }, [isAuthenticated, dispatch, userLogin]);
 
     const handleNewNotification = (notification: NotificationResponseItem) => {
         dispatch(addNotification(notification));
@@ -291,7 +402,9 @@ const HeaderTutor: FC = () => {
                     />
 
                     {chatUnreadCount > 0 && (
-                        <div className="noti-number">{chatUnreadCount}</div>
+                        <div className="noti-number" title={`${chatUnreadCount} tin nhắn chưa đọc`}>
+                            {chatUnreadCount}
+                        </div>
                     )}
 
                     {isChatOpen && (
@@ -315,6 +428,7 @@ const HeaderTutor: FC = () => {
                                             handleConversationClick(conv)
                                         }
                                         className="chat-content"
+                                        style={{ position: "relative" }}
                                     >
                                         <div className="chat-img">
                                             <img
@@ -335,10 +449,24 @@ const HeaderTutor: FC = () => {
                                                 )}
                                         </div>
                                         <div className="chat-info">
-                                            <div className="chat-name">
-                                                {conv.otherUserName ||
-                                                    conv.title}
-                                            </div>
+                                            {(() => {
+                                                const baseName =
+                                                    conv.otherUserName ||
+                                                    conv.title ||
+                                                    "Cuộc trò chuyện";
+                                                const suffix = conv.id
+                                                    ? ` • ${conv.id.slice(-4)}`
+                                                    : "";
+                                                return (
+                                                    <div
+                                                        className="chat-name"
+                                                        title={`${baseName}${suffix}`}
+                                                    >
+                                                        {baseName}
+                                                        {suffix}
+                                                    </div>
+                                                );
+                                            })()}
                                             <div className="chat-message">
                                                 {conv.lastMessageContent ||
                                                     "Chưa có tin nhắn"}
@@ -357,8 +485,34 @@ const HeaderTutor: FC = () => {
                                             {currentTime && null}
                                         </div>
                                         {conv.unreadCount > 0 && (
-                                            <span>{conv.unreadCount}</span>
+                                            <span className="chat-unread-badge">{conv.unreadCount}</span>
                                         )}
+                                        <button
+                                            onClick={(e) => handleDeleteConversation(e, conv.id)}
+                                            aria-label="Xóa cuộc trò chuyện"
+                                            style={{
+                                                position: "absolute",
+                                                top: "8px",
+                                                right: "8px",
+                                                background: "#ff4444",
+                                                border: "none",
+                                                borderRadius: "50%",
+                                                width: "24px",
+                                                height: "24px",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                cursor: "pointer",
+                                                color: "white",
+                                                fontSize: "18px",
+                                                fontWeight: "bold",
+                                                lineHeight: "1",
+                                                zIndex: 10,
+                                            }}
+                                            title="Xóa cuộc trò chuyện"
+                                        >
+                                            ×
+                                        </button>
                                     </li>
                                 ))}
                             </ul>
@@ -367,7 +521,7 @@ const HeaderTutor: FC = () => {
                                 <button
                                     className="pr-btn"
                                     onClick={() => {
-                                        handleClickSubMenu(routes.student.chat);
+                                        handleClickSubMenu(routes.tutor.chat);
                                     }}
                                 >
                                     Xem tất cả

@@ -1,8 +1,9 @@
 import { useState, type FC } from "react";
 import type { StudentWithdrawClassModalProps } from "../../types/modal";
 import Modal from "./modal";
-import { useAppDispatch } from "../../app/store";
+import { useAppDispatch, useAppSelector } from "../../app/store";
 import { withdrawClassForStudentApiThunk } from "../../services/student/class/classThunk";
+import { selectUserLogin } from "../../app/selector";
 import { get } from "lodash";
 import { toast } from "react-toastify";
 import { LoadingSpinner } from "../elements";
@@ -11,8 +12,10 @@ const StudentWithdrawClassModal: FC<StudentWithdrawClassModalProps> = ({
     isOpen,
     setIsOpen,
     classId,
+    onSuccess,
 }) => {
     const dispatch = useAppDispatch();
+    const userInfo = useAppSelector(selectUserLogin);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleWithdraw = async () => {
@@ -21,14 +24,23 @@ const StudentWithdrawClassModal: FC<StudentWithdrawClassModalProps> = ({
             return;
         }
 
+        if (!userInfo?.id) {
+            toast.error("Không tìm thấy thông tin người dùng");
+            return;
+        }
+
         setIsSubmitting(true);
 
-        await dispatch(withdrawClassForStudentApiThunk(classId))
+        await dispatch(withdrawClassForStudentApiThunk({ classId, studentId: userInfo.id }))
             .unwrap()
             .then((res) => {
                 const message = get(res, "data.message", "Rút khỏi lớp học thành công");
                 toast.success(message);
                 setIsOpen(false);
+                // Call onSuccess callback if provided
+                if (onSuccess) {
+                    onSuccess();
+                }
             })
             .catch((error) => {
                 const errorData = get(error, "data.message", "Có lỗi xảy ra");
@@ -41,12 +53,12 @@ const StudentWithdrawClassModal: FC<StudentWithdrawClassModalProps> = ({
 
     return (
         <Modal isOpen={isOpen} setIsOpen={setIsOpen} title="Rút khỏi lớp học">
-            <section id="student-withdraw-class-modal">
-                <div className="swcm-container">
-                    <p className="swcm-warning">
+            <section id="student-assign-class-modal">
+                <div className="sacm-container">
+                    <h3 className="sacm-warning">
                         Bạn có chắc chắn muốn rút khỏi lớp học này không?
-                    </p>
-                    <p className="swcm-note">
+                    </h3>
+                    <p className="sacm-note">
                         Lưu ý: Khi rút khỏi lớp học, tiền học phí sẽ được hoàn lại vào ví của bạn.
                     </p>
 

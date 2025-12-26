@@ -4,7 +4,10 @@ import { routes } from "../../../routes/routeName";
 import { useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../app/store";
 import { getDetailScheduleLessonForTutorApiThunk } from "../../../services/tutor/schedule/tutorScheduleThunk";
-import { selectDetailScheduleForTutor } from "../../../app/selector";
+import {
+    selectDetailScheduleForTutor,
+    selectLessonAttendanceDetailForTutor,
+} from "../../../app/selector";
 import {
     formatTime,
     getAttendanceText,
@@ -12,10 +15,12 @@ import {
 } from "../../../utils/helper";
 import { markAttendanceManyStudentsForTutorApiThunk } from "../../../services/tutor/attendance/tutorAttendanceThunk";
 import { toast } from "react-toastify";
-import { Modal } from "../../../components/modal";
+import { CreateRescheduleModal, Modal } from "../../../components/modal";
 import { LoadingSpinner } from "../../../components/elements";
 import LessonMaterialsView from "../../../components/lessonMaterials/LessonMaterialsView";
 import TutorManageQuiz from "../../../components/tutor/manage/lesson/quiz";
+import { getLessonAttendanceDetailForTutorApiThunk } from "../../../services/attendance/attendanceThunk";
+import { MdNote } from "react-icons/md";
 
 interface TutorDetailLessonPageProps {}
 
@@ -23,16 +28,23 @@ const TutorDetailLessonPage: FC<TutorDetailLessonPageProps> = () => {
     const { id } = useParams();
     const dispatch = useAppDispatch();
     const lesson = useAppSelector(selectDetailScheduleForTutor);
+    const lessonAttendanceDetail = useAppSelector(
+        selectLessonAttendanceDetailForTutor,
+    );
 
     const [tabSubActive, setTabSubActive] = useState("lesson");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
+    const [notes, setNotes] = useState("");
 
     const openModal = () => {
         const initial: any = {};
         lesson?.students.forEach((s) => {
-            initial[s.studentId] = "Present"; // default
+            initial[s.studentId] = s.attendanceStatus;
         });
+
         setAttendanceMap(initial);
+        setNotes(""); // ✅ reset ghi chú
         setShowModal(true);
     };
 
@@ -57,14 +69,20 @@ const TutorDetailLessonPage: FC<TutorDetailLessonPageProps> = () => {
         return now >= fifteenMinutesBefore && now <= endOfDay;
     };
 
+    useEffect(() => {
+        if (lesson && tabSubActive === "attendance") {
+            dispatch(getLessonAttendanceDetailForTutorApiThunk(lesson?.id!));
+        }
+    }, [dispatch, tabSubActive, lesson]);
+
     const submitAttendanceMany = () => {
         setIsSubmitting(true);
         dispatch(
             markAttendanceManyStudentsForTutorApiThunk({
                 lessonId: id!,
                 params: {
-                    notes: "",
-                    studentStatusMap: attendanceMap,
+                    studentStatus: attendanceMap,
+                    notes: notes,
                 },
             }),
         )
@@ -124,22 +142,27 @@ const TutorDetailLessonPage: FC<TutorDetailLessonPageProps> = () => {
                 <div className="tldscr4">
                     <div className="tldscr4r1">
                         <div className="sub-tabs">
-                            {["lesson", "student", "material", "quiz"].map(
-                                (t) => (
-                                    <div
-                                        key={t}
-                                        className={`sub-tab ${
-                                            tabSubActive === t ? "active" : ""
-                                        }`}
-                                        onClick={() => setTabSubActive(t)}
-                                    >
-                                        {t === "lesson" && "Buổi học"}
-                                        {t === "student" && "Học sinh"}
-                                        {t === "material" && "Tài liệu"}
-                                        {t === "quiz" && "Bài tập"}
-                                    </div>
-                                ),
-                            )}
+                            {[
+                                "lesson",
+                                "student",
+                                "material",
+                                "quiz",
+                                "attendance",
+                            ].map((t) => (
+                                <div
+                                    key={t}
+                                    className={`sub-tab ${
+                                        tabSubActive === t ? "active" : ""
+                                    }`}
+                                    onClick={() => setTabSubActive(t)}
+                                >
+                                    {t === "lesson" && "Buổi học"}
+                                    {t === "student" && "Học sinh"}
+                                    {t === "material" && "Tài liệu"}
+                                    {t === "quiz" && "Bài tập"}
+                                    {t === "attendance" && "Điểm danh"}
+                                </div>
+                            ))}
                         </div>
                     </div>
                     <div className="tldscr4r2">
@@ -168,6 +191,14 @@ const TutorDetailLessonPage: FC<TutorDetailLessonPageProps> = () => {
                                             </p>
                                         </div>
                                     </div>
+                                    <button
+                                        className="pr-btn"
+                                        onClick={() =>
+                                            setIsRescheduleOpen(true)
+                                        }
+                                    >
+                                        Dời lịch học
+                                    </button>
                                 </div>
                                 <div className="detail-group">
                                     <h3 className="group-title">
@@ -249,7 +280,11 @@ const TutorDetailLessonPage: FC<TutorDetailLessonPageProps> = () => {
                                     </div>
                                 </div>
                                 <button
-                                    className={!canCheckAttendance() ? "disable-btn" : "pr-btn"}
+                                    className={
+                                        !canCheckAttendance()
+                                            ? "disable-btn"
+                                            : "pr-btn"
+                                    }
                                     onClick={openModal}
                                     disabled={!canCheckAttendance()}
                                 >
@@ -284,6 +319,93 @@ const TutorDetailLessonPage: FC<TutorDetailLessonPageProps> = () => {
                             <div className="detail-group">
                                 <h3 className="group-title">Bài tập</h3>
                                 <TutorManageQuiz lessonId={id!} />
+                            </div>
+                        )}
+                        {tabSubActive === "attendance" && (
+                            <div className="detail-lesson">
+                                <div className="detail-group">
+                                    <h3 className="group-title">Thống kê</h3>
+                                    <div className="group-content">
+                                        <div className="detail-item">
+                                            <h4>Buổi học</h4>
+                                            <p>
+                                                Buổi{" "}
+                                                {
+                                                    lessonAttendanceDetail?.lessonNumber
+                                                }
+                                            </p>
+                                        </div>
+                                        <div className="detail-item">
+                                            <h4>Sỉ số</h4>
+                                            <p>
+                                                {
+                                                    lessonAttendanceDetail?.presentCount
+                                                }
+                                                /
+                                                {
+                                                    lessonAttendanceDetail?.totalStudents
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="detail-group">
+                                    <h3 className="group-title">Học sinh</h3>
+                                    <table className="table">
+                                        <thead className="table-head">
+                                            <tr className="table-head-row">
+                                                <th className="table-head-cell">
+                                                    Học sinh
+                                                </th>
+                                                <th className="table-head-cell">
+                                                    Trạng thái
+                                                </th>
+                                                <th className="table-head-cell">
+                                                    Ghi chú
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="table-body">
+                                            {lessonAttendanceDetail?.students
+                                                .length === 0 ? (
+                                                <tr className="table-body-row">
+                                                    <td
+                                                        className="table-body-cell no-data"
+                                                        colSpan={3}
+                                                    >
+                                                        Không có học sinh nào
+                                                        trong buổi học này.
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                lessonAttendanceDetail?.students?.map(
+                                                    (item) => (
+                                                        <tr
+                                                            className="table-body-row"
+                                                            key={item.studentId}
+                                                        >
+                                                            <td className="table-body-cell">
+                                                                {
+                                                                    item.studentName
+                                                                }
+                                                            </td>
+                                                            <td className="table-body-cell">
+                                                                {getAttendanceText(
+                                                                    item.status,
+                                                                )}
+                                                            </td>
+                                                            <td className="table-body-cell">
+                                                                {item.notes
+                                                                    ? item.notes
+                                                                    : "Không có"}
+                                                            </td>
+                                                        </tr>
+                                                    ),
+                                                )
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -331,6 +453,20 @@ const TutorDetailLessonPage: FC<TutorDetailLessonPageProps> = () => {
                         </div>
                     ))}
                 </div>
+                <div className="form">
+                    <div className="form-field">
+                        <label className="form-label">Ghi chú buổi học</label>
+                        <div className="form-input-container">
+                            <MdNote className="form-input-icon" />
+                            <textarea
+                                className="form-input"
+                                placeholder="Ví dụ: tuần sau kiểm tra quiz..."
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                </div>
 
                 <div className="modal-actions">
                     <button
@@ -347,6 +483,11 @@ const TutorDetailLessonPage: FC<TutorDetailLessonPageProps> = () => {
                     </button>
                 </div>
             </Modal>
+            <CreateRescheduleModal
+                isOpen={isRescheduleOpen}
+                setIsOpen={setIsRescheduleOpen}
+                lessonId={lesson?.id!}
+            />
         </section>
     );
 };

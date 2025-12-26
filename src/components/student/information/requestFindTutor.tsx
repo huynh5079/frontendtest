@@ -50,6 +50,7 @@ import {
 } from "../../elements";
 import {
     CancelRequestFindTutorForStudent,
+    ConfirmPaymentModal,
     Modal,
     RemindWalletModal,
     UpdateRequestFindTutorForStudentModal,
@@ -110,17 +111,18 @@ const StudentRequestFindTutor: FC = () => {
     const id = searchParams.get("id");
 
     const balance: WalletBalance | null = useAppSelector(selectBalance);
+    // Chỉ hiển thị các request có status = Pending (chưa được xử lý)
     const bookingTutors = useAppSelector(
-        selectListClassRequestForStudent
-    )?.filter((b) => !b.tutorName);
+        selectListClassRequestForStudent,
+    )?.filter((b) => b.status === "Pending");
     const bookingTutor = useAppSelector(selectDetailClassRequestForStudent);
     const applyRequests = useAppSelector(
-        selectListApplyRequestFindTutorForStudent
+        selectListApplyRequestFindTutorForStudent,
     );
     const schedules =
         useAppSelector(selectListLearningScheduleForStudent) || [];
     const busySchedules = groupSchedulesByWeek(
-        Array.isArray(schedules) ? schedules : []
+        Array.isArray(schedules) ? schedules : [],
     );
 
     // === STATE ===
@@ -144,6 +146,11 @@ const StudentRequestFindTutor: FC = () => {
         useState(false);
     const [selectedApplyRequestId, setSelectedApplyRequestId] =
         useState<string>("");
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [pendingValues, setPendingValues] =
+        useState<CreateClassRequestParams | null>(null);
+    const [isConfirmLoading, setIsConfirmLoading] = useState(false);
+    const [tabSubActive, setTabSubActive] = useState("request");
 
     // === EFFECTS ===
     useEffect(() => {
@@ -160,8 +167,6 @@ const StudentRequestFindTutor: FC = () => {
             dispatch(getAllApplyRequestFindTutorForStudentApiThunk(id));
         }
     }, [dispatch, id, bookingTutor]);
-
-    useDocumentTitle("Danh sách đơn tìm gia sư");
 
     // === HANDLERS ===
     const handleNextStep = () => setIsStep((prev) => prev + 1);
@@ -180,7 +185,7 @@ const StudentRequestFindTutor: FC = () => {
                 ? Array.from({ length: 4 }, (_, i) => `Lớp ${i + 6}`)
                 : value === "Trung học phổ thông"
                 ? Array.from({ length: 3 }, (_, i) => `Lớp ${i + 10}`)
-                : []
+                : [],
         );
     };
 
@@ -200,15 +205,18 @@ const StudentRequestFindTutor: FC = () => {
         setIsSubmittingAcceptApplyRequest(true);
         await dispatch(
             acceptApplyRequestFindTutorForStudentApiThunk(
-                selectedApplyRequestId
-            )
+                selectedApplyRequestId,
+            ),
         )
             .unwrap()
-            .then((res) =>
-                toast.success(get(res, "data.message", "Xử lí thành công"))
-            )
+            .then((res) => {
+                toast.success(get(res, "data.message", "Xử lí thành công"));
+                navigateHook(
+                    `/student/information?tab=assigned_class&id=${res.data.classId}`,
+                );
+            })
             .catch((err) =>
-                toast.error(get(err, "data.message", "Có lỗi xảy ra"))
+                toast.error(get(err, "data.message", "Có lỗi xảy ra")),
             )
             .finally(() => {
                 dispatch(getAllApplyRequestFindTutorForStudentApiThunk(id!)),
@@ -222,15 +230,15 @@ const StudentRequestFindTutor: FC = () => {
         setIsSubmittingRejectApplyRequest(true);
         await dispatch(
             rejectApplyRequestFindTutorForStudentApiThunk(
-                selectedApplyRequestId
-            )
+                selectedApplyRequestId,
+            ),
         )
             .unwrap()
             .then((res) =>
-                toast.success(get(res, "data.message", "Xử lí thành công"))
+                toast.success(get(res, "data.message", "Xử lí thành công")),
             )
             .catch((err) =>
-                toast.error(get(err, "data.message", "Có lỗi xảy ra"))
+                toast.error(get(err, "data.message", "Có lỗi xảy ra")),
             )
             .finally(() => {
                 dispatch(getAllApplyRequestFindTutorForStudentApiThunk(id!)),
@@ -266,24 +274,75 @@ const StudentRequestFindTutor: FC = () => {
         mode: Yup.string()
             .oneOf(["Offline", "Online"])
             .required("Vui lòng chọn hình thức học"),
-        classStartDate: Yup.string().required("Vui lòng chọn ngày bắt đầu"),
+        classStartDate: Yup.string()
+            .required("Vui lòng chọn ngày bắt đầu")
+            .test(
+                "min-4-days",
+                "Ngày bắt đầu học phải sau hôm nay ít nhất 4 ngày",
+                (value) => {
+                    if (!value) return false;
+
+                    const selectedDate = new Date(value);
+                    const today = new Date();
+
+                    // reset giờ để so sánh chính xác theo ngày
+                    today.setHours(0, 0, 0, 0);
+
+                    const minDate = new Date(today);
+                    minDate.setDate(minDate.getDate() + 4);
+
+                    return selectedDate >= minDate;
+                },
+            ),
         budget: Yup.number().min(0, "Học phí phải >= 0"),
         schedules: Yup.array()
             .of(
-                Yup.object().shape({
+                Yup.object({
                     dayOfWeek: Yup.number().required(),
                     startTime: Yup.string().required(),
                     endTime: Yup.string().required(),
-                })
+                }),
             )
-            .min(1, "Vui lòng chọn lịch đúng số buổi"),
+            .min(1, "Vui lòng chọn ít nhất 1 buổi học"),
     });
+
+    const handleConfirmPayment = () => {
+        if (!pendingValues || isConfirmLoading) return;
+
+        setIsConfirmLoading(true);
+
+        dispatch(
+            tranferToAdminApiThunk({
+                Amount: createRequestFee,
+                Note: "Phí đặt lịch gia sư",
+            }),
+        )
+            .unwrap()
+            .then(() => {
+                return dispatch(
+                    createClassRequestForStudentApiThunk(pendingValues),
+                ).unwrap();
+            })
+            .then((res) => {
+                toast.success(get(res, "data.message", "Đặt lịch thành công"));
+                handlePrevStep();
+                dispatch(getAllClassRequestForStudentApiThunk());
+            })
+            .catch((err) => {
+                toast.error(get(err, "data.message", "Có lỗi xảy ra"));
+            })
+            .finally(() => {
+                setIsConfirmLoading(false);
+                setIsConfirmOpen(false);
+                setPendingValues(null);
+            });
+    };
 
     /* Pagination */
     const totalPages = Math.ceil((bookingTutors?.length || 0) / ITEMS_PER_PAGE);
     const paginatedItems = bookingTutors?.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
-        currentPage * ITEMS_PER_PAGE
+        currentPage * ITEMS_PER_PAGE,
     );
 
     const handlePrevPage = () => {
@@ -293,6 +352,18 @@ const StudentRequestFindTutor: FC = () => {
     const handleNextPage = () => {
         if (currentPage < totalPages) setCurrentPage(currentPage + 1);
     };
+
+    useEffect(() => {
+        if (isStep === 1) {
+            if (!id) {
+                document.title = "Danh sách đơn tìm gia sư";
+            } else {
+                document.title = "Chi tiết đơn tìm gia sư";
+            }
+        } else if (isStep === 2) {
+            document.title = "Yêu cầu tìm gia sư";
+        }
+    }, [isStep, id]);
 
     // === RENDER ===
     return (
@@ -328,7 +399,7 @@ const StudentRequestFindTutor: FC = () => {
                                                 Trạng thái
                                             </th>
                                             <th className="table-head-cell">
-                                                Thời gian đặt lịch
+                                                Thời gian gửi đơn
                                             </th>
                                             <th className="table-head-cell">
                                                 Thao tác
@@ -336,40 +407,57 @@ const StudentRequestFindTutor: FC = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="table-body">
-                                        {paginatedItems?.map((bookingTutor) => (
-                                            <tr key={bookingTutor.id}>
-                                                <td className="table-body-cell">
-                                                    {bookingTutor.subject}
-                                                </td>
-                                                <td className="table-body-cell">
-                                                    {
-                                                        bookingTutor.educationLevel
-                                                    }
-                                                </td>
-                                                <td className="table-body-cell">
-                                                    {getStatusText(
-                                                        bookingTutor.status
-                                                    )}
-                                                </td>
-                                                <td className="table-body-cell">
-                                                    {formatDate(
-                                                        bookingTutor.createdAt
-                                                    )}
-                                                </td>
-                                                <td className="table-body-cell">
-                                                    <button
-                                                        className="pr-btn"
-                                                        onClick={() =>
-                                                            handleViewDetail(
-                                                                bookingTutor.id
-                                                            )
-                                                        }
-                                                    >
-                                                        Chi tiết
-                                                    </button>
+                                        {paginatedItems &&
+                                        paginatedItems.length > 0 ? (
+                                            paginatedItems.map(
+                                                (bookingTutor) => (
+                                                    <tr key={bookingTutor.id}>
+                                                        <td className="table-body-cell">
+                                                            {
+                                                                bookingTutor.subject
+                                                            }
+                                                        </td>
+                                                        <td className="table-body-cell">
+                                                            {
+                                                                bookingTutor.educationLevel
+                                                            }
+                                                        </td>
+                                                        <td className="table-body-cell">
+                                                            {getStatusText(
+                                                                bookingTutor.status,
+                                                            )}
+                                                        </td>
+                                                        <td className="table-body-cell">
+                                                            {formatDate(
+                                                                bookingTutor.createdAt,
+                                                            )}
+                                                        </td>
+                                                        <td className="table-body-cell">
+                                                            <button
+                                                                className="pr-btn"
+                                                                onClick={() =>
+                                                                    handleViewDetail(
+                                                                        bookingTutor.id,
+                                                                    )
+                                                                }
+                                                            >
+                                                                Chi tiết
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ),
+                                            )
+                                        ) : (
+                                            <tr>
+                                                <td
+                                                    colSpan={5}
+                                                    className="table-body-cell no-data"
+                                                >
+                                                    Chưa có đơn yêu cầu tìm gia
+                                                    sư
                                                 </td>
                                             </tr>
-                                        ))}
+                                        )}
                                     </tbody>
                                 </table>
 
@@ -407,168 +495,193 @@ const StudentRequestFindTutor: FC = () => {
                                 </h3>
                             </div>
 
-                            <div className="detail-request-find-tutor">
-                                {/* NHÓM 1: Thông tin học sinh */}
-                                <div className="detail-group">
-                                    <h3 className="group-title">
-                                        Thông tin học sinh
-                                    </h3>
-                                    <div className="group-content">
-                                        <div className="detail-item">
-                                            <h4>Học sinh</h4>
-                                            <p>{bookingTutor?.studentName}</p>
-                                        </div>
-
-                                        <div className="detail-item">
-                                            <h4>Mô tả</h4>
-                                            <p>{bookingTutor?.description}</p>
-                                        </div>
-
-                                        <div className="detail-item">
-                                            <h4>Yêu cầu đặc biệt</h4>
-                                            <p>
-                                                {
-                                                    bookingTutor?.specialRequirements
-                                                }
-                                            </p>
-                                        </div>
+                            <div className="sub-tabs">
+                                {["request", "tutor"].map((t) => (
+                                    <div
+                                        key={t}
+                                        className={`sub-tab ${
+                                            tabSubActive === t ? "active" : ""
+                                        }`}
+                                        onClick={() => {
+                                            setTabSubActive(t);
+                                        }}
+                                    >
+                                        {t === "request" && "Đơn yêu cầu"}
+                                        {t === "tutor" && "Gia sư ứng tuyển"}
                                     </div>
-                                </div>
-
-                                {/* NHÓM 2: Thông tin gia sư */}
-                                <div className="detail-group">
-                                    <h3 className="group-title">
-                                        Thông tin gia sư
-                                    </h3>
-                                    <div className="group-content">
-                                        <div className="detail-item">
-                                            <h4>Môn học</h4>
-                                            <p>{bookingTutor?.subject}</p>
-                                        </div>
-
-                                        <div className="detail-item">
-                                            <h4>Cấp bậc học</h4>
-                                            <p>
-                                                {bookingTutor?.educationLevel}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* NHÓM 3: Hình thức & Học phí */}
-                                <div className="detail-group">
-                                    <h3 className="group-title">
-                                        Hình thức học & học phí
-                                    </h3>
-                                    <div className="group-content">
-                                        <div className="detail-item">
-                                            <h4>Hình thức học</h4>
-                                            <p>{bookingTutor?.mode}</p>
-                                        </div>
-
-                                        {bookingTutor?.mode === "Offline" && (
-                                            <div className="detail-item">
-                                                <h4>Địa điểm</h4>
-                                                <p>{bookingTutor?.location}</p>
-                                            </div>
-                                        )}
-
-                                        <div className="detail-item">
-                                            <h4>Học phí</h4>
-                                            <p>
-                                                {bookingTutor?.budget?.toLocaleString()}{" "}
-                                                VNĐ
-                                            </p>
-                                        </div>
-
-                                        <div className="detail-item">
-                                            <h4>Trạng thái</h4>
-                                            <p>
-                                                {getStatusText(
-                                                    bookingTutor?.status
-                                                )}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* NHÓM 4: Thời gian & Lịch trình */}
-                                <div className="detail-group">
-                                    <h3 className="group-title">Lịch học</h3>
-                                    <div className="group-content">
-                                        <div className="detail-item">
-                                            <h4>Ngày bắt đầu</h4>
-                                            <p>
-                                                {formatDate(
-                                                    String(
-                                                        bookingTutor?.classStartDate
-                                                    )
-                                                )}
-                                            </p>
-                                        </div>
-
-                                        <div className="detail-item">
-                                            <h4>Ngày hết hạn</h4>
-                                            <p>
-                                                {formatDate(
-                                                    String(
-                                                        bookingTutor?.expiryDate
-                                                    )
-                                                )}
-                                            </p>
-                                        </div>
-
-                                        <div className="detail-item">
-                                            <h4>Ngày tạo</h4>
-                                            <p>
-                                                {formatDate(
-                                                    String(
-                                                        bookingTutor?.createdAt
-                                                    )
-                                                )}
-                                            </p>
-                                        </div>
-
-                                        <div className="detail-item detail-item-schedule">
-                                            <h4>Lịch học chi tiết</h4>
-
-                                            {[
-                                                ...(bookingTutor?.schedules ||
-                                                    []),
-                                            ]
-                                                .sort(
-                                                    (a, b) =>
-                                                        sortOrder.indexOf(
-                                                            a.dayOfWeek
-                                                        ) -
-                                                        sortOrder.indexOf(
-                                                            b.dayOfWeek
-                                                        )
-                                                )
-                                                .map((s, index) => (
-                                                    <div
-                                                        key={index}
-                                                        className="schedule-item"
-                                                    >
-                                                        <p className="schedule-day">
-                                                            {
-                                                                daysOfWeek[
-                                                                    s.dayOfWeek
-                                                                ]
-                                                            }
-                                                        </p>
-                                                        <p className="schedule-time">
-                                                            {s.startTime} →{" "}
-                                                            {s.endTime}
-                                                        </p>
-                                                    </div>
-                                                ))}
-                                        </div>
-                                    </div>
-                                </div>
+                                ))}
                             </div>
 
-                            {applyRequests?.length! > 0 && (
+                            {tabSubActive === "request" && (
+                                <div className="detail-request-find-tutor">
+                                    {/* NHÓM 1: Thông tin học sinh */}
+                                    <div className="detail-group">
+                                        <h3 className="group-title">
+                                            Thông tin học sinh
+                                        </h3>
+                                        <div className="group-content">
+                                            <div className="detail-item">
+                                                <h4>Học sinh</h4>
+                                                <p>
+                                                    {bookingTutor?.studentName}
+                                                </p>
+                                            </div>
+
+                                            <div className="detail-item">
+                                                <h4>Mô tả</h4>
+                                                <p>
+                                                    {bookingTutor?.description}
+                                                </p>
+                                            </div>
+
+                                            {bookingTutor?.specialRequirements && (
+                                                <div className="detail-item">
+                                                    <h4>Yêu cầu đặc biệt</h4>
+                                                    <p>
+                                                        {
+                                                            bookingTutor?.specialRequirements
+                                                        }
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* NHÓM 3: Hình thức & Học phí */}
+                                    <div className="detail-group">
+                                        <h3 className="group-title">
+                                            Thông tin yêu cầu
+                                        </h3>
+                                        <div className="group-content">
+                                            <div className="detail-item">
+                                                <h4>Môn học</h4>
+                                                <p>{bookingTutor?.subject}</p>
+                                            </div>
+
+                                            <div className="detail-item">
+                                                <h4>Cấp bậc học</h4>
+                                                <p>
+                                                    {
+                                                        bookingTutor?.educationLevel
+                                                    }
+                                                </p>
+                                            </div>
+
+                                            <div className="detail-item">
+                                                <h4>Hình thức học</h4>
+                                                <p>{bookingTutor?.mode === "Online" ? "Học trực tuyến" : "Học trực tiếp"}</p>
+                                            </div>
+
+                                            {bookingTutor?.mode ===
+                                                "Offline" && (
+                                                <div className="detail-item">
+                                                    <h4>Địa điểm</h4>
+                                                    <p>
+                                                        {bookingTutor?.location}
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            <div className="detail-item">
+                                                <h4>Học phí</h4>
+                                                <p>
+                                                    {bookingTutor?.budget?.toLocaleString()}{" "}
+                                                    VNĐ
+                                                </p>
+                                            </div>
+
+                                            <div className="detail-item">
+                                                <h4>Trạng thái</h4>
+                                                <p>
+                                                    {getStatusText(
+                                                        bookingTutor?.status,
+                                                    )}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* NHÓM 4: Thời gian & Lịch trình */}
+                                    <div className="detail-group">
+                                        <h3 className="group-title">
+                                            Lịch học
+                                        </h3>
+                                        <div className="group-content">
+                                            <div className="detail-item">
+                                                <h4>Ngày bắt đầu</h4>
+                                                <p>
+                                                    {formatDate(
+                                                        String(
+                                                            bookingTutor?.classStartDate,
+                                                        ),
+                                                    )}
+                                                </p>
+                                            </div>
+
+                                            <div className="detail-item">
+                                                <h4>Ngày hết hạn</h4>
+                                                <p>
+                                                    {formatDate(
+                                                        String(
+                                                            bookingTutor?.expiryDate,
+                                                        ),
+                                                    )}
+                                                </p>
+                                            </div>
+
+                                            <div className="detail-item">
+                                                <h4>Ngày tạo</h4>
+                                                <p>
+                                                    {formatDate(
+                                                        String(
+                                                            bookingTutor?.createdAt,
+                                                        ),
+                                                    )}
+                                                </p>
+                                            </div>
+
+                                            <div className="detail-item detail-item-schedule">
+                                                <h4>Lịch học chi tiết</h4>
+
+                                                {[
+                                                    ...(bookingTutor?.schedules ||
+                                                        []),
+                                                ]
+                                                    .sort(
+                                                        (a, b) =>
+                                                            sortOrder.indexOf(
+                                                                a.dayOfWeek,
+                                                            ) -
+                                                            sortOrder.indexOf(
+                                                                b.dayOfWeek,
+                                                            ),
+                                                    )
+                                                    .map((s, index) => (
+                                                        <div
+                                                            key={index}
+                                                            className="schedule-item"
+                                                        >
+                                                            <p className="schedule-day">
+                                                                {
+                                                                    daysOfWeek[
+                                                                        s
+                                                                            .dayOfWeek
+                                                                    ]
+                                                                }
+                                                            </p>
+                                                            <p className="schedule-time">
+                                                                {s.startTime} →{" "}
+                                                                {s.endTime}
+                                                            </p>
+                                                        </div>
+                                                    ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {tabSubActive === "tutor" && (
                                 <>
                                     {/* Danh sách ứng tuyển */}
                                     <div className="srfts1r2">
@@ -591,66 +704,78 @@ const StudentRequestFindTutor: FC = () => {
                                                 </tr>
                                             </thead>
                                             <tbody className="table-body">
-                                                {applyRequests?.map(
-                                                    (applyRequest) => (
-                                                        <tr
-                                                            key={
-                                                                applyRequest.id
-                                                            }
-                                                        >
-                                                            <td className="table-body-cell">
-                                                                {
-                                                                    applyRequest.tutorName
+                                                {applyRequests?.length! > 0 ? (
+                                                    applyRequests?.map(
+                                                        (applyRequest) => (
+                                                            <tr
+                                                                key={
+                                                                    applyRequest.id
                                                                 }
-                                                            </td>
-                                                            <td className="table-body-cell">
-                                                                {getStatusText(
-                                                                    applyRequest.status
-                                                                )}
-                                                            </td>
-                                                            <td className="table-body-cell">
-                                                                {formatDate(
-                                                                    applyRequest.createdAt
-                                                                )}
-                                                            </td>
-                                                            <td className="table-body-cell">
-                                                                {applyRequest.status ===
-                                                                    "Pending" && (
-                                                                    <>
-                                                                        <button
-                                                                            className="pr-btn"
-                                                                            onClick={() => {
-                                                                                handleAcceptApplyRequestOpen(
-                                                                                    applyRequest.id
-                                                                                );
-                                                                            }}
-                                                                        >
-                                                                            Chấp
-                                                                            thuận
-                                                                        </button>
-                                                                        <button
-                                                                            className="delete-btn"
-                                                                            onClick={() => {
-                                                                                handleRejectApplyRequestOpen(
-                                                                                    applyRequest.id
-                                                                                );
-                                                                            }}
-                                                                        >
-                                                                            Từ
-                                                                            chối
-                                                                        </button>
-                                                                    </>
-                                                                )}
-                                                                <button
-                                                                    className="sc-btn"
-                                                                    onClick={() => {}}
-                                                                >
-                                                                    Chi tiết gia
-                                                                    sư
-                                                                </button>
-                                                            </td>
-                                                        </tr>
+                                                            >
+                                                                <td className="table-body-cell">
+                                                                    {
+                                                                        applyRequest.tutorName
+                                                                    }
+                                                                </td>
+                                                                <td className="table-body-cell">
+                                                                    {getStatusText(
+                                                                        applyRequest.status,
+                                                                    )}
+                                                                </td>
+                                                                <td className="table-body-cell">
+                                                                    {formatDate(
+                                                                        applyRequest.createdAt,
+                                                                    )}
+                                                                </td>
+                                                                <td className="table-body-cell">
+                                                                    {applyRequest.status ===
+                                                                        "Pending" && (
+                                                                        <>
+                                                                            <button
+                                                                                className="pr-btn"
+                                                                                onClick={() => {
+                                                                                    handleAcceptApplyRequestOpen(
+                                                                                        applyRequest.id,
+                                                                                    );
+                                                                                }}
+                                                                            >
+                                                                                Chấp
+                                                                                thuận
+                                                                            </button>
+                                                                            <button
+                                                                                className="delete-btn"
+                                                                                onClick={() => {
+                                                                                    handleRejectApplyRequestOpen(
+                                                                                        applyRequest.id,
+                                                                                    );
+                                                                                }}
+                                                                            >
+                                                                                Từ
+                                                                                chối
+                                                                            </button>
+                                                                        </>
+                                                                    )}
+                                                                    <button
+                                                                        className="sc-btn"
+                                                                        onClick={() => {}}
+                                                                    >
+                                                                        Chi tiết
+                                                                        gia sư
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        ),
                                                     )
+                                                ) : (
+                                                    <tr>
+                                                        <td
+                                                            colSpan={4}
+                                                            className="table-body-cell no-data"
+                                                        >
+                                                            Chưa có gia sư nào
+                                                            ứng tuyển
+                                                        </td>
+                                                    </tr>
                                                 )}
                                             </tbody>
                                         </table>
@@ -664,7 +789,7 @@ const StudentRequestFindTutor: FC = () => {
                                         className="pr-btn"
                                         onClick={() =>
                                             setIsUpdateBookingTutorModalOpen(
-                                                true
+                                                true,
                                             )
                                         }
                                     >
@@ -681,7 +806,7 @@ const StudentRequestFindTutor: FC = () => {
                                         className="delete-btn"
                                         onClick={() =>
                                             setIsCancelBookingTutorModalOpen(
-                                                true
+                                                true,
                                             )
                                         }
                                     >
@@ -721,62 +846,15 @@ const StudentRequestFindTutor: FC = () => {
                         initialValues={initialValues}
                         validationSchema={validationSchema}
                         onSubmit={(values, { setSubmitting }) => {
-                            setSubmitting(true);
+                            setSubmitting(false);
 
-                            const totalAmount = createRequestFee;
-
-                            if (
-                                balance?.balance &&
-                                balance.balance < totalAmount
-                            ) {
+                            if (balance?.balance! < createRequestFee) {
                                 setIsRemindWalletOpen(true);
-                                setSubmitting(false);
                                 return;
                             }
 
-                            dispatch(
-                                tranferToAdminApiThunk({
-                                    Amount: totalAmount,
-                                    Note: "Phí đặt lịch gia sư",
-                                })
-                            )
-                                .unwrap()
-                                .then(() => {
-                                    dispatch(
-                                        createClassRequestForStudentApiThunk(
-                                            values
-                                        )
-                                    )
-                                        .unwrap()
-                                        .then((res) => {
-                                            const message = get(
-                                                res,
-                                                "data.message",
-                                                "Gửi thành công"
-                                            );
-                                            toast.success(message);
-                                            navigateHook(routes.student.home);
-                                        })
-                                        .catch((error) => {
-                                            const errorData = get(
-                                                error,
-                                                "data.message",
-                                                "Có lỗi xảy ra"
-                                            );
-                                            toast.error(errorData);
-                                        });
-                                })
-                                .catch((error) => {
-                                    const errorData = get(
-                                        error,
-                                        "data.message",
-                                        "Có lỗi xảy ra"
-                                    );
-                                    toast.error(errorData);
-                                })
-                                .finally(() => {
-                                    setSubmitting(false);
-                                });
+                            setPendingValues(values);
+                            setIsConfirmOpen(true);
                         }}
                     >
                         {({ values, setFieldValue, isSubmitting }) => {
@@ -798,11 +876,11 @@ const StudentRequestFindTutor: FC = () => {
                             useEffect(() => {
                                 if (values.classStartDate) {
                                     const start = formatDateToYMD(
-                                        new Date(values.classStartDate)
+                                        new Date(values.classStartDate),
                                     );
 
                                     const endDate = new Date(
-                                        values.classStartDate
+                                        values.classStartDate,
                                     );
                                     endDate.setDate(endDate.getDate() + 30);
                                     const end = formatDateToYMD(endDate);
@@ -811,8 +889,8 @@ const StudentRequestFindTutor: FC = () => {
                                             {
                                                 startDate: start,
                                                 endDate: end,
-                                            }
-                                        )
+                                            },
+                                        ),
                                     );
                                 }
                             }, [dispatch, values.classStartDate]);
@@ -823,6 +901,7 @@ const StudentRequestFindTutor: FC = () => {
                                     <div className="form-field">
                                         <label className="form-label">
                                             Cấp bậc học
+                                            <span>*</span>
                                         </label>
                                         <div className="form-input-container">
                                             <MdOutlineDriveFileRenameOutline className="form-input-icon" />
@@ -832,9 +911,10 @@ const StudentRequestFindTutor: FC = () => {
                                                 onChange={(e) =>
                                                     handleLevelChange(
                                                         e.target
-                                                            .value as LevelType
+                                                            .value as LevelType,
                                                     )
                                                 }
+                                                aria-label="Cấp bậc học"
                                             >
                                                 <option value="">
                                                     -- Chọn cấp bậc --
@@ -856,6 +936,7 @@ const StudentRequestFindTutor: FC = () => {
                                     <div className="form-field">
                                         <label className="form-label">
                                             Môn học
+                                            <span>*</span>
                                         </label>
                                         <div className="form-input-container">
                                             <MdOutlineDriveFileRenameOutline className="form-input-icon" />
@@ -865,11 +946,11 @@ const StudentRequestFindTutor: FC = () => {
                                                 className="form-input"
                                                 onChange={(e: any) => {
                                                     handleSubjectChange(
-                                                        e.target.value
+                                                        e.target.value,
                                                     );
                                                     setFieldValue(
                                                         "subject",
-                                                        e.target.value
+                                                        e.target.value,
                                                     );
                                                 }}
                                             >
@@ -885,7 +966,7 @@ const StudentRequestFindTutor: FC = () => {
                                                             >
                                                                 {subj}
                                                             </option>
-                                                        )
+                                                        ),
                                                     )}
                                             </Field>
                                         </div>
@@ -900,6 +981,7 @@ const StudentRequestFindTutor: FC = () => {
                                     <div className="form-field">
                                         <label className="form-label">
                                             Lớp
+                                            <span>*</span>
                                         </label>
                                         <div className="form-input-container">
                                             <MdOutlineDriveFileRenameOutline className="form-input-icon" />
@@ -932,6 +1014,7 @@ const StudentRequestFindTutor: FC = () => {
                                     <div className="form-field">
                                         <label className="form-label">
                                             Mô tả
+                                            <span>*</span>
                                         </label>
                                         <div className="form-input-container">
                                             <MdDescription className="form-input-icon" />
@@ -970,42 +1053,11 @@ const StudentRequestFindTutor: FC = () => {
                                         />
                                     </div>
 
-                                    {/* Ngày bắt đầu */}
-                                    <div className="form-field">
-                                        <label className="form-label">
-                                            Ngày bắt đầu
-                                        </label>
-                                        <div className="form-input-container">
-                                            <MdDateRange className="form-input-icon" />
-                                            <DatePickerElement
-                                                placeholder="Chọn ngày bắt đầu học"
-                                                value={
-                                                    values.classStartDate
-                                                        ? new Date(
-                                                              values.classStartDate
-                                                          )
-                                                        : null
-                                                }
-                                                onChange={(date: any) =>
-                                                    setFieldValue(
-                                                        "classStartDate",
-                                                        date?.toISOString() ||
-                                                            ""
-                                                    )
-                                                }
-                                            />
-                                        </div>
-                                        <ErrorMessage
-                                            name="classStartDate"
-                                            component="div"
-                                            className="text-error"
-                                        />
-                                    </div>
-
                                     {/* Hình thức học */}
                                     <div className="form-field">
                                         <label className="form-label">
                                             Hình thức học
+                                            <span>*</span>
                                         </label>
                                         <div className="form-input-container">
                                             <MdOutlineCastForEducation className="form-input-icon" />
@@ -1034,6 +1086,7 @@ const StudentRequestFindTutor: FC = () => {
                                         <div className="form-field">
                                             <label className="form-label">
                                                 Địa chỉ
+                                                <span>*</span>
                                             </label>
                                             <div className="form-input-container">
                                                 <MdLocationOn className="form-input-icon" />
@@ -1052,9 +1105,49 @@ const StudentRequestFindTutor: FC = () => {
                                         </div>
                                     )}
 
+                                    {/* Ngày bắt đầu */}
+                                    <div className="form-field">
+                                        <label className="form-label">
+                                            Ngày bắt đầu
+                                            <span>*</span>
+                                        </label>
+                                        <div className="form-input-container">
+                                            <MdDateRange className="form-input-icon" />
+                                            <DatePickerElement
+                                                placeholder="Chọn ngày bắt đầu học"
+                                                value={
+                                                    values.classStartDate
+                                                        ? new Date(
+                                                              values.classStartDate,
+                                                          )
+                                                        : null
+                                                }
+                                                onChange={(date: any) =>
+                                                    setFieldValue(
+                                                        "classStartDate",
+                                                        date?.toISOString() ||
+                                                            "",
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                        <p className="note">
+                                            Ngày bắt đầu học cần cách hôm nay ít
+                                            nhất 4 ngày để hệ thống và gia sư xử
+                                            lí. Sau khi chọn ngày, các khung giờ
+                                            học phù hợp sẽ được hiển thị.
+                                        </p>
+                                        <ErrorMessage
+                                            name="classStartDate"
+                                            component="div"
+                                            className="text-error"
+                                        />
+                                    </div>
+
                                     <div className="form-field">
                                         <label className="form-label">
                                             Học phí 1 tháng
+                                            <span>*</span>
                                         </label>
                                         <div className="form-input-container">
                                             <MdAttachMoney className="form-input-icon" />
@@ -1064,7 +1157,7 @@ const StudentRequestFindTutor: FC = () => {
                                                 value={
                                                     values.budget
                                                         ? values.budget.toLocaleString(
-                                                              "vi-VN"
+                                                              "vi-VN",
                                                           ) + " VND"
                                                         : ""
                                                 }
@@ -1085,36 +1178,45 @@ const StudentRequestFindTutor: FC = () => {
                                                 onSelectedChange={(schedules) =>
                                                     setFieldValue(
                                                         "schedules",
-                                                        schedules
+                                                        schedules,
                                                     )
                                                 }
+                                            />
+                                            <ErrorMessage
+                                                name="schedules"
+                                                component="div"
+                                                className="text-error"
                                             />
                                         </div>
                                     )}
 
-                                    <div className="price-container">
-                                        <div className="price-container-col">
-                                            <h4>Phí tạo đơn</h4>
-                                        </div>
-                                        <div className="price-container-col">
-                                            <p>
-                                                {createRequestFee.toLocaleString()}{" "}
-                                                VNĐ
-                                            </p>
-                                        </div>
-                                    </div>
+                                    {values.schedules.length > 0 && (
+                                        <>
+                                            <div className="price-container">
+                                                <div className="price-container-col">
+                                                    <h4>Phí tạo đơn</h4>
+                                                </div>
+                                                <div className="price-container-col">
+                                                    <p>
+                                                        {createRequestFee.toLocaleString()}{" "}
+                                                        VNĐ
+                                                    </p>
+                                                </div>
+                                            </div>
 
-                                    <div className="price-container">
-                                        <div className="price-container-col">
-                                            <h4>Tổng cộng</h4>
-                                        </div>
-                                        <div className="price-container-col">
-                                            <p>
-                                                {createRequestFee.toLocaleString() +
-                                                    " VND"}
-                                            </p>
-                                        </div>
-                                    </div>
+                                            <div className="price-container">
+                                                <div className="price-container-col">
+                                                    <h4>Tổng cộng</h4>
+                                                </div>
+                                                <div className="price-container-col">
+                                                    <p>
+                                                        {createRequestFee.toLocaleString() +
+                                                            " VND"}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
 
                                     <div className="form-submit">
                                         <button
@@ -1208,6 +1310,13 @@ const StudentRequestFindTutor: FC = () => {
                     </div>
                 </section>
             </Modal>
+            <ConfirmPaymentModal
+                isOpen={isConfirmOpen}
+                totalAmount={createRequestFee}
+                setIsOpen={setIsConfirmOpen}
+                onConfirm={handleConfirmPayment}
+                loading={isConfirmLoading}
+            />
         </div>
     );
 };

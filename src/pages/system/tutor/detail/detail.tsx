@@ -12,9 +12,10 @@ import {
     selectCheckFavoriteTutor,
     selectIsAuthenticated,
     selectPublicTutor,
+    selectPublicTutorClasses,
     selectUserLogin,
 } from "../../../../app/selector";
-import { publicGetDetailTutorApiThunk } from "../../../../services/public/tutor/tutorThunk";
+import { publicGetDetailTutorApiThunk, publicGetTutorClassesApiThunk } from "../../../../services/public/tutor/tutorThunk";
 import {
     csvToArray,
     useDocumentTitle,
@@ -41,9 +42,17 @@ const DetailTutorPage: FC = () => {
     const user = useAppSelector(selectUserLogin);
     const isAuthenticated = useAppSelector(selectIsAuthenticated);
     const isFavorited = useAppSelector(selectCheckFavoriteTutor);
+    const tutorClasses = useAppSelector(selectPublicTutorClasses);
+
+    /** ============ TAB HANDLE ============== */
+    const getActiveTabFromURL = () => {
+        const params = new URLSearchParams(location.search);
+        return params.get("tab") || "gioithieu";
+    };
 
     const [openRemindLogin, setOpenRemindLogin] = useState(false);
     const [loadingFavorite, setLoadingFavorite] = useState(false);
+    const [activeTab, setActiveTab] = useState(getActiveTabFromURL());
 
     /** ============ MEMO HOÁ DỮ LIỆU ============== */
     const subjects = useMemo(
@@ -68,13 +77,14 @@ const DetailTutorPage: FC = () => {
         }
     }, [tutor?.tutorProfileId, isAuthenticated]);
 
-    /** ============ TAB HANDLE ============== */
-    const getActiveTabFromURL = () => {
-        const params = new URLSearchParams(location.search);
-        return params.get("tab") || "gioithieu";
-    };
+    useEffect(() => {
+        if (tutor?.tutorId && activeTab === "lophoc") {
+            dispatch(
+                publicGetTutorClassesApiThunk(String(tutor?.tutorProfileId)),
+            );
+        }
+    }, [tutor?.tutorId, activeTab]);
 
-    const [activeTab, setActiveTab] = useState(getActiveTabFromURL());
 
     const handleTabChange = (tab: string) => {
         setActiveTab(tab);
@@ -150,8 +160,8 @@ const DetailTutorPage: FC = () => {
                                     loadingFavorite
                                         ? "disable-btn"
                                         : isFavorited?.isFavorited
-                                        ? "delete-btn"
-                                        : "sc-btn"
+                                            ? "delete-btn"
+                                            : "sc-btn"
                                 }
                                 onClick={() =>
                                     toggleFavorite(
@@ -192,11 +202,10 @@ const DetailTutorPage: FC = () => {
                             ].map((tab) => (
                                 <div
                                     key={tab.key}
-                                    className={`tabs-item ${
-                                        activeTab === tab.key
-                                            ? "tabs-item-actived"
-                                            : ""
-                                    }`}
+                                    className={`tabs-item ${activeTab === tab.key
+                                        ? "tabs-item-actived"
+                                        : ""
+                                        }`}
                                     onClick={() => handleTabChange(tab.key)}
                                 >
                                     {tab.label}
@@ -232,6 +241,13 @@ const DetailTutorPage: FC = () => {
                                     </p>
                                 </div>
 
+                                {tutor?.address && (
+                                    <div className="tabs-content">
+                                        <h4>Địa chỉ</h4>
+                                        <p>{tutor?.address}</p>
+                                    </div>
+                                )}
+
                                 <div className="tabs-content">
                                     <h4>Cấp bậc dạy học</h4>
                                     {teachingLevels.map((item, i) => (
@@ -253,12 +269,16 @@ const DetailTutorPage: FC = () => {
                             <div className="tabs-content">
                                 <h4>Danh sách lớp học</h4>
                                 <div className="list">
-                                    {fakeDataCourses.map((course) => (
-                                        <CourseDetaiTutorCard
-                                            key={course.id}
-                                            course={course}
-                                        />
-                                    ))}
+                                    {tutorClasses?.length! > 0 ? (
+                                        tutorClasses?.map((course) => (
+                                            <CourseDetaiTutorCard
+                                                key={course.id}
+                                                course={course}
+                                            />
+                                        ))
+                                    ) : (
+                                        <p>Gia sư không có lớp học nào.</p>
+                                    )}
                                 </div>
                             </div>
                         )}

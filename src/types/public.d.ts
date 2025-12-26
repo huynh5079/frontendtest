@@ -15,6 +15,7 @@ export type PublicClass = {
     tutorId: string;
     tutorUserId: string;
     tutorName?: string; // Thêm field này để lưu tên gia sư
+    tutorAddress?: string; // Địa chỉ gia sư
     subject: string;
     educationLevel: string;
     description: string;

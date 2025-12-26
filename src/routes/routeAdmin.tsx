@@ -13,12 +13,14 @@ import {
     AdminDetailTutorPage,
     AdminListTutorPage,
 } from "../pages/admin/user/tutor";
-import { AdminListClassPage } from "../pages/admin/manage/class";
-import { AdminListNotificationPage } from "../pages/admin/manage/notification";
+import { AdminListClassPage, AdminDetailClassPage } from "../pages/admin/manage/class";
+import { AdminListNotificationPage, AdminSendNotificationPage } from "../pages/admin/manage/notification";
 import { AdminListReportPage } from "../pages/admin/manage/report";
 import { AdminListTutorTransactionPage } from "../pages/admin/transaction/tutor";
 import { AdminListStudentTransactionPage } from "../pages/admin/transaction/student";
 import { AdminListParentTransactionPage } from "../pages/admin/transaction/parent";
+import { AdminWalletPage } from "../pages/admin/wallet";
+import { AdminCommissionPage, AdminCommissionHistoryPage } from "../pages/admin/commission";
 import { PrivateAuthAdmin } from "../components/private";
 
 const routeAdmin: RouteObject[] = [
@@ -66,8 +68,16 @@ const routeAdmin: RouteObject[] = [
                         element: <AdminListClassPage />,
                     },
                     {
+                        path: "class/:id/detail",
+                        element: <AdminDetailClassPage />,
+                    },
+                    {
                         path: "notification",
                         element: <AdminListNotificationPage />,
+                    },
+                    {
+                        path: "notification/send",
+                        element: <AdminSendNotificationPage />,
                     },
                     {
                         path: "report",
@@ -84,6 +94,18 @@ const routeAdmin: RouteObject[] = [
                     {
                         path: "transaction/parent",
                         element: <AdminListParentTransactionPage />,
+                    },
+                    {
+                        path: "wallet",
+                        element: <AdminWalletPage />,
+                    },
+                    {
+                        path: "commission",
+                        element: <AdminCommissionPage />,
+                    },
+                    {
+                        path: "commission/history",
+                        element: <AdminCommissionHistoryPage />,
                     },
                 ],
             },

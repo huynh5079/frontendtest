@@ -11,13 +11,20 @@ import {
 import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
 import { navigateHook } from "../../../routes/routeApp";
 import { routes } from "../../../routes/routeName";
-import { useAppSelector } from "../../../app/store";
-import { selectIsAuthenticated, selectUserLogin } from "../../../app/selector";
+import { useAppDispatch, useAppSelector } from "../../../app/store";
+import {
+    select3PublicTutors,
+    selectIsAuthenticated,
+    selectUserLogin,
+} from "../../../app/selector";
 import { USER_PARENT, USER_STUDENT } from "../../../utils/helper";
+import { publicGet3TutorsApiThunk } from "../../../services/public/tutor/tutorThunk";
 
 const LandingPage: FC = () => {
+    const dispatch = useAppDispatch();
     const isAuthenticated = useAppSelector(selectIsAuthenticated);
     const user = useAppSelector(selectUserLogin);
+    const topRateTutor = useAppSelector(select3PublicTutors);
 
     const handle = () => {
         if (!isAuthenticated) return navigateHook(routes.register.student);
@@ -30,6 +37,8 @@ const LandingPage: FC = () => {
     // === EFFECTS ===
     useEffect(() => {
         document.title = "Trang chủ";
+
+        dispatch(publicGet3TutorsApiThunk());
     }, []);
 
     return (
@@ -71,7 +80,7 @@ const LandingPage: FC = () => {
                         </h3>
                     </div>
                     <div className="ls3cr2">
-                        <LandingTopTutors />
+                        <LandingTopTutors tutors={topRateTutor!} />
                     </div>
                 </div>
             </section>

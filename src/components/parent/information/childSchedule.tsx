@@ -4,7 +4,7 @@ import {
     selectListChildAccount,
     selectListChildSchedule,
 } from "../../../app/selector";
-import { useDocumentTitle } from "../../../utils/helper";
+import { getAttendanceText, useDocumentTitle } from "../../../utils/helper";
 import { format, startOfWeek, addDays, parseISO, getDay } from "date-fns";
 
 import {
@@ -43,7 +43,7 @@ const weekDays = [
 // Trả về đúng ngày của 1 thứ trong tuần, với firstDay = Monday
 export const getDateOfSpecificWeekday = (
     monday: Date,
-    weekday: number // weekday: 0=CN,1=T2,...6=T7
+    weekday: number, // weekday: 0=CN,1=T2,...6=T7
 ) => {
     // Map weekday sang offset tính theo Monday
     const offset = weekday === 0 ? 6 : weekday - 1;
@@ -56,6 +56,25 @@ export const scheduleByDay = (schedules: any[], dayKey: number) => {
         const d = getDay(parseISO(s.startTime)); // vẫn giữ local timezone
         return d === dayKey;
     });
+};
+
+const EventComponent = ({ event }: any) => {
+    return (
+        <div className="event-component">
+            <div className="event-title">Buổi học</div>
+            <div
+                className={`event-attendance ${
+                    event.attendanceStatus === null
+                        ? "not-marked"
+                        : event.attendanceStatus === "Present"
+                        ? "present"
+                        : "absent"
+                }`}
+            >
+                {getAttendanceText(event.attendanceStatus)}
+            </div>
+        </div>
+    );
 };
 
 const ParentChildScheduleSchedule: FC = () => {
@@ -94,7 +113,7 @@ const ParentChildScheduleSchedule: FC = () => {
                 childProfileId: childProfileId,
                 startDate: startStr,
                 endDate: endStr,
-            })
+            }),
         );
     }, [childProfileId, currentDate, startStr, endStr, dispatch]);
 
@@ -109,15 +128,21 @@ const ParentChildScheduleSchedule: FC = () => {
     // ------------------- Convert schedule => Events -------------------
     const events: RBCEvent[] = schedules.map((s) => ({
         id: s.id,
-        title: "Buổi học",
-        start: new Date(s.startTime),
+        lessonId: s.lessonId,
+        title: `Buổi học`,
+        attendanceStatus: s.attendanceStatus,
+        // mode: s.mode,
+        start: parseISO(s.startTime),
         end: new Date(s.endTime),
+        allDay: false,
+        resource: s,
     }));
 
     const eventStyleGetter = () => ({
         style: {
-            backgroundColor: "var(--main-color)",
-            color: "white",
+            backgroundColor: "#fff",
+            border: "1px solid var(--main-color)",
+            color: "var(--main-color)",
             borderRadius: "6px",
             padding: "4px 6px",
         },
@@ -132,7 +157,7 @@ const ParentChildScheduleSchedule: FC = () => {
                 childProfileId: childProfileId,
                 startDate: startStr,
                 endDate: endStr,
-            })
+            }),
         );
 
         const midDate = new Date((start.getTime() + end.getTime()) / 2);
@@ -155,7 +180,6 @@ const ParentChildScheduleSchedule: FC = () => {
         <div className="parent-child-schedule">
             <h4>Lịch học của con</h4>
 
-            {/* ---- Form chọn gia sư ---- */}
             <div className="form">
                 <div className="form-field">
                     <label className="form-label">Chọn tài khoản của con</label>
@@ -198,6 +222,10 @@ const ParentChildScheduleSchedule: FC = () => {
                         <Calendar
                             localizer={localizer}
                             events={events}
+                            components={{
+                                event: EventComponent,
+                            }}
+                            step={15}
                             startAccessor="start"
                             endAccessor="end"
                             defaultView={Views.WEEK}
@@ -256,9 +284,9 @@ const ParentChildScheduleSchedule: FC = () => {
                                                 {format(
                                                     getDateOfSpecificWeekday(
                                                         firstDay,
-                                                        d.key
+                                                        d.key,
                                                     ),
-                                                    "dd/MM/yyyy"
+                                                    "dd/MM/yyyy",
                                                 )}
                                             </h5>
 
@@ -279,7 +307,7 @@ const ParentChildScheduleSchedule: FC = () => {
                                                 )}
                                             </div>
                                         </div>
-                                    )
+                                    ),
                                 )}
                             </div>
                         </>

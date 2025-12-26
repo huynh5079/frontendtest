@@ -20,21 +20,342 @@
         .sc-btn {
             padding: 0.75rem 1.25rem;
             font-size: 1.25rem;
+            background: #008d52 !important;
+            color: #fff !important;
+            border: none !important;
             transition: all 0.3s ease;
 
             &:hover {
-                background-color: var(--main-color);
+                background: #007a47 !important;
+                color: #fff !important;
+            }
+        }
+    }
+
+    .tabs {
+        max-width: 500px;
+        margin: 0 auto;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        padding: 0.5rem;
+        background: #fff;
+        border-radius: 1.5rem;
+        border: 1px solid var(--main-color);
+        gap: 0.5rem;
+
+        .tab {
+            position: relative;
+            flex: 1;
+            padding: 0.75rem 0 0.5rem;
+            font-size: 1.25rem;
+            font-weight: 500;
+            text-align: center;
+            color: var(--main-color);
+            cursor: pointer;
+            transition: color 0.3s ease;
+
+            &.active {
+                background: var(--main-color);
+                border-radius: 1rem;
                 color: #fff;
+                font-weight: 700;
+                font-size: 1.25rem;
+            }
+
+            &:hover:not(.active) {
+                background: var(--main-color-10);
+                color: var(--main-color);
+                border-radius: 1rem;
             }
         }
     }
 
     .swr2 {
-        h3 {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: var(--main-color);
-            margin-bottom: 1rem;
+        margin-bottom: 2rem;
+
+        .swr2-cards {
+            display: flex;
+            justify-content: start;
+            align-items: start;
+            gap: 2rem;
+            margin-bottom: 2rem;
+
+            .swr2-card {
+                flex: 1;
+                background: #fff;
+                border-radius: 1rem;
+                padding:0.5rem;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                border: 1px solid var(--main-color);
+
+                .amount {
+                    text-align: center;
+
+                    h5 {
+                        font-size: 1.5rem;
+                        font-weight: 700;
+                        color: var(--main-color);
+                        margin-bottom: 0.5rem;
+                    }
+
+                    p {
+                        font-size: 1.25rem;
+                        font-weight: 500;
+                        color: var(--main-color);
+                    }
+                }
+
+                &:hover {
+                    background: var(--main-color-10);
+                }
+
+                &.active {
+                    background: var(--main-color);
+
+                    .swr2-card-icon {
+                        background: #fff;
+                        color: var(--main-color);
+                    }
+
+                    .amount {
+
+                        h5,
+                        p {
+                            color: #fff;
+                        }
+                    }
+                }
+            }
         }
+    }
+
+    .swr3 {
+        padding: 1rem 2rem;
+        background: #fff;
+        border-radius: 1rem;
+
+        .table {
+            .table-body {
+                .table-body-row {
+                    border-bottom: 1px solid var(--main-color-10);
+
+                    .table-body-cell {
+                        &.empty-state {
+                            text-align: center;
+                            padding: 2rem;
+                        }
+
+                        padding: 1rem;
+                        font-size: 0.95rem;
+                        color: var(--main-black);
+                        vertical-align: top;
+
+                        .transaction-type {
+                            font-weight: 500;
+                            color: var(--main-black);
+                        }
+
+                        .amount {
+                            font-weight: 700;
+
+                            &.positive {
+                                color: #22c55e;
+                            }
+
+                            &.negative {
+                                color: #ef4444;
+                            }
+                        }
+
+                        .status-badge {
+                            display: inline-block;
+                            padding: 0.375rem 0.75rem;
+                            border-radius: 0.5rem;
+                            font-size: 0.75rem;
+                            font-weight: 700;
+                            text-transform: uppercase;
+
+                            &.status-succeeded {
+                                background: #c6f6d5;
+                                color: #22543d;
+                            }
+
+                            &.status-pending {
+                                background: #fefcbf;
+                                color: #744210;
+                            }
+
+                            &.status-failed {
+                                background: #fed7d7;
+                                color: #c53030;
+                            }
+                        }
+
+                        .view-detail-btn {
+                            display: inline-flex !important;
+                            align-items: center;
+                            gap: 0.5rem;
+                            padding: 0.5rem 1rem;
+                            font-size: 0.875rem;
+                            background: var(--main-color) !important;
+                            color: #fff !important;
+                            border: none !important;
+                            border-radius: 0.5rem;
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                            text-decoration: none;
+                            visibility: visible !important;
+                            opacity: 1 !important;
+
+                            &:hover {
+                                background: #007a47 !important;
+                                color: #fff !important;
+                            }
+
+                            .view-detail-icon {
+                                font-size: 0.875rem;
+                                display: inline-block;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .no-data {
+        padding: 2rem;
+        text-align: center;
+
+        p {
+            color: var(--main-black);
+            opacity: 0.7;
+            font-size: 1rem;
+        }
+    }
+
+    .altscr4 {
+        width: fit-content;
+        margin: 0 auto;
+        margin-top: 2rem;
+        padding: 0.5rem;
+        background: #fff;
+        border-radius: 1rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+
+        .altscr4-item {
+            padding: 0.5rem 0.6rem;
+            border-radius: 50%;
+            cursor: pointer;
+
+            .altscr4-item-icon {
+                font-size: 1rem;
+            }
+
+            &:hover:not(.disabled) {
+                background: var(--main-color);
+                color: #fff;
+            }
+
+            &.disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+        }
+
+        .altscr4-page {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--main-black);
+        }
+    }
+
+    .transaction-detail {
+        padding: 1rem;
+
+        .detail-section {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--main-color-10);
+
+            &:last-child {
+                border-bottom: none;
+            }
+
+            h5 {
+                font-size: 1.125rem;
+                font-weight: 700;
+                color: var(--main-color);
+                margin-bottom: 1rem;
+            }
+
+            .detail-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.75rem 0;
+                gap: 1rem;
+
+                label {
+                    font-weight: 500;
+                    color: var(--main-black);
+                    opacity: 0.7;
+                    min-width: 120px;
+                }
+
+                span {
+                    color: var(--main-black);
+                    text-align: right;
+
+                    &.transaction-id,
+                    &.user-id,
+                    &.wallet-id {
+                        font-family: monospace;
+                        font-size: 0.875rem;
+                        color: var(--main-color);
+                    }
+
+                    &.amount-value {
+                        font-weight: 700;
+                        color: var(--main-color);
+                        font-size: 1.125rem;
+                    }
+
+                    &.status-badge {
+                        display: inline-block;
+                        padding: 0.375rem 0.75rem;
+                        border-radius: 0.5rem;
+                        font-size: 0.75rem;
+                        font-weight: 700;
+                        text-transform: uppercase;
+
+                        &.status-succeeded {
+                            background: #c6f6d5;
+                            color: #22543d;
+                        }
+
+                        &.status-pending {
+                            background: #fefcbf;
+                            color: #744210;
+                        }
+
+                        &.status-failed {
+                            background: #fed7d7;
+                            color: #c53030;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .deposit-submit-btn {
+        padding: 0.75rem 0.5rem;
+        font-size: 1.25rem;
     }
 }

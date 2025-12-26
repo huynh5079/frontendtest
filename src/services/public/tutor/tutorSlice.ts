@@ -6,14 +6,19 @@ import type {
     ResponsePublicTutors,
 } from "../../../types/tutor";
 import {
+    publicGet3TutorsApiThunk,
     publicGetAllTutorsApiThunk,
     publicGetDetailTutorApiThunk,
+    publicGetTutorClassesApiThunk,
 } from "./tutorThunk";
 import type { ResponseFromServer } from "../../../types/app";
+import { PublicClass } from "../../../types/public";
 
 const initialState: PublicTutorState = {
     listTutors: null,
+    list3Tutors: null,
     tutor: null,
+    listTutorClasses: null,
 };
 
 export const publicTutorSlice = createSlice({
@@ -34,12 +39,30 @@ export const publicTutorSlice = createSlice({
                 },
             )
             .addCase(
+                publicGet3TutorsApiThunk.fulfilled,
+                (
+                    state,
+                    action: PayloadAction<ResponseFromServer<PublicTutors[]>>,
+                ) => {
+                    state.list3Tutors = action.payload.data;
+                },
+            )
+            .addCase(
                 publicGetDetailTutorApiThunk.fulfilled,
                 (
                     state,
                     action: PayloadAction<ResponseFromServer<PublicTutor>>,
                 ) => {
                     state.tutor = action.payload.data;
+                },
+            )
+            .addCase(
+                publicGetTutorClassesApiThunk.fulfilled,
+                (
+                    state,
+                    action: PayloadAction<ResponseFromServer<PublicClass[]>>,
+                ) => {
+                    state.listTutorClasses = action.payload.data;
                 },
             );
     },

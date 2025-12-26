@@ -14,6 +14,7 @@ import {
     getAllClassApi,
     getAllStudentEnrolledClassForTutorApi,
     getDetailClassApi,
+    syncLessonStatusForClassApi,
     updateInfoClassForTutorApi,
     UpdateScheduleClassForTutorApi,
 } from "./classApi";
@@ -29,6 +30,7 @@ const UPDATE_SCHEDULE_CLASS_FOR_TUTOR = "UPDATE_SCHEDULE_CLASS_FOR_TUTOR";
 const DELETE_CLASS_FOR_TUTOR = "DELETE_CLASS_FOR_TUTOR";
 const CANCEL_CLASS_FOR_TUTOR = "CANCEL_CLASS_FOR_TUTOR";
 const COMPLETE_CLASS_FOR_TUTOR = "COMPLETE_CLASS_FOR_TUTOR";
+const SYNC_LESSON_STATUS_FOR_CLASS = "SYNC_LESSON_STATUS_FOR_CLASS";
 
 export const createClassApiThunk = createAsyncThunk<{}, CreateClassParams>(
     CREATE_CLASS,
@@ -168,6 +170,21 @@ export const completeClassForTutorApiThunk = createAsyncThunk<
 >(COMPLETE_CLASS_FOR_TUTOR, async (payload, { rejectWithValue }) => {
     try {
         const response = await completeClassForTutorApi(payload);
+        return response;
+    } catch (err: any) {
+        return rejectWithValue({
+            errorMessage: err.message,
+            data: err.response?.data,
+        });
+    }
+});
+
+export const syncLessonStatusForClassApiThunk = createAsyncThunk<
+    ResponseFromServer<{ completedLessons: number }>,
+    string
+>(SYNC_LESSON_STATUS_FOR_CLASS, async (payload, { rejectWithValue }) => {
+    try {
+        const response = await syncLessonStatusForClassApi(payload);
         return response;
     } catch (err: any) {
         return rejectWithValue({

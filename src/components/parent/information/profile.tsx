@@ -1,5 +1,5 @@
-import { useEffect, type FC } from "react";
-import { Formik, Form, Field, ErrorMessage } from "formik";
+import { useEffect, useRef, useState, type FC } from "react";
+import { Formik, Form, Field, ErrorMessage, FormikHelpers } from "formik";
 import * as Yup from "yup";
 import { CiCalendarDate, CiMail } from "react-icons/ci";
 import { FaMapMarkerAlt, FaPhone } from "react-icons/fa";
@@ -7,13 +7,25 @@ import { MdOutlineDriveFileRenameOutline } from "react-icons/md";
 import { DatePickerElement, LoadingSpinner } from "../../elements";
 import { useAppDispatch, useAppSelector } from "../../../app/store";
 import { selectProfileParent } from "../../../app/selector";
-import { getProfileParentApiThunk } from "../../../services/user/userThunk";
+import {
+    getProfileParentApiThunk,
+    updateAvatarApiThunk,
+    updateProfileParentApiThunk,
+} from "../../../services/user/userThunk";
 import type { UpdateParentParams } from "../../../types/parent";
-import { useDocumentTitle } from "../../../utils/helper";
+import { formatDateReverse, useDocumentTitle } from "../../../utils/helper";
+import { SystemLogo } from "../../../assets/images";
+import { toast } from "react-toastify";
+import { get } from "lodash";
+import { UpdateParentProfileParams } from "../../../types/user";
+import { GiMale } from "react-icons/gi";
 
 const ParentProfile: FC = () => {
     const dispatch = useAppDispatch();
     const parentProfile = useAppSelector(selectProfileParent);
+
+    const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
         dispatch(getProfileParentApiThunk());
@@ -23,43 +35,115 @@ const ParentProfile: FC = () => {
     const maxDate = new Date(
         today.getFullYear() - 16,
         today.getMonth(),
-        today.getDate()
+        today.getDate(),
     );
 
     // ✅ Schema kiểm tra dữ liệu
     const validationSchema = Yup.object({
         username: Yup.string().required("Vui lòng nhập họ và tên"),
-        email: Yup.string()
-            .email("Email không hợp lệ")
-            .required("Vui lòng nhập email"),
         address: Yup.string().required("Vui lòng nhập địa chỉ"),
         phone: Yup.string()
-            .matches(/^[0-9]{10}$/, "Số điện thoại phải có 10 chữ số")
-            .required("Vui lòng nhập số điện thoại"),
-        dateOfBirth: Yup.date()
-            .max(maxDate, "Bạn cần đủ 16 tuổi trở lên")
-            .required("Vui lòng chọn ngày sinh"),
+            .required("Vui lòng nhập số điện thoại")
+            .matches(/^(0|\+84)[0-9]{9,10}$/, "Số điện thoại không hợp lệ"),
+        gender: Yup.string().required("Vui lòng chọn giới tính"),
+        dateOfBirth: Yup.date().required("Vui lòng chọn ngày sinh"),
     });
 
     // ✅ Giá trị mặc định (lấy từ store nếu có)
-    const initialValues: UpdateParentParams = {
+    const initialValues: UpdateParentProfileParams = {
         username: parentProfile?.username || "",
-        avatarUrl: parentProfile?.avatarUrl || "",
-        email: parentProfile?.email || "",
         phone: parentProfile?.phone || "",
         address: parentProfile?.address || "",
         gender: parentProfile?.gender || "male",
         dateOfBirth: parentProfile?.dateOfBirth || "",
     };
 
-    const handleSubmit = async (values: UpdateParentParams) => {
-        console.log(values)
+    const handleSubmit = async (
+        values: UpdateParentProfileParams,
+        helpers: FormikHelpers<UpdateParentProfileParams>,
+    ) => {
+        const payload: UpdateParentProfileParams = {
+            ...values,
+            dateOfBirth: formatDateReverse(values.dateOfBirth),
+        };
+
+        helpers.setSubmitting(true);
+        dispatch(updateProfileParentApiThunk(payload))
+            .unwrap()
+            .then((res) => {
+                toast.success(get(res, "data.message", "Cập nhật thành công"));
+                dispatch(getProfileParentApiThunk());
+            })
+            .catch((err) => {
+                toast.error(get(err, "data.message", "Có lỗi xảy ra"));
+            })
+            .finally(() => helpers.setSubmitting(false));
     };
 
-    useDocumentTitle("Trang cá nhân")
+    useDocumentTitle("Trang cá nhân");
+
+    const handleUpdateAvatar = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("avatar", file);
+
+        setIsUploadingAvatar(true);
+
+        dispatch(updateAvatarApiThunk(formData))
+            .unwrap()
+            .then(() => {
+                toast.success("Cập nhật ảnh đại diện thành công");
+                dispatch(getProfileParentApiThunk());
+            })
+            .catch((err) => {
+                toast.error(
+                    get(err, "data.message", "Cập nhật ảnh đại diện thất bại"),
+                );
+            })
+            .finally(() => {
+                setIsUploadingAvatar(false);
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                }
+            });
+    };
 
     return (
         <div className="parent-profile">
+            <div className="avatar-container">
+                <img
+                    src={parentProfile?.avatarUrl || SystemLogo}
+                    className="avatar"
+                    onError={(e) => {
+                        (e.target as HTMLImageElement).src = SystemLogo;
+                    }}
+                />
+
+                {/* Input ẩn */}
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={handleUpdateAvatar}
+                />
+
+                {/* Button thay thế */}
+                <button
+                    type="button"
+                    className={isUploadingAvatar ? "disable-btn" : "pr-btn"}
+                    disabled={isUploadingAvatar}
+                    onClick={() => fileInputRef.current?.click()}
+                >
+                    {isUploadingAvatar ? (
+                        <LoadingSpinner />
+                    ) : (
+                        "Thay đổi ảnh đại diện"
+                    )}
+                </button>
+            </div>
             <Formik
                 enableReinitialize
                 initialValues={initialValues}
@@ -68,16 +152,6 @@ const ParentProfile: FC = () => {
             >
                 {({ setFieldValue, values, isSubmitting }) => (
                     <Form>
-                        <div className="avatar-container">
-                            <h5>Ảnh đại diện</h5>
-                            <img
-                                className="avatar"
-                                src={values.avatarUrl || ""}
-                            />
-                            <div className="group-btn">
-                                <div className="pr-btn">Tải ảnh lên</div>
-                            </div>
-                        </div>
                         <div className="form">
                             {/* Họ và tên */}
                             <div className="form-field">
@@ -172,7 +246,7 @@ const ParentProfile: FC = () => {
                                         onChange={(date) =>
                                             setFieldValue(
                                                 "dateOfBirth",
-                                                date?.toISOString() || ""
+                                                date?.toISOString() || "",
                                             )
                                         }
                                         maxDate={maxDate}
@@ -183,29 +257,27 @@ const ParentProfile: FC = () => {
                                     component="div"
                                     className="text-error"
                                 />
-                                <p className="form-note">
-                                    <span>Lưu ý:</span> Học viên cần đủ từ 16
-                                    tuổi trở lên
-                                </p>
                             </div>
 
+                            {/* ----------- Giới tính ----------- */}
                             <div className="form-field">
-                                <label className="form-label">Ngày sinh</label>
+                                <label className="form-label">Giới tính</label>
                                 <div className="form-input-container">
-                                    <CiCalendarDate className="form-input-icon" />
-                                    <DatePickerElement
-                                        value={
-                                            values.dateOfBirth
-                                                ? new Date(values.dateOfBirth)
-                                                : null
-                                        }
-                                        onChange={(date) =>
-                                            setFieldValue("dateOfBirth", date)
-                                        }
-                                    />
+                                    <GiMale className="form-input-icon" />
+                                    <Field
+                                        as="select"
+                                        name="gender"
+                                        className="form-input"
+                                    >
+                                        <option value="">
+                                            -- Chọn giới tính --
+                                        </option>
+                                        <option value="male">Nam</option>
+                                        <option value="female">Nữ</option>
+                                    </Field>
                                 </div>
                                 <ErrorMessage
-                                    name="dateOfBirth"
+                                    name="gender"
                                     component="p"
                                     className="text-error"
                                 />
@@ -216,7 +288,7 @@ const ParentProfile: FC = () => {
                             <div className="sc-btn">Làm mới</div>
                             <button
                                 type="submit"
-                                className="pr-btn"
+                                className={isSubmitting ? "disable-btn" : "pr-btn"}
                                 disabled={isSubmitting}
                             >
                                 {isSubmitting ? <LoadingSpinner /> : "Cập nhật"}

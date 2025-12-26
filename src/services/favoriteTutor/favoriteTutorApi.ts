@@ -14,3 +14,8 @@ export const deleteFavoriteTutorApi = async (tutorProfileId: string) => {
     const data = await request.delete(`/favorite-tutors/${tutorProfileId}`);
     return data.data;
 };
+
+export const getAllFavoriteTutorApi = async () => {
+    const data = await request.get(`/favorite-tutors`);
+    return data.data;
+};

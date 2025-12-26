@@ -5,7 +5,10 @@ import {
     rejectApplyRequestFindTutorForStudentApi,
 } from "./requestFindTutorApi";
 import type { ResponseFromServer } from "../../../types/app";
-import type { ApplyRequestFindTutorForStudent } from "../../../types/student";
+import type {
+    AcceptApplyRequestFindTutorForStudent,
+    ApplyRequestFindTutorForStudent,
+} from "../../../types/student";
 
 const GET_ALL_APPLY_REQUEST_FIND_TUTOR_FOR_STUDENT =
     "GET_ALL_APPLY_REQUEST_FIND_TUTOR_FOR_STUDENT";
@@ -24,7 +27,7 @@ export const getAllApplyRequestFindTutorForStudentApiThunk = createAsyncThunk<
     async (payload, { rejectWithValue }) => {
         try {
             const response = await getAllApplyRequestFindTutorForStudentApi(
-                payload,
+                payload
             );
             return response;
         } catch (err: any) {
@@ -33,18 +36,18 @@ export const getAllApplyRequestFindTutorForStudentApiThunk = createAsyncThunk<
                 data: err.response.data,
             });
         }
-    },
+    }
 );
 
 export const acceptApplyRequestFindTutorForStudentApiThunk = createAsyncThunk<
-    {},
+    ResponseFromServer<AcceptApplyRequestFindTutorForStudent>,
     string
 >(
     ACCEPT_APPLY_REQUEST_FIND_TUTOR_FOR_STUDENT,
     async (payload, { rejectWithValue }) => {
         try {
             const response = await acceptApplyRequestFindTutorForStudentApi(
-                payload,
+                payload
             );
             return response;
         } catch (err: any) {
@@ -53,7 +56,7 @@ export const acceptApplyRequestFindTutorForStudentApiThunk = createAsyncThunk<
                 data: err.response.data,
             });
         }
-    },
+    }
 );
 
 export const rejectApplyRequestFindTutorForStudentApiThunk = createAsyncThunk<
@@ -64,7 +67,7 @@ export const rejectApplyRequestFindTutorForStudentApiThunk = createAsyncThunk<
     async (payload, { rejectWithValue }) => {
         try {
             const response = await rejectApplyRequestFindTutorForStudentApi(
-                payload,
+                payload
             );
             return response;
         } catch (err: any) {
@@ -73,5 +76,5 @@ export const rejectApplyRequestFindTutorForStudentApiThunk = createAsyncThunk<
                 data: err.response.data,
             });
         }
-    },
+    }
 );

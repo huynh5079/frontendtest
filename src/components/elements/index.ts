@@ -14,6 +14,8 @@ import WeekCalendarCreateClass from "./WeekCalendarCreateClass";
 import WeekCalendarUpdate from "./WeekCalendarUpdate";
 import WeekCalendarUpdateRequestFindTutor from "./WeekCalendarUpdateRequestFindTutor";
 import TimePickerElement from "./TimePicker";
+import IncomeLineChart from "./lineChart";
+import LessonLineChart from "./lessonLineChart";
 
 export {
     DatePickerElement,
@@ -31,5 +33,7 @@ export {
     WeekCalendarCreateClass,
     WeekCalendarUpdate,
     WeekCalendarUpdateRequestFindTutor,
-    TimePickerElement
+    TimePickerElement,
+    IncomeLineChart,
+    LessonLineChart,
 };

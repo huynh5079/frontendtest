@@ -11,7 +11,7 @@ import type {
 // Gửi tin nhắn (hỗ trợ file)
 export const sendMessageApi = async (dto: SendMessageDto) => {
     const formData = new FormData();
-    
+
     if (dto.receiverId) {
         formData.append("ReceiverId", dto.receiverId);
     }
@@ -132,6 +132,12 @@ export const getConversationsApi = async () => {
 // Lấy conversation theo ID
 export const getConversationByIdApi = async (conversationId: string) => {
     const res = await request.get(`/chats/conversations/${conversationId}`);
+    return res.data;
+};
+
+// Xóa conversation (user remove khỏi conversation)
+export const deleteConversationApi = async (conversationId: string) => {
+    const res = await request.delete(`/chats/conversations/${conversationId}`);
     return res.data;
 };
 

@@ -193,12 +193,8 @@ const ListTutorBookingPage: FC = () => {
                             ) : (
                                 <tr className="table-body-row">
                                     <td
-                                        className="table-body-cell"
+                                        className="table-body-cell no-data"
                                         colSpan={6}
-                                        style={{
-                                            textAlign: "center",
-                                            padding: "16px",
-                                        }}
                                     >
                                         Không có dữ liệu
                                     </td>

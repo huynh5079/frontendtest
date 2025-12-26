@@ -8,6 +8,7 @@ import {
     getDetailClassRequestForStudentApiThunk,
 } from "./bookingTutorThunk";
 import { ResponseFromServer } from "../../../types/app";
+import { getAllClassRequestForParentApiThunk } from "../../parent/classRequest/classRequestThunk";
 
 const initialState: BookingTutorStudentState = {
     lists: [],
@@ -22,6 +23,15 @@ export const bookingTutorStudentSlice = createSlice({
         builder
             .addCase(
                 getAllClassRequestForStudentApiThunk.fulfilled,
+                (
+                    state,
+                    action: PayloadAction<ResponseFromServer<ClassRequests[]>>
+                ) => {
+                    state.lists = action.payload.data;
+                }
+            )
+            .addCase(
+                getAllClassRequestForParentApiThunk.fulfilled,
                 (
                     state,
                     action: PayloadAction<ResponseFromServer<ClassRequests[]>>

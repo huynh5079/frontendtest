@@ -1,4 +1,5 @@
 import type {
+    ResponseGetUsersForAdmin,
     TutorForAdmin,
     TutorForAdminState,
     TutorsForAdmin,
@@ -28,9 +29,9 @@ export const tutorForAdminSlice = createSlice({
                 getAllTutorForAdminApiThunk.fulfilled,
                 (
                     state,
-                    action: PayloadAction<ResponseFromServer<TutorsForAdmin[]>>,
+                    action: PayloadAction<ResponseFromServer<ResponseGetUsersForAdmin<TutorsForAdmin[]>>>,
                 ) => {
-                    state.listTutors = action.payload.data;
+                    state.listTutors = action.payload.data.items;
                 },
             )
             .addCase(

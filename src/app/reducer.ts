@@ -46,10 +46,15 @@ import {
     RequestFindTutorForTutorState,
     ScheduleForTutorState,
     TutorClassState,
+    TutorDashboardState,
 } from "../types/tutor";
 import { TutorScheduleState } from "../types/booking";
 import { UserState } from "../types/user";
-import { ChildAccountState, ChildScheduleState } from "../types/parent";
+import {
+    ChildAccountState,
+    ChildScheduleState,
+    ParentClassState,
+} from "../types/parent";
 import {
     ApplyRequestFindTutorForStudentState,
     BookingTutorStudentState,
@@ -66,6 +71,17 @@ import { ChatState } from "../types/chat";
 import { childScheduleSlice } from "../services/parent/childSchedule/childScheduleSlice";
 import { tutorQuizSlice } from "../services/tutor/quiz/tutorQuizSlice";
 import { studentQuizSlice } from "../services/student/quiz/studentQuizSlice";
+import { rescheduleSlice } from "../services/reschedule/rescheduleSlice";
+import { RescheduleState } from "../types/reschedule";
+import { parentClassSlice } from "../services/parent/class/parentClassSlice";
+import commissionSlice from "../services/admin/commission/adminCommissionSlice";
+import adminReportSlice from "../services/admin/report/adminReportSlice";
+import adminDashboardSlice from "../services/admin/dashboard/adminDashboardSlice";
+import adminTransactionSlice from "../services/admin/transaction/adminTransactionSlice";
+import { attendanceSlice } from "../services/attendance/attendanceSlice";
+import { AttendanceState } from "../types/attendance";
+import { tutorDashboardSlice } from "../services/tutor/dashboard/tutorDashboardSlice";
+import tutorReportSlice from "../services/tutor/report/tutorReportSlice";
 
 // === Combine reducers ===
 const reducer = combineReducers({
@@ -90,6 +106,7 @@ const reducer = combineReducers({
     tutorClass: tutorClassSlice.reducer,
     publicClass: publicClassSlice.reducer,
     studentClass: studentClassSlice.reducer,
+    parentClass: parentClassSlice.reducer,
     notification: notificationSlice.reducer,
     wallet: walletSlice.reducer,
     feedback: feedbackSlice.reducer,
@@ -98,8 +115,16 @@ const reducer = combineReducers({
     childSchedule: childScheduleSlice.reducer,
     tutorQuiz: tutorQuizSlice.reducer,
     studentQuiz: studentQuizSlice.reducer,
+    reschedule: rescheduleSlice.reducer,
     lessonMaterials: lessonMaterialsSlice,
     videoAnalysis: videoAnalysisSlice,
+    commission: commissionSlice,
+    adminReport: adminReportSlice,
+    adminDashboard: adminDashboardSlice,
+    adminTransaction: adminTransactionSlice,
+    attendance: attendanceSlice.reducer,
+    tutorDashboard: tutorDashboardSlice.reducer,
+    tutorReport: tutorReportSlice,
 });
 
 // === Explicit RootState ===
@@ -110,7 +135,14 @@ export type RootState = {
     tutorForAdmin: TutorForAdminState;
     studentForAdmin: StudentForAdminState;
     parentForAdmin: ParentForAdminState;
-    adminClass: { listClasses: any[] };
+    adminClass: {
+        listClasses: any[];
+        classDetail: any | null;
+        studentsInClass: any[];
+        loading: boolean;
+        studentsLoading: boolean;
+        error: string | null;
+    };
     availabilityBlockForTutor: AvailabilityBlockForTutorState;
     publicTutor: PublicTutorState;
     tutorSchedule: TutorScheduleState;
@@ -125,6 +157,7 @@ export type RootState = {
     tutorClass: TutorClassState;
     publicClass: PublicClassState;
     studentClass: StudentClassState;
+    parentClass: ParentClassState;
     notification: NotificationState;
     wallet: WalletState;
     feedback: FeedbackState;
@@ -133,6 +166,7 @@ export type RootState = {
     childSchedule: ChildScheduleState;
     tutorQuiz: QuizForTutorState;
     studentQuiz: QuizForStudentState;
+    reschedule: RescheduleState;
     lessonMaterials: {
         materials: any[];
         isLoading: boolean;
@@ -145,6 +179,33 @@ export type RootState = {
         questionAnswers: any[];
         isAsking: boolean;
     };
+    commission: {
+        commission: any | null;
+        loading: boolean;
+        error: string | null;
+    };
+    adminReport: {
+        reports: any[];
+        reportDetail: any | null;
+        total: number;
+        loading: boolean;
+        error: string | null;
+    };
+    adminDashboard: {
+        statistics: any | null;
+        loading: boolean;
+        error: string | null;
+    };
+    adminTransaction: {
+        transactions: any[];
+        transactionDetail: any | null;
+        total: number;
+        loading: boolean;
+        detailLoading: boolean;
+        error: string | null;
+    };
+    attendance: AttendanceState;
+    tutorDashboard: TutorDashboardState;
 };
 
 export default reducer;

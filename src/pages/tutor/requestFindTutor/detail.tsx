@@ -210,10 +210,14 @@ const DetailRequestFindtutorForTutorPage: FC = () => {
                                         <p>{request?.description}</p>
                                     </div>
 
-                                    <div className="detail-item">
-                                        <h4>Yêu cầu đặc biệt</h4>
-                                        <p>{request?.specialRequirements}</p>
-                                    </div>
+                                    {request?.specialRequirements && (
+                                        <div className="detail-item">
+                                            <h4>Yêu cầu đặc biệt</h4>
+                                            <p>
+                                                {request?.specialRequirements}
+                                            </p>
+                                        </div>
+                                    )}
                                     <div className="detail-item">
                                         <h4>Môn học</h4>
                                         <p>{request?.subject}</p>
@@ -357,7 +361,7 @@ const DetailRequestFindtutorForTutorPage: FC = () => {
                 setIsOpen={setIsApplyRequestOpen}
                 title={"Ứng tuyển yêu cầu"}
             >
-                <section id="tutor-accept-request">
+                <section id="tutor-accept-booking">
                     <div className="tab-container">
                         <h3>
                             Bạn có chắc chắn muốn ứng tuyển yêu cầu này không?

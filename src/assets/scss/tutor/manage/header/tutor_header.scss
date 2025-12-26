@@ -177,6 +177,21 @@
                         }
                     }
                 }
+
+                .chat-unread-badge {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-width: 24px;
+                    height: 24px;
+                    padding: 0 8px;
+                    background-color: var(--main-color);
+                    color: #fff;
+                    border-radius: 12px;
+                    font-size: 0.875rem;
+                    font-weight: 700;
+                    margin-left: auto;
+                }
             }
 
             .button-container {
@@ -260,8 +275,12 @@
                             padding: 0;
 
                             h5 {
+                                max-width: 300px;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                white-space: nowrap;
                                 font-size: 1.25rem;
-                                font-weight: 600;
+                                font-weight: 700;
                                 color: var(--main-color);
                                 margin-bottom: 0.5rem;
                             }
@@ -306,6 +325,7 @@
         }
 
         .status-wrapper {
+
             .pending,
             .approved,
             .rejected {

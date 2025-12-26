@@ -9,6 +9,8 @@ import { DetailCoursePage } from "../pages/system/course/detail";
 import { LandingPage } from "../pages/system/landing";
 import { ChatPage } from "../pages/system/chat";
 import { PrivateAuthStudent } from "../components/private";
+import { AboutPage } from "../pages/system/about";
+import { ContactPage } from "../pages/system/contact";
 
 const routeStudent: RouteObject[] = [
     {
@@ -45,6 +47,14 @@ const routeStudent: RouteObject[] = [
                     {
                         path: "course/:id/detail",
                         element: <DetailCoursePage />,
+                    },
+                    {
+                        path: "about",
+                        element: <AboutPage />,
+                    },
+                    {
+                        path: "contact",
+                        element: <ContactPage />,
                     },
                     {
                         path: "information",

@@ -1,9 +1,7 @@
 .student-report-learning {
-    height: 100%;
-
     h4 {
         font-size: 2rem;
-        font-weight: 600;
+        font-weight: 700;
         color: var(--main-color);
         padding-bottom: 1rem;
         margin-bottom: 1rem;
@@ -11,70 +9,130 @@
         text-align: center;
     }
 
-    .tabs {
+    .srlr2 {
         display: flex;
-        align-items: center;
-        padding: 0.5rem;
-        margin: 1rem 0 2rem;
-        background: #fff;
-        border-radius: 1.5rem;
-        border: 1px solid var(--main-color);
-        gap: 0.5rem;
+        gap: 1rem;
 
-        .tab {
-            position: relative;
-            flex: 1;
-            padding: 0.75rem 0 0.5rem;
-            font-size: 1.25rem;
-            font-weight: 500;
-            text-align: center;
-            color: var(--main-color);
-            cursor: pointer;
-            transition: color 0.3s ease;
-
-            &.active {
-                background: var(--main-color);
-                border-radius: 1rem;
-                color: #fff;
-                font-weight: 600;
-                font-size: 1.25rem;
-            }
-
-            &:hover:not(.active) {
-                background: var(--main-color-10);
+        .srlr2c1,
+        .srlr2c2 {
+            h5 {
+                font-size: 1.5rem;
+                font-weight: 700;
                 color: var(--main-color);
-                border-radius: 1rem;
+                margin-bottom: 1rem;
+                text-align: center;
+                margin-bottom: 0.75rem;
             }
         }
-    }
 
-    .form-field {
-        max-width: 600px;
-        margin: 0 auto;
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-    }
+        .srlr2c1 {
+            flex: 1;
+            li {
+                list-style: none;
+                padding: 0.5rem 1rem;
+                margin: 0.5rem 0;
+                border-radius: 1rem;
+                cursor: pointer;
 
-    .pie-chart {
-        width: 300px;
-        height: 300px;
-        margin: 0 auto;
+                p {
+                    max-width: 275px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    font-size: 1.25rem;
+                    font-weight: 500;
+                }
 
-        .recharts-wrapper *:focus {
-            outline: none;
+                &:hover {
+                    background-color: var(--main-color-30);
+                }
 
-            .recharts-default-legend {
-                width: fit-content;
-                margin: 0 auto !important;
+                &.actived {
+                    background-color: var(--main-color);
+                    color: #fff;
+                }
+            }
+        }
+
+        .srlr2c2 {
+            flex: 2;
+            padding: 0 1rem;
+            border-right: 1px solid var(--main-color);
+            border-left: 1px solid var(--main-color);
+
+            .table {
+                .pr-btn {
+                    padding: 0.25rem 0.5rem;
+                    font-size: 1rem;
+                }
+            }
+
+            .sub-tabs {
+                max-width: 500px;
                 display: flex;
-                justify-content: center;
                 align-items: center;
-                gap: 1rem;
+                padding: 0.25rem;
+                margin: 0 auto 2rem;
+                background: #fff;
+                border-radius: 1.5rem;
+                border: 1px solid var(--main-color);
+                gap: 0.5rem;
 
-                .recharts-legend-item {
-                    display: flex !important;
-                    align-items: center !important;
+                .sub-tab {
+                    position: relative;
+                    flex: 1;
+                    padding: 0.75rem 0 0.5rem;
+                    font-size: 1.15rem;
+                    font-weight: 500;
+                    text-align: center;
+                    color: var(--main-color);
+                    cursor: pointer;
+                    transition: color 0.3s ease;
+                    border-radius: 1.15rem;
+
+                    &.active {
+                        background: var(--main-color);
+                        color: #fff;
+                        font-weight: 700;
+                        font-size: 1.15rem;
+                    }
+
+                    &:hover:not(.active) {
+                        background: var(--main-color-10);
+                        color: var(--main-color);
+                    }
+                }
+            }
+
+            h6 {
+                font-size: 1.5rem;
+                font-weight: 700;
+                color: var(--main-color);
+                padding: 3rem 0;
+                text-align: center;
+            }
+
+            .pie-chart {
+                width: 300px;
+                height: 300px;
+                margin: 0 auto;
+
+                .recharts-wrapper *:focus {
+                    outline: none;
+
+                    .recharts-default-legend {
+                        width: fit-content;
+                        margin: 0 auto !important;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        gap: 1rem;
+
+                        .recharts-legend-item {
+                            display: flex !important;
+                            align-items: center !important;
+                        }
+                    }
                 }
             }
         }

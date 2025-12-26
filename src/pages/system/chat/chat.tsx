@@ -14,16 +14,19 @@ import {
     getMessagesByConversationIdApiThunk,
     sendMessageApiThunk,
     markConversationAsReadApiThunk,
+    deleteConversationApiThunk,
 } from "../../../services/chat/chatThunk";
 import {
     setCurrentConversation,
     addMessage,
 } from "../../../services/chat/chatSlice";
-import chatConnection, { startChatConnection } from "../../../signalR/signalRChat";
+import chatConnection, {
+    startChatConnection,
+} from "../../../signalR/signalRChat";
 import { toast } from "react-toastify";
 import type { MessageDto, ConversationDto } from "../../../types/chat";
 import { LoadingSpinner } from "../../../components/elements";
-import { formatDate } from "../../../utils/helper";
+import { formatDate, timeAgo } from "../../../utils/helper";
 
 const ChatPage: FC = () => {
     const dispatch = useAppDispatch();
@@ -50,7 +53,7 @@ const ChatPage: FC = () => {
 
         const initConnection = async () => {
             await startChatConnection();
-            
+
             // Listen for new messages
             chatConnection.on("ReceiveMessage", (message: MessageDto) => {
                 dispatch(addMessage(message));
@@ -85,7 +88,9 @@ const ChatPage: FC = () => {
             // Mark as read
             if (currentConversation.otherUserId) {
                 dispatch(
-                    markConversationAsReadApiThunk(currentConversation.otherUserId)
+                    markConversationAsReadApiThunk(
+                        currentConversation.otherUserId
+                    )
                 );
             }
         }
@@ -143,6 +148,20 @@ const ChatPage: FC = () => {
         }
     };
 
+    const handleDeleteConversation = async (e: React.MouseEvent, conversationId: string) => {
+        e.stopPropagation(); // Ngăn chặn click vào conversation item
+        if (window.confirm("Bạn có chắc chắn muốn xóa cuộc trò chuyện này không?")) {
+            try {
+                await dispatch(deleteConversationApiThunk(conversationId)).unwrap();
+                toast.success("Đã xóa cuộc trò chuyện");
+                // Refresh conversations list
+                dispatch(getConversationsApiThunk());
+            } catch (error: any) {
+                toast.error(error?.errorMessage || "Xóa cuộc trò chuyện thất bại");
+            }
+        }
+    };
+
     if (!isAuthenticated) {
         return (
             <div className="chat-page">
@@ -154,104 +173,81 @@ const ChatPage: FC = () => {
     }
 
     return (
-        <div className="chat-page" style={{ display: "flex", height: "100vh" }}>
+        <div className="chat-page">
             {/* Conversation List */}
-            <div
-                className="chat-sidebar"
-                style={{
-                    width: "300px",
-                    borderRight: "1px solid #ddd",
-                    overflowY: "auto",
-                }}
-            >
-                <div style={{ padding: "1rem", borderBottom: "1px solid #ddd" }}>
-                    <h2>Tin nhắn</h2>
+            <div className="chat-sidebar">
+                <div className="chat-sidebar-header">
+                    <h2 className="chat-sidebar-title">Tin nhắn</h2>
                     {unreadCount > 0 && (
-                        <span
-                            style={{
-                                background: "#ff4444",
-                                color: "white",
-                                padding: "2px 8px",
-                                borderRadius: "12px",
-                                fontSize: "12px",
-                            }}
-                        >
+                        <span className="unread-count">
                             {unreadCount} chưa đọc
                         </span>
                     )}
                 </div>
-                <div>
+                <div className="chat-list">
                     {conversations.length === 0 ? (
-                        <p style={{ padding: "1rem", textAlign: "center" }}>
-                            Chưa có cuộc trò chuyện nào
-                        </p>
+                        <p className="no-chat">Chưa có tin nhắn</p>
                     ) : (
                         conversations.map((conv) => (
                             <div
                                 key={conv.id}
                                 onClick={() => handleSelectConversation(conv)}
-                                style={{
-                                    padding: "1rem",
-                                    cursor: "pointer",
-                                    borderBottom: "1px solid #eee",
-                                    backgroundColor:
-                                        currentConversation?.id === conv.id
-                                            ? "#f0f0f0"
-                                            : "white",
-                                }}
+                                className={`chat-item ${conv.id === currentConversation?.id
+                                        ? "active"
+                                        : ""
+                                    }`}
+                                style={{ position: "relative" }}
                             >
-                                <div style={{ display: "flex", gap: "10px" }}>
+                                <div className="chat-item-content">
                                     <img
                                         src={
                                             conv.otherUserAvatarUrl ||
                                             "/default-avatar.png"
                                         }
                                         alt={conv.otherUserName || "User"}
-                                        style={{
-                                            width: "40px",
-                                            height: "40px",
-                                            borderRadius: "50%",
-                                        }}
+                                        className="chat-avatar"
                                     />
-                                    <div style={{ flex: 1 }}>
-                                        <div
-                                            style={{
-                                                fontWeight: "bold",
-                                                marginBottom: "4px",
-                                            }}
-                                        >
+                                    <div className="chat-item-info">
+                                        <div className="chat-item-name">
                                             {conv.otherUserName || conv.title}
                                         </div>
-                                        <div
-                                            style={{
-                                                fontSize: "12px",
-                                                color: "#666",
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                                whiteSpace: "nowrap",
-                                            }}
-                                        >
-                                            {conv.lastMessageContent || "Chưa có tin nhắn"}
+                                        <div className="chat-item-message">
+                                            {conv.lastMessageContent ||
+                                                "Chưa có tin nhắn"}
                                         </div>
                                     </div>
                                     {conv.unreadCount > 0 && (
-                                        <span
-                                            style={{
-                                                background: "#ff4444",
-                                                color: "white",
-                                                borderRadius: "50%",
-                                                width: "20px",
-                                                height: "20px",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                fontSize: "10px",
-                                            }}
-                                        >
+                                        <span className="unread-count">
                                             {conv.unreadCount}
                                         </span>
                                     )}
                                 </div>
+                                <button
+                                    onClick={(e) => handleDeleteConversation(e, conv.id)}
+                                    aria-label="Xóa cuộc trò chuyện"
+                                    style={{
+                                        position: "absolute",
+                                        top: "8px",
+                                        right: "8px",
+                                        background: "#ff4444",
+                                        border: "none",
+                                        borderRadius: "50%",
+                                        width: "24px",
+                                        height: "24px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        cursor: "pointer",
+                                        color: "white",
+                                        fontSize: "18px",
+                                        fontWeight: "bold",
+                                        lineHeight: "1",
+                                        zIndex: 10,
+                                    }}
+                                    title="Xóa cuộc trò chuyện"
+                                >
+                                    ×
+                                </button>
                             </div>
                         ))
                     )}
@@ -259,210 +255,133 @@ const ChatPage: FC = () => {
             </div>
 
             {/* Chat Window */}
-            <div
-                className="chat-main"
-                style={{ flex: 1, display: "flex", flexDirection: "column" }}
-            >
+            <div className="chat-main">
                 {currentConversation ? (
                     <>
-                        {/* Header */}
-                        <div
-                            style={{
-                                padding: "1rem",
-                                borderBottom: "1px solid #ddd",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "10px",
-                            }}
-                        >
+                        <div className="chat-main-header">
                             <img
                                 src={
                                     currentConversation.otherUserAvatarUrl ||
                                     "/default-avatar.png"
                                 }
-                                alt={currentConversation.otherUserName || "User"}
-                                style={{
-                                    width: "40px",
-                                    height: "40px",
-                                    borderRadius: "50%",
-                                }}
+                                alt={
+                                    currentConversation.otherUserName || "User"
+                                }
+                                className="chat-main-avatar"
                             />
-                            <div>
-                                <div style={{ fontWeight: "bold" }}>
+                            <div className="chat-main-header-info">
+                                <div className="chat-main-header-name">
                                     {currentConversation.otherUserName ||
                                         currentConversation.title}
                                 </div>
                             </div>
                         </div>
 
-                        {/* Messages */}
-                        <div
-                            style={{
-                                flex: 1,
-                                overflowY: "auto",
-                                padding: "1rem",
-                            }}
-                        >
+                        <div className="chat-messages">
                             {messages.length === 0 ? (
-                                <p style={{ textAlign: "center", color: "#666" }}>
+                                <p className="no-message">
                                     Chưa có tin nhắn nào
                                 </p>
                             ) : (
                                 messages.map((message) => {
                                     const isOwnMessage =
                                         message.senderId === userLogin?.id;
+
                                     return (
                                         <div
                                             key={message.id}
-                                            style={{
-                                                display: "flex",
-                                                justifyContent: isOwnMessage
-                                                    ? "flex-end"
-                                                    : "flex-start",
-                                                marginBottom: "1rem",
-                                            }}
+                                            className={`chat-message ${isOwnMessage ? "own" : "other"
+                                                }`}
                                         >
-                                            <div
-                                                style={{
-                                                    maxWidth: "70%",
-                                                    padding: "8px 12px",
-                                                    borderRadius: "12px",
-                                                    backgroundColor: isOwnMessage
-                                                        ? "#007bff"
-                                                        : "#f0f0f0",
-                                                    color: isOwnMessage
-                                                        ? "white"
-                                                        : "black",
-                                                }}
-                                            >
+                                            <div>
                                                 {!isOwnMessage && (
-                                                    <div
-                                                        style={{
-                                                            fontSize: "12px",
-                                                            fontWeight: "bold",
-                                                            marginBottom: "4px",
-                                                        }}
-                                                    >
+                                                    <div className="sender-name">
                                                         {message.senderName}
                                                     </div>
                                                 )}
-                                                {message.messageType === "Image" &&
-                                                message.fileUrl ? (
+
+                                                {message.messageType ===
+                                                    "Image" &&
+                                                    message.fileUrl ? (
                                                     <img
                                                         src={message.fileUrl}
                                                         alt="Image"
-                                                        style={{
-                                                            maxWidth: "100%",
-                                                            borderRadius: "8px",
-                                                        }}
+                                                        className="chat-image"
                                                     />
-                                                ) : message.messageType === "File" &&
-                                                  message.fileUrl ? (
+                                                ) : message.messageType ===
+                                                    "File" &&
+                                                    message.fileUrl ? (
                                                     <a
                                                         href={message.fileUrl}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        style={{
-                                                            color: isOwnMessage
-                                                                ? "white"
-                                                                : "#007bff",
-                                                        }}
+                                                        className="chat-file"
                                                     >
-                                                        📎 {message.fileName || "File"}
+                                                        📎{" "}
+                                                        {message.fileName ||
+                                                            "File"}
                                                     </a>
                                                 ) : (
-                                                    <div>{message.content}</div>
+                                                    <div className="chat-message-content">
+                                                        {message.content}
+                                                    </div>
                                                 )}
-                                                <div
-                                                    style={{
-                                                        fontSize: "10px",
-                                                        marginTop: "4px",
-                                                        opacity: 0.7,
-                                                    }}
-                                                >
+
+                                                <div className="message-time">
                                                     {message.createdAt &&
-                                                        formatDate(message.createdAt)}
-                                                    {message.isEdited && " (đã sửa)"}
+                                                        timeAgo(
+                                                            message.createdAt
+                                                        )}
+                                                    {message.isEdited &&
+                                                        " (đã sửa)"}
                                                 </div>
                                             </div>
                                         </div>
                                     );
                                 })
                             )}
-                            <div ref={messagesEndRef} />
+                            <div ref={messagesEndRef} className="chat-end" />
                         </div>
 
-                        {/* Input */}
-                        <div
-                            style={{
-                                padding: "1rem",
-                                borderTop: "1px solid #ddd",
-                                display: "flex",
-                                gap: "10px",
-                            }}
-                        >
+                        <div className="chat-input">
                             <input
                                 type="file"
                                 ref={fileInputRef}
                                 onChange={handleFileSelect}
-                                style={{ display: "none" }}
+                                className="chat-file-input"
+                                aria-label="Chọn file để gửi"
                             />
                             <button
                                 onClick={() => fileInputRef.current?.click()}
-                                style={{
-                                    padding: "8px 12px",
-                                    border: "1px solid #ddd",
-                                    borderRadius: "4px",
-                                    cursor: "pointer",
-                                }}
+                                className="chat-file-button"
                             >
                                 📎
                             </button>
                             <input
                                 type="text"
                                 value={messageInput}
-                                onChange={(e) => setMessageInput(e.target.value)}
+                                onChange={(e) =>
+                                    setMessageInput(e.target.value)
+                                }
                                 onKeyPress={handleKeyPress}
                                 placeholder="Nhập tin nhắn..."
-                                style={{
-                                    flex: 1,
-                                    padding: "8px 12px",
-                                    border: "1px solid #ddd",
-                                    borderRadius: "4px",
-                                }}
                                 disabled={isSending}
+                                className="chat-input-field"
                             />
                             <button
                                 onClick={handleSendMessage}
                                 disabled={!messageInput.trim() || isSending}
-                                style={{
-                                    padding: "8px 20px",
-                                    background: "#007bff",
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "4px",
-                                    cursor:
-                                        !messageInput.trim() || isSending
-                                            ? "not-allowed"
-                                            : "pointer",
-                                    opacity:
-                                        !messageInput.trim() || isSending ? 0.5 : 1,
-                                }}
+                                className="chat-send-button"
                             >
                                 {isSending ? "Đang gửi..." : "Gửi"}
                             </button>
                         </div>
                     </>
                 ) : (
-                    <div
-                        style={{
-                            flex: 1,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                        }}
-                    >
-                        <p>Chọn một cuộc trò chuyện để bắt đầu</p>
+                    <div className="no-conversation">
+                        <p className="no-conversation-text">
+                            Chọn một cuộc trò chuyện để bắt đầu
+                        </p>
                     </div>
                 )}
             </div>
@@ -471,4 +390,3 @@ const ChatPage: FC = () => {
 };
 
 export default ChatPage;
-

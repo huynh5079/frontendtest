@@ -25,6 +25,8 @@ export type ParentProfile = {
 };
 
 export type ProfileStudent = {
+    studentUserId: string;
+    studentProfileId: string;
     educationLevel: string;
     preferredSubjects: string;
     username: string;
@@ -44,4 +46,16 @@ export type UpdateStudentProfileParams = {
     address: string;
     gender: string;
     dateOfBirth: string;
+};
+
+export type UpdateParentProfileParams = {
+    username: string;
+    phone: string;
+    address: string;
+    gender: string;
+    dateOfBirth: string;
+};
+
+export type UpdateAvatarParams = {
+    avatar: File;
 };
